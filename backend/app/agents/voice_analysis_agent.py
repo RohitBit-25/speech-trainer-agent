@@ -27,6 +27,5 @@ voice_analysis_agent = Agent(
         "The final response MUST not include any other text or anything else other than the JSON response."
     ],
     markdown=True,
-    show_tool_calls=True,
     debug_mode=True
 )

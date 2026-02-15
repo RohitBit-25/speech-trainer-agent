@@ -26,9 +26,34 @@ def analyze_video_task(self, file_path: str):
     """
     Celery task to run the coordinator agent analysis asynchronously.
     """
+    import sys
+    import io
+    import redis
+    import time
+    
+    # Redis connection for publishing logs
+    r = redis.from_url(REDIS_URL)
+    
+    class RedisStreamer(io.StringIO):
+        def __init__(self, task_id):
+            super().__init__()
+            self.task_id = task_id
+            
+        def write(self, s):
+            if s and s.strip():
+                # Publish log to Redis channel
+                r.publish(f"task_logs:{self.task_id}", s)
+            super().write(s)
+            
+    # Redirect stdout to capture agent output
+    original_stdout = sys.stdout
+    streamer = RedisStreamer(self.request.id)
+    sys.stdout = streamer
+    
     try:
         # Update state to processing
         self.update_state(state='PROGRESS', meta={'status': 'Analyzing video...'})
+        r.publish(f"task_logs:{self.request.id}", "Initializing Coordinator Agent...\n")
         
         prompt = f"Analyze the following video: {file_path}"
         response: RunOutput = coordinator_agent.run(prompt)
@@ -48,16 +73,6 @@ def analyze_video_task(self, file_path: str):
             if db_record:
                 db_record.status = "COMPLETED"
                 db_record.completed_at = datetime.utcnow()
-                # Store the raw JSON content or parsed if preferred. 
-                # Since the model has specific JSON columns:
-                
-                # Careful parsing: The agent returns strings for nested fields, but 'result' object here has them.
-                # If they are already strings (JSON), we might need to parse them to store as JSON type in DB, 
-                # or keep as is if DB column is JSON type (SQLAlchemy handles JSON type as python dicts usually).
-                
-                # 'result' is a dict. 'facial_expression_response' inside it is likely a JSON string.
-                # Let's try to parse them if possible to store as structured JSON, or just store the whole thing.
-                # But our model has specific columns. Let's map them.
                 
                 def parse_if_string(val):
                     if isinstance(val, str):
@@ -83,12 +98,18 @@ def analyze_video_task(self, file_path: str):
                     pass
                 
                 db.commit()
+                r.publish(f"task_logs:{self.request.id}", "Analysis Completed Successfully.\n")
+                r.publish(f"task_logs:{self.request.id}", "DONE") # Signal end of stream
         except Exception as db_e:
+            r.publish(f"task_logs:{self.request.id}", f"Database Error: {str(db_e)}\n")
             print(f"Database error: {db_e}")
         finally:
             db.close()
         
         return result
     except Exception as e:
-        # In case of failure, we might want to return the error
+        r.publish(f"task_logs:{self.request.id}", f"Error: {str(e)}\n")
         raise e
+    finally:
+        # Restore stdout
+        sys.stdout = original_stdout

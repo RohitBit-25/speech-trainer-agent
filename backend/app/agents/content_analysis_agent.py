@@ -37,6 +37,5 @@ content_analysis_agent = Agent(
         "Do not include any additional text outside the JSON response."
     ],
     markdown=True,
-    show_tool_calls=True,
     debug_mode=True
 )

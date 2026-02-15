@@ -33,6 +33,5 @@ facial_expression_agent = Agent(
         "The final response MUST be a valid JSON object and MUST not have any unterminated strings in the JSON response."
     ],
     markdown=True,
-    show_tool_calls=True,
     debug_mode=True
 )

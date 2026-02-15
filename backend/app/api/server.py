@@ -112,3 +112,35 @@ async def get_status(task_id: str):
             "state": task_result.state,
             "error": str(task_result.info)
         }
+
+from sse_starlette.sse import EventSourceResponse
+import redis
+import asyncio
+
+# Get Redis URL from env or default to localhost
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+@app.get("/stream/{task_id}")
+async def stream_logs(task_id: str):
+    async def event_generator():
+        r = redis.from_url(REDIS_URL)
+        pubsub = r.pubsub()
+        pubsub.subscribe(f"task_logs:{task_id}")
+        
+        # Yield initial message
+        yield {"data": "Connection Established..."}
+        
+        try:
+            while True:
+                message = pubsub.get_message(ignore_subscribe_messages=True)
+                if message:
+                    data = message['data'].decode('utf-8')
+                    if data == "DONE":
+                        yield {"data": "Analysis Completed."}
+                        break
+                    yield {"data": data}
+                await asyncio.sleep(0.1)
+        except asyncio.CancelledError:
+            pubsub.close()
+            
+    return EventSourceResponse(event_generator())

@@ -78,7 +78,7 @@ export function VideoDropzone({ onUpload, isUploading = false }: VideoDropzonePr
                         </div>
                     )}
 
-                    <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-4 p-8">
+                    <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-4 p-8 w-full">
                         <AnimatePresence mode="wait">
                             {!file ? (
                                 <motion.div
@@ -130,7 +130,7 @@ export function VideoDropzone({ onUpload, isUploading = false }: VideoDropzonePr
                                     </div>
 
                                     <div className="mt-8 flex gap-4">
-                                        {!isUploading ? (
+                                        {!isUploading && (
                                             <>
                                                 <Button
                                                     variant="outline"
@@ -147,18 +147,17 @@ export function VideoDropzone({ onUpload, isUploading = false }: VideoDropzonePr
                                                     <Sparkles className="h-3 w-3" />
                                                 </Button>
                                             </>
-                                        ) : (
-                                            <div className="flex flex-col items-center gap-4 w-full max-w-xs">
-                                                <div className="w-full h-4 bg-zinc-800 border border-zinc-600 relative overflow-hidden">
-                                                    <div className="absolute inset-y-0 left-0 bg-primary w-full animate-[scan-line_2s_linear_infinite]" style={{ transformOrigin: 'left' }}></div>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-primary font-pixel text-xs animate-pulse">
-                                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                                    PROCESSING_DATA...
-                                                </div>
-                                            </div>
                                         )}
                                     </div>
+
+                                    {isUploading && (
+                                        <div className="w-full max-w-2xl mt-4">
+                                            <div className="flex items-center gap-2 text-primary font-pixel text-xs animate-pulse justify-center mb-4">
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                                ESTABLISHING_UPLINK...
+                                            </div>
+                                        </div>
+                                    )}
                                 </motion.div>
                             )}
                         </AnimatePresence>

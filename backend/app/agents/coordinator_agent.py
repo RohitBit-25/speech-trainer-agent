@@ -59,6 +59,5 @@ coordinator_agent = Team(
     response_model=CoordinatorResponse,
     use_json_mode=True,
     markdown=True,
-    show_tool_calls=True,
     debug_mode=True
 )
