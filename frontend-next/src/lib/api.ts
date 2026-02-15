@@ -1,4 +1,4 @@
-import { ParsedAnalysisResult } from "./types";
+import { ParsedAnalysisResult, HistoryItem } from "./types";
 
 const API_URL = "http://localhost:8000";
 
@@ -85,4 +85,36 @@ export async function pollAnalysis(task_id: string): Promise<ParsedAnalysisResul
 export async function uploadVideo(file: File): Promise<ParsedAnalysisResult> {
     const taskId = await startAnalysis(file);
     return await pollAnalysis(taskId);
+}
+
+export async function getHistory(): Promise<HistoryItem[]> {
+    const response = await fetch(`${API_URL}/history`);
+    if (!response.ok) {
+        throw new Error("Failed to fetch history");
+    }
+    return await response.json();
+}
+
+export async function getAnalysis(taskId: string): Promise<ParsedAnalysisResult> {
+    const response = await fetch(`${API_URL}/analysis/${taskId}`);
+    if (!response.ok) {
+        throw new Error("Failed to fetch analysis");
+    }
+    const data = await response.json();
+
+    // The backend returns the raw JSON structure, but we need to ensure it matches ParsedAnalysisResult
+    // Our backend endpoint get_analysis already parses/constructs it, but let's be safe with parsing if strings are returned
+
+    // Helper to safely parse if string
+    const parseIfString = (val: any) => (typeof val === 'string' ? JSON.parse(val) : val);
+
+    return {
+        facial: parseIfString(data.facial),
+        voice: parseIfString(data.voice),
+        content: parseIfString(data.content),
+        feedback: parseIfString(data.feedback),
+        strengths: data.strengths,
+        weaknesses: data.weaknesses,
+        suggestions: data.suggestions
+    };
 }

@@ -58,3 +58,13 @@ export interface UserProfile {
     title: string;
     achievements: Achievement[];
 }
+
+export interface HistoryItem {
+    id: number;
+    task_id: string;
+    video_filename: string;
+    status: string;
+    created_at: string;
+    total_score: number | null;
+    feedback_summary: string | null;
+}

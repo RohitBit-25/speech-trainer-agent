@@ -19,6 +19,12 @@ export function Navbar() {
             active: pathname === "/",
         },
         {
+            href: "/history",
+            label: "Logs",
+            icon: Activity,
+            active: pathname === "/history",
+        },
+        {
             href: "/analysis",
             label: "Analysis",
             icon: Activity,

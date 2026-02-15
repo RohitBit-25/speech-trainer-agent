@@ -144,3 +144,41 @@ async def stream_logs(task_id: str):
             pubsub.close()
             
     return EventSourceResponse(event_generator())
+
+# History Endpoint
+@app.get("/history")
+async def get_history(db: Session = Depends(get_db)):
+    results = db.query(models.AnalysisResult).order_by(models.AnalysisResult.created_at.desc()).all()
+    return [
+        {
+            "id": r.id,
+            "task_id": r.task_id,
+            "video_filename": r.video_filename,
+            "status": r.status,
+            "created_at": r.created_at,
+            "total_score": r.total_score,
+            "feedback_summary": r.feedback_analysis.get("feedback_summary") if r.feedback_analysis else None
+        }
+        for r in results
+    ]
+
+@app.get("/analysis/{task_id}")
+async def get_analysis(task_id: str, db: Session = Depends(get_db)):
+    result = db.query(models.AnalysisResult).filter(models.AnalysisResult.task_id == task_id).first()
+    if not result:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    
+    # Reconstruct the full response format expected by frontend
+    # Note: The stored JSON might need parsing if it was stored as string, but here it is defined as JSON type in older steps. 
+    # Let's assume it's dict.
+    
+    return {
+        "facial": result.facial_analysis,
+        "voice": result.voice_analysis,
+        "content": result.content_analysis,
+        "feedback": result.feedback_analysis,
+        "strengths": result.strengths,
+        "weaknesses": result.weaknesses,
+        "suggestions": result.suggestions,
+        "created_at": result.created_at
+    }
