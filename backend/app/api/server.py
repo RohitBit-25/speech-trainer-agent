@@ -1,11 +1,9 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from app.agents.coordinator_agent import coordinator_agent
-from agno.agent import RunResponse
-from app.core.config import settings
+from app.worker import analyze_video_task
+from celery.result import AsyncResult
 import shutil
 import os
 import uuid
@@ -50,16 +48,28 @@ async def analyze(video: UploadFile = File(...)):
             
         # Get absolute path for the agent
         absolute_path = os.path.abspath(temp_file_path)
+        
+        # Trigger Celery task
+        task = analyze_video_task.delay(absolute_path)
             
-        prompt = f"Analyze the following video: {absolute_path}"
-        response: RunResponse = coordinator_agent.run(prompt)
-    
-        # Assuming response.content is a Pydantic model or a dictionary
-        json_compatible_response = jsonable_encoder(response.content)
-        return JSONResponse(content=json_compatible_response)
+        return JSONResponse(content={"task_id": task.id, "status": "processing"})
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        # Cleanup could happen here, or we keep files for debugging
-        pass
+
+@app.get("/status/{task_id}")
+async def get_status(task_id: str):
+    task_result = AsyncResult(task_id)
+    
+    if task_result.state == 'PENDING':
+        return {"state": task_result.state, "status": "Pending..."}
+    elif task_result.state != 'FAILURE':
+        return {
+            "state": task_result.state,
+            "result": task_result.result if task_result.state == 'SUCCESS' else None
+        }
+    else:
+        return {
+            "state": task_result.state,
+            "error": str(task_result.info)
+        }
