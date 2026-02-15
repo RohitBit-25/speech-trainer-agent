@@ -154,8 +154,6 @@ export function VideoDropzone({ onUpload, isUploading = false }: VideoDropzonePr
                                                     <Sparkles className="h-3 w-3" />
                                                 </Button>
                                             </>
-                                        ) : (
-                                        null
                                         )}
                                     </div>
 
