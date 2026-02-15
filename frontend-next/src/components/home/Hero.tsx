@@ -1,41 +1,62 @@
 "use client";
 
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { ArrowRight, Mic, Sparkles, Terminal } from "lucide-react";
 
 export function Hero() {
     return (
-        <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">
-            <div className="flex max-w-[980px] flex-col items-start gap-2">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-primary"
-                >
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    AI-Powered Speech Analysis
-                </motion.div>
+        <section className="w-full py-12 md:py-24 lg:py-32 flex flex-col items-center justify-center text-center space-y-8 relative z-10">
 
-                <motion.h1
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="text-3xl font-extrabold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]"
-                >
-                    Master Public Speaking <br className="hidden sm:inline" />
-                    with <span className="text-primary">Artificial Intelligence</span>
-                </motion.h1>
+            {/* Floating Pixel Elements */}
+            <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-10 left-10 md:left-20 text-4xl hidden md:block"
+            >
+                👾
+            </motion.div>
+            <motion.div
+                animate={{ y: [0, 15, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute bottom-20 right-10 md:right-20 text-4xl hidden md:block"
+            >
+                💾
+            </motion.div>
 
-                <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                    className="max-w-[750px] text-lg text-muted-foreground sm:text-xl font-mono"
-                >
-                    Upload your video and get instant, detailed feedback on your delivery, content, and facial expressions.
-                </motion.p>
-            </div>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-4 max-w-3xl"
+            >
+                <div className="inline-block px-4 py-1.5 mb-4 border-2 border-primary bg-primary/10 text-primary font-pixel text-xs tracking-wider rounded-none uppercase shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)]">
+                    Pass Level 1: Public Speaking
+                </div>
+
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-pixel tracking-tighter text-white drop-shadow-[4px_4px_0px_rgba(34,197,94,0.5)]">
+                    LEVEL UP YOUR<br />
+                    <span className="text-primary drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">SPEECH SKILLS</span>
+                </h1>
+
+                <p className="mx-auto max-w-[700px] text-zinc-300 md:text-xl font-mono leading-relaxed bg-black/50 p-4 border border-dashed border-zinc-700">
+                    Your personal <span className="text-secondary font-bold">AI Companion</span> for mastering communication.
+                    Upload a video, get instant XP, and unlock confidence.
+                </p>
+            </motion.div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="flex flex-col sm:flex-row gap-4"
+            >
+                <div className="flex items-center gap-2 px-6 py-2 bg-zinc-800 border-2 border-zinc-600 font-pixel text-xs text-zinc-400">
+                    <Terminal className="w-4 h-4" />
+                    <span>READY_PLAYER_ONE...</span>
+                </div>
+            </motion.div>
         </section>
     );
 }
