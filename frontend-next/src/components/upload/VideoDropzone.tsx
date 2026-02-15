@@ -7,6 +7,8 @@ import { Upload, FileVideo, X, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import { audioController } from "@/lib/audio";
+
 interface VideoDropzoneProps {
     onUpload: (file: File) => void;
     isUploading?: boolean;
@@ -17,6 +19,7 @@ export function VideoDropzone({ onUpload, isUploading = false }: VideoDropzonePr
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles?.length > 0) {
+            audioController.playSuccess();
             setFile(acceptedFiles[0]);
         }
     }, []);
@@ -34,12 +37,14 @@ export function VideoDropzone({ onUpload, isUploading = false }: VideoDropzonePr
 
     const handleUploadClick = () => {
         if (file) {
+            audioController.playClick();
             onUpload(file);
         }
     };
 
     const removeFile = (e: React.MouseEvent) => {
         e.stopPropagation();
+        audioController.playError();
         setFile(null);
     };
 
@@ -135,18 +140,22 @@ export function VideoDropzone({ onUpload, isUploading = false }: VideoDropzonePr
                                                 <Button
                                                     variant="outline"
                                                     className="font-pixel text-xs border-2 hover:bg-zinc-800 h-12"
-                                                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                                                    onClick={(e) => { e.stopPropagation(); removeFile(e); }}
+                                                    onMouseEnter={() => audioController.playHover()}
                                                 >
                                                     EJECT
                                                 </Button>
                                                 <Button
                                                     className="min-w-[180px] font-pixel text-xs border-2 border-primary bg-primary text-black hover:bg-primary/90 h-12 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all"
                                                     onClick={(e) => { e.stopPropagation(); handleUploadClick(); }}
+                                                    onMouseEnter={() => audioController.playHover()}
                                                 >
                                                     <span className="mr-2">INITIALIZE_SCAN</span>
                                                     <Sparkles className="h-3 w-3" />
                                                 </Button>
                                             </>
+                                        ) : (
+                                        null
                                         )}
                                     </div>
 

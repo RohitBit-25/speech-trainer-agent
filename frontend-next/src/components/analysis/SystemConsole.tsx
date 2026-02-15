@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Terminal, Cpu, Activity } from "lucide-react";
+import { audioController } from "@/lib/audio";
 
 interface SystemConsoleProps {
     taskId: string | null;
@@ -36,6 +37,7 @@ export function SystemConsole({ taskId, isAnalyzing, onComplete }: SystemConsole
                 if (onComplete) onComplete();
             }
 
+            audioController.playTyping();
             setLogs(prev => [...prev, data]);
         };
 
