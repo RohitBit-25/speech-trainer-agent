@@ -60,6 +60,8 @@ const config = {
             fontFamily: {
                 sans: ["var(--font-sans)", "sans-serif"],
                 mono: ["var(--font-mono)", "monospace"],
+                pixel: ["var(--font-pixel)", "monospace"],
+                retro: ["var(--font-retro)", "monospace"],
             },
             keyframes: {
                 "accordion-down": {

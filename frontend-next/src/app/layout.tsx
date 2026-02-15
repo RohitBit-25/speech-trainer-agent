@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Press_Start_2P, VT323 } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
@@ -7,6 +7,8 @@ import { Navbar } from "@/components/layout/Navbar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
+const pressStart2P = Press_Start_2P({ weight: "400", subsets: ["latin"], variable: "--font-pixel" });
+const vt323 = VT323({ weight: "400", subsets: ["latin"], variable: "--font-retro" });
 
 export const metadata: Metadata = {
     title: "AI Speech Trainer",
@@ -23,18 +25,46 @@ export default function RootLayout({
             <body className={cn(
                 "min-h-screen bg-background font-sans antialiased relative overflow-x-hidden selection:bg-primary selection:text-primary-foreground",
                 inter.variable,
-                jetbrainsMono.variable
+                jetbrainsMono.variable,
+                pressStart2P.variable,
+                vt323.variable
             )}>
-                {/* Global Grid Background */}
-                <div className="fixed inset-0 z-[-1] bg-[linear_gradient(to_right,#80808012_1px,transparent_1px),linear_gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-
-                {/* CRT Scanline Overlay */}
-                <div className="fixed inset-0 z-50 pointer-events-none bg-[linear_gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear_gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] opacity-20"></div>
-
-                <Navbar />
-                <div className="relative flex min-h-screen flex-col">
-                    <div className="flex-1 pt-14">{children}</div>
+                {/* Indian-Style Pattern Background */}
+                <div className="fixed inset-0 z-[-2] bg-[#F5F5F0] dark:bg-[#1a1a1a]">
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')]"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,153,51,0.1),transparent_70%)]"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FF9933]/20 to-transparent"></div>
                 </div>
+
+                {/* Desktop OS Container */}
+                <div className="relative flex min-h-screen flex-col items-center justify-center p-4 md:p-8">
+                    <div className="w-full max-w-7xl min-h-[85vh] bg-card border-4 border-primary shadow-[10px_10px_0px_0px_rgba(0,0,0,0.5)] rounded-lg overflow-hidden flex flex-col relative">
+
+                        {/* OS Window Title Bar */}
+                        <div className="h-10 bg-primary flex items-center justify-between px-4 select-none">
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-red-500 rounded-full border border-black"></div>
+                                <div className="w-3 h-3 bg-yellow-500 rounded-full border border-black"></div>
+                                <div className="w-3 h-3 bg-green-500 rounded-full border border-black"></div>
+                            </div>
+                            <div className="font-pixel text-xs text-primary-foreground tracking-widest">SPEECH_TRAINER_OS_v1.0</div>
+                            <div className="flex gap-1">
+                                <div className="w-4 h-1 bg-primary-foreground/50"></div>
+                                <div className="w-4 h-1 bg-primary-foreground/50"></div>
+                                <div className="w-4 h-1 bg-primary-foreground/50"></div>
+                            </div>
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="flex-1 flex flex-col relative bg-zinc-900/90 backdrop-blur-md">
+                            <Navbar />  {/* Navbar inside the window now */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                {children}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <Toaster />
             </body>
         </html>
