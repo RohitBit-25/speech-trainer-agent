@@ -45,7 +45,7 @@ export function EvaluationSummary({ scores, totalScore, averageScore, interpreta
                     <h4 className="font-semibold text-sm">Overall Assessment</h4>
                     <p className="text-sm font-medium text-primary">{interpretation}</p>
                     <div className="text-sm text-muted-foreground bg-muted/10 p-3 rounded-md italic border-l-2 border-primary">
-                        "{summary}"
+                        &quot;{summary}&quot;
                     </div>
                 </div>
             </CardContent>

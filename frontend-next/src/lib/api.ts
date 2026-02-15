@@ -1,6 +1,6 @@
-import { AnalysisResponse, ParsedAnalysisResult } from "./types";
+import { ParsedAnalysisResult } from "./types";
 
-const API_URL = "http://localhost:8000"; // TODO: Use env var
+// const API_URL = "http://localhost:8000"; // TODO: Use env var
 
 export async function uploadVideo(file: File): Promise<ParsedAnalysisResult> {
     // Mock implementation for now since backend might not be running or reachable

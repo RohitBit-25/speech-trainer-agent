@@ -8,11 +8,37 @@ export interface AnalysisResponse {
     suggestions: string[];
 }
 
+export interface FacialAnalysis {
+    summary: string;
+    emotions: Record<string, number>;
+    eye_contact: number;
+}
+
+export interface VoiceAnalysis {
+    transcription: string;
+    pitch: number;
+    pace: number;
+    volume: string;
+}
+
+export interface FeedbackAnalysis {
+    scores: Record<string, number>;
+    total_score: number;
+    interpretation: string;
+    feedback_summary: string;
+}
+
+export interface ContentAnalysis {
+    structure: string;
+    clarity: number;
+    persuasion: number;
+}
+
 export interface ParsedAnalysisResult {
-    facial: any;
-    voice: any;
-    content: any;
-    feedback: any;
+    facial: FacialAnalysis;
+    voice: VoiceAnalysis;
+    content: ContentAnalysis;
+    feedback: FeedbackAnalysis;
     strengths: string[];
     weaknesses: string[];
     suggestions: string[];
