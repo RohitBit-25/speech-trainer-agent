@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.core.config import settingsalyze_video_task
+from app.worker import analyze_video_task
 from celery.result import AsyncResult
 import shutil
 import os

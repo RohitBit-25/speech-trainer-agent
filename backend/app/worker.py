@@ -1,7 +1,7 @@
 import os
 from celery import Celery
 from app.agents.coordinator_agent import coordinator_agent
-from agno.agent import RunResponse
+from agno.agent import RunOutput
 from fastapi.encoders import jsonable_encoder
 
 # Get Redis URL from env or default to localhost
@@ -31,7 +31,7 @@ def analyze_video_task(self, file_path: str):
         self.update_state(state='PROGRESS', meta={'status': 'Analyzing video...'})
         
         prompt = f"Analyze the following video: {file_path}"
-        response: RunResponse = coordinator_agent.run(prompt)
+        response: RunOutput = coordinator_agent.run(prompt)
         
         # Serialize the response
         result = jsonable_encoder(response.content)

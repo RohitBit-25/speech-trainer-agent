@@ -1,5 +1,5 @@
 from agno.team.team import Team
-from agno.agent import Agent, RunResponse
+from agno.agent import Agent, RunOutput
 from agno.models.together import Together
 from app.agents.facial_expression_agent import facial_expression_agent
 from app.agents.voice_analysis_agent import voice_analysis_agent
