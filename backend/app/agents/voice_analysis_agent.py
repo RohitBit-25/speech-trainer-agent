@@ -1,4 +1,4 @@
-from agno.agent import Agent, RunResponse
+from agno.agent import Agent, RunOutput
 from agno.models.together import Together
 from app.agents.tools.voice_analysis_tool import analyze_voice_attributes as voice_analysis_tool
 from agno.utils.pprint import pprint_run_response

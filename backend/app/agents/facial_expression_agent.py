@@ -1,4 +1,4 @@
-from agno.agent import Agent, RunResponse
+from agno.agent import Agent, RunOutput
 from agno.models.together import Together
 from app.agents.tools.facial_expression_tool import analyze_facial_expressions as facial_expression_tool
 from agno.utils.pprint import pprint_run_response
