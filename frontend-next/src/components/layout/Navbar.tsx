@@ -49,8 +49,8 @@ export function Navbar() {
                                 key={route.href}
                                 href={route.href}
                                 className={cn(
-                                    "transition-colors hover:text-foreground/80 flex items-center gap-2",
-                                    route.active ? "text-foreground" : "text-foreground/60"
+                                    "transition-colors hover:text-primary flex items-center gap-2 font-pixel text-xs tracking-wide",
+                                    route.active ? "text-primary" : "text-muted-foreground"
                                 )}
                             >
                                 <route.icon className="h-4 w-4" />
@@ -64,16 +64,18 @@ export function Navbar() {
                         {/* Search or other controls could go here */}
                     </div>
                     <nav className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 px-0">
-                            <Github className="h-4 w-4" />
-                            <span className="sr-only">GitHub</span>
-                        </Button>
-                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 border border-secondary text-xs font-mono text-muted-foreground">
+                        <Link href="https://github.com/RohitBit-25/speech-trainer-agent" target="_blank" rel="noopener noreferrer">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 px-0 hover:bg-primary/20 hover:text-primary transition-colors">
+                                <Github className="h-4 w-4" />
+                                <span className="sr-only">GitHub</span>
+                            </Button>
+                        </Link>
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-sm bg-zinc-900 border border-zinc-700 text-[10px] font-pixel text-primary uppercase shadow-[2px_2px_0px_rgba(0,0,0,0.5)]">
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-sm bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-sm h-2 w-2 bg-green-500"></span>
                             </span>
-                            SYSTEM ONLINE
+                            SYSTEM_ONLINE
                         </div>
                     </nav>
                 </div>
