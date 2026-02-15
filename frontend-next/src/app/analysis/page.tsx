@@ -13,6 +13,7 @@ export default function AnalysisPage() {
     const router = useRouter();
     const result = useAppStore((state) => state.result);
     const videoFile = useAppStore((state) => state.videoFile);
+    const updateTranscription = useAppStore((state) => state.updateTranscription);
 
     useEffect(() => {
         // Redirect if no result
@@ -55,6 +56,7 @@ export default function AnalysisPage() {
                 <div className="lg:col-span-1 h-full">
                     <Transcript
                         text={result.voice.transcription}
+                        onSave={updateTranscription}
                     />
                 </div>
             </div>

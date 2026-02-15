@@ -43,3 +43,18 @@ export interface ParsedAnalysisResult {
     weaknesses: string[];
     suggestions: string[];
 }
+
+export interface Achievement {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    unlockedAt?: Date;
+}
+
+export interface UserProfile {
+    xp: number;
+    level: number;
+    title: string;
+    achievements: Achievement[];
+}
