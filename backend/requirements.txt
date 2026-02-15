@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-dotenv
+pydantic
+agno
+together
+opencv-python
+mediapipe
+deepface
+librosa
+moviepy
+faster-whisper
