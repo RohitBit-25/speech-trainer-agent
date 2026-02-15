@@ -6,12 +6,16 @@ from app.worker import analyze_video_task
 from celery.result import AsyncResult
 from sqlalchemy.orm import Session
 from app.db import models, database
+from app.api.auth import router as auth_router
 import shutil
 import os
 import uuid
 
 # Initialize FastAPI app
 app = FastAPI()
+
+# Include authentication router
+app.include_router(auth_router)
 
 # Create tables
 models.Base.metadata.create_all(bind=database.engine)
