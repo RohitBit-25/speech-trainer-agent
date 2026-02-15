@@ -19,13 +19,33 @@ export async function uploadVideo(file: File): Promise<ParsedAnalysisResult> {
 
         const data = await response.json();
 
-        // The backend returns the raw Agent response. We need to parse it if it's a string, 
-        // or just return it if it's already an object. 
-        // Based on the mock data structure, we expect an object with facial, voice, content, etc.
-        // If the agent returns a stringified JSON, we might need to parse it. 
-        // For now, assuming the agent returns the structured object directly or we fit it.
+        // Parse JSON strings from the backend response
+        // The backend returns strings for these fields because they are from sub-agents
+        const facial = typeof data.facial_expression_response === 'string'
+            ? JSON.parse(data.facial_expression_response)
+            : data.facial_expression_response;
 
-        return data as ParsedAnalysisResult;
+        const voice = typeof data.voice_analysis_response === 'string'
+            ? JSON.parse(data.voice_analysis_response)
+            : data.voice_analysis_response;
+
+        const content = typeof data.content_analysis_response === 'string'
+            ? JSON.parse(data.content_analysis_response)
+            : data.content_analysis_response;
+
+        const feedback = typeof data.feedback_response === 'string'
+            ? JSON.parse(data.feedback_response)
+            : data.feedback_response;
+
+        return {
+            facial,
+            voice,
+            content,
+            feedback,
+            strengths: data.strengths,
+            weaknesses: data.weaknesses,
+            suggestions: data.suggestions
+        } as ParsedAnalysisResult;
 
     } catch (error) {
         console.error("Error uploading video:", error);
