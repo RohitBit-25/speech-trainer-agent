@@ -11,8 +11,20 @@ const pressStart2P = Press_Start_2P({ weight: "400", subsets: ["latin"], variabl
 const vt323 = VT323({ weight: "400", subsets: ["latin"], variable: "--font-retro" });
 
 export const metadata: Metadata = {
-    title: "AI Speech Trainer",
-    description: "Your personal coach for public speaking",
+    title: "Speech Trainer OS - AI-Powered Speech Analysis",
+    description: "Level up your speech skills with AI-powered analysis. Get instant feedback on voice, facial expressions, and content. Earn XP, unlock achievements, and master communication.",
+    keywords: ["speech training", "AI speech analysis", "public speaking", "communication skills", "voice analysis", "presentation skills"],
+    authors: [{ name: "Speech Trainer Team" }],
+    openGraph: {
+        title: "Speech Trainer OS - AI-Powered Speech Analysis",
+        description: "Your personal AI companion for mastering communication. Upload a video, get instant XP, and unlock confidence.",
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Speech Trainer OS",
+        description: "AI-powered speech analysis and training platform",
+    },
 };
 
 export default function RootLayout({
