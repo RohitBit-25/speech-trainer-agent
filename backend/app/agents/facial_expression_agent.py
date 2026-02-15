@@ -1,13 +1,13 @@
 from agno.agent import Agent, RunOutput
-from agno.models.together import Together
+from agno.models.google import Gemini
 from app.agents.tools.facial_expression_tool import analyze_facial_expressions as facial_expression_tool
 from agno.utils.pprint import pprint_run_response
 from app.core.config import settings
 
-# Define the facial expression agent
+# Initialize the facial expression agent
 facial_expression_agent = Agent(
     name="facial-expression-agent",
-    model=Together(id="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free", api_key=settings.TOGETHER_API_KEY), 
+    model=Gemini(id="gemini-1.5-flash", api_key=settings.GEMINI_API_KEY),
     tools=[facial_expression_tool],
     description=
     '''
@@ -15,6 +15,7 @@ facial_expression_agent = Agent(
         You will return the emotion timeline and engagement metrics.
     ''',
     instructions=[
+        "You are an expert in analyzing facial expressions and non-verbal cues.",
         "You will be provided with a video file of a person speaking in a public setting.",
         "Your task is to analyze the facial expressions in the video to detect emotions and engagement.",
         "You will analyze the video frame by frame to detect and classify facial expressions such as happiness, sadness, anger, surprise, and neutrality.",

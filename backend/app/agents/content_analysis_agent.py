@@ -1,19 +1,16 @@
-from agno.agent import Agent
-from agno.models.together import Together
+from agno.agent import Agent, RunOutput
+from agno.models.google import Gemini
+from app.agents.tools.content_analysis_tool import analyze_content_structure as content_analysis_tool
+from agno.utils.pprint import pprint_run_response
 from app.core.config import settings
 
-# Define the content analysis agent
+# Initialize the content analysis agent
 content_analysis_agent = Agent(
     name="content-analysis-agent",
-    model=Together(
-        id="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-        api_key=settings.TOGETHER_API_KEY
-    ),
-    description="""
-        You are a highly advanced content analysis agent that evaluates transcribed speech for rhetorical structure, persuasion, tone, and clarity.
-        You will return grammar corrections, filler word analysis, and deep insights into content effectiveness.
-    """,
+    model=Gemini(id="gemini-1.5-flash", api_key=settings.GEMINI_API_KEY),
+    tools=[content_analysis_tool],
     instructions=[
+        "You are an expert in analyzing speech content, rhetorical structure, and persuasion techniques. You will evaluate transcribed speech for rhetorical structure, persuasion, tone, and clarity. You will return grammar corrections, filler word analysis, and deep insights into content effectiveness.",
         "You will be provided with a transcript of spoken content.",
         "Your task is to analyze the transcript and identify:",
         "- Grammar and syntax corrections.",

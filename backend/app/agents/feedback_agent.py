@@ -1,20 +1,18 @@
-from agno.agent import Agent
-from agno.models.together import Together
+from agno.agent import Agent, RunOutput
+from agno.models.google import Gemini
+from agno.utils.pprint import pprint_run_response
 from app.core.config import settings
 
-# Define the feedback agent
+# Initialize the feedback agent
 feedback_agent = Agent(
     name="feedback-agent",
-    model=Together(
-        id="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-        api_key=settings.TOGETHER_API_KEY
-    ),
+    model=Gemini(id="gemini-1.5-flash", api_key=settings.GEMINI_API_KEY),
     description="""
         You are a feedback agent that evaluates presentation based on the analysis results from all agents.
         You will provide feedback on the overall effectiveness of the presentation.
     """,
     instructions=[
-        "You are a public speaking coach that evaluates a speaker's performance based on a detailed scoring rubric.",
+        "You are an expert public speaking coach who provides constructive facilitation and feedback.",
         "You will be provided with analysis results from the facial expression agent, voice analysis agent, and content analysis agent.",
         "You will be given a criteria to evaluate the performance of the speaker based on the analysis results.",
         "Your task is to evaluate the speaker on the following 5 criteria, scoring each from 1 (Poor) to 5 (Excellent):",

@@ -1,6 +1,6 @@
 from agno.team.team import Team
 from agno.agent import Agent, RunOutput
-from agno.models.together import Together
+from agno.models.google import Gemini
 from app.agents.facial_expression_agent import facial_expression_agent
 from app.agents.voice_analysis_agent import voice_analysis_agent
 from app.agents.content_analysis_agent import content_analysis_agent
@@ -22,7 +22,7 @@ class CoordinatorResponse(BaseModel):
 coordinator_agent = Team(
     name="coordinator-agent",
     mode="coordinate",
-    model=Together(id="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free", api_key=settings.TOGETHER_API_KEY),
+    model=Gemini(id="gemini-1.5-flash", api_key=settings.GEMINI_API_KEY),
     members=[facial_expression_agent, voice_analysis_agent, content_analysis_agent, feedback_agent],
     description="You are a public speaking coach who helps individuals improve their presentation skills through feedback and analysis.",
     instructions=[
