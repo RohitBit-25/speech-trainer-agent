@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Loader2, UserPlus, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { PasswordStrength } from "@/components/auth/PasswordStrength";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -26,13 +27,19 @@ export default function SignupPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Validate password strength
+        if (formData.password.length < 6) {
+            toast.error("Weak Password", { description: "Password must be at least 6 characters" });
+            return;
+        }
+
         if (formData.password !== formData.confirmPassword) {
             toast.error("Password Mismatch", { description: "Passwords do not match" });
             return;
         }
 
         if (!acceptedTerms) {
-            toast.error("Terms Required", { description: "Please accept the terms and conditions" });
+            toast.error("Terms Required", { description: "Please accept the mission terms" });
             return;
         }
 
@@ -94,7 +101,7 @@ export default function SignupPage() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="name" className="font-mono text-xs text-zinc-400 uppercase">
-                                    Agent_Name
+                                    Agent_Codename
                                 </Label>
                                 <Input
                                     id="name"
@@ -102,15 +109,15 @@ export default function SignupPage() {
                                     required
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono"
-                                    placeholder="John Doe"
+                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono text-white"
                                     disabled={isLoading}
+                                    autoComplete="name"
                                 />
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="email" className="font-mono text-xs text-zinc-400 uppercase">
-                                    Email_Address
+                                    Secure_Channel
                                 </Label>
                                 <Input
                                     id="email"
@@ -118,9 +125,9 @@ export default function SignupPage() {
                                     required
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono"
-                                    placeholder="agent@mission.com"
+                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono text-white"
                                     disabled={isLoading}
+                                    autoComplete="email"
                                 />
                             </div>
 
@@ -135,15 +142,16 @@ export default function SignupPage() {
                                     minLength={6}
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono"
-                                    placeholder="••••••••"
+                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono text-white"
                                     disabled={isLoading}
+                                    autoComplete="new-password"
                                 />
+                                <PasswordStrength password={formData.password} />
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="confirmPassword" className="font-mono text-xs text-zinc-400 uppercase">
-                                    Confirm_Code
+                                    Verify_Code
                                 </Label>
                                 <Input
                                     id="confirmPassword"
@@ -152,9 +160,9 @@ export default function SignupPage() {
                                     minLength={6}
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono"
-                                    placeholder="••••••••"
+                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono text-white"
                                     disabled={isLoading}
+                                    autoComplete="new-password"
                                 />
                             </div>
 

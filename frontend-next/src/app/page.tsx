@@ -73,26 +73,29 @@ export default function LandingPage() {
                     <div className="grid md:grid-cols-3 gap-8">
                         {[
                             {
+                                id: "voice-analysis",
                                 icon: <Mic className="h-8 w-8" />,
                                 title: "VOICE_ANALYSIS",
                                 description: "AI-powered analysis of pitch, tone, pace, and clarity. Get real-time feedback on your vocal delivery."
                             },
                             {
+                                id: "facial-tracking",
                                 icon: <Brain className="h-8 w-8" />,
                                 title: "FACIAL_TRACKING",
                                 description: "Advanced emotion detection and engagement scoring. Master your non-verbal communication."
                             },
                             {
+                                id: "content-scoring",
                                 icon: <BarChart3 className="h-8 w-8" />,
                                 title: "CONTENT_SCORING",
                                 description: "Analyze structure, persuasion, and clarity. Eliminate filler words and improve your message."
                             }
-                        ].map((feature, i) => (
+                        ].map((feature) => (
                             <motion.div
-                                key={i}
+                                key={feature.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: i * 0.1 }}
+                                transition={{ duration: 0.5, delay: parseInt(feature.id.split('-')[0] === 'voice' ? '0' : feature.id.split('-')[0] === 'facial' ? '1' : '2') * 0.1 }}
                                 viewport={{ once: true }}
                                 className="bg-zinc-900 border-4 border-zinc-700 p-6 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:translate-y-[-4px] hover:shadow-[8px_8px_0px_rgba(0,0,0,0.5)] transition-all"
                             >
@@ -126,23 +129,26 @@ export default function LandingPage() {
                     <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                         {[
                             {
+                                id: "step-01",
                                 step: "01",
                                 title: "UPLOAD_VIDEO",
                                 description: "Record or upload your speech video. Our AI accepts any format."
                             },
                             {
+                                id: "step-02",
                                 step: "02",
                                 title: "AI_ANALYSIS",
                                 description: "Advanced multi-agent system analyzes voice, face, and content in real-time."
                             },
                             {
+                                id: "step-03",
                                 step: "03",
                                 title: "LEVEL_UP",
                                 description: "Get detailed feedback, earn XP, unlock achievements, and improve."
                             }
                         ].map((step, i) => (
                             <motion.div
-                                key={i}
+                                key={step.id}
                                 initial={{ opacity: 0, x: -20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
                                 transition={{ duration: 0.5, delay: i * 0.15 }}
@@ -188,11 +194,11 @@ export default function LandingPage() {
 
                             <div className="space-y-4">
                                 {[
-                                    { icon: <Zap />, text: "500 XP per analysis" },
-                                    { icon: <Trophy />, text: "Unlock achievements" },
-                                    { icon: <Target />, text: "7 progression tiers" }
-                                ].map((item, i) => (
-                                    <div key={i} className="flex items-center gap-3 text-zinc-300 font-mono text-sm">
+                                    { id: "xp-gain", icon: <Zap />, text: "500 XP per analysis" },
+                                    { id: "achievements", icon: <Trophy />, text: "Unlock achievements" },
+                                    { id: "tiers", icon: <Target />, text: "7 progression tiers" }
+                                ].map((item) => (
+                                    <div key={item.id} className="flex items-center gap-3 text-zinc-300 font-mono text-sm">
                                         <div className="h-8 w-8 bg-primary/20 border-2 border-primary flex items-center justify-center text-primary">
                                             {item.icon}
                                         </div>

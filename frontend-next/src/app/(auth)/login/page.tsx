@@ -75,7 +75,7 @@ export default function LoginPage() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="email" className="font-mono text-xs text-zinc-400 uppercase">
-                                    Email_Address
+                                    Secure_Channel
                                 </Label>
                                 <Input
                                     id="email"
@@ -83,9 +83,9 @@ export default function LoginPage() {
                                     required
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono"
-                                    placeholder="agent@mission.com"
+                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono text-white"
                                     disabled={isLoading}
+                                    autoComplete="email"
                                 />
                             </div>
 
@@ -99,9 +99,9 @@ export default function LoginPage() {
                                     required
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono"
-                                    placeholder="••••••••"
+                                    className="bg-zinc-950 border-2 border-zinc-700 focus:border-primary font-mono text-white"
                                     disabled={isLoading}
+                                    autoComplete="current-password"
                                 />
                             </div>
 

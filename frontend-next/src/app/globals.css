@@ -78,3 +78,61 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ========================================
+   AUTOFILL OVERRIDE - MAINTAIN DARK THEME
+   ======================================== */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fafafa !important;
+  -webkit-box-shadow: 0 0 0px 1000px #09090b inset !important;
+  box-shadow: 0 0 0px 1000px #09090b inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+  border: 2px solid #3f3f46 !important;
+}
+
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #09090b inset, 0 0 0 2px rgba(251, 191, 36, 0.5) !important;
+  box-shadow: 0 0 0px 1000px #09090b inset, 0 0 0 2px rgba(251, 191, 36, 0.5) !important;
+}
+
+/* ========================================
+   INPUT FOCUS GLOW - ORANGE THEME
+   ======================================== */
+input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5);
+  border-color: rgb(251, 191, 36) !important;
+}
+
+/* ========================================
+   MOBILE RESPONSIVENESS
+   ======================================== */
+@media (max-width: 640px) {
+
+  .max-w-7xl,
+  .max-w-6xl,
+  .max-w-5xl {
+    max-width: 100vw;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ========================================
+   SMOOTH TRANSITIONS
+   ======================================== */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+button,
+a {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
