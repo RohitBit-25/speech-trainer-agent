@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Mic2, Activity, Settings, Github } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LevelBadge } from "@/components/gamification/LevelBadge";
+import { AchievementPopup } from "@/components/gamification/AchievementPopup";
 
 export function Navbar() {
     const pathname = usePathname();
@@ -63,7 +65,9 @@ export function Navbar() {
                     <div className="w-full flex-1 md:w-auto md:flex-none">
                         {/* Search or other controls could go here */}
                     </div>
-                    <nav className="flex items-center gap-2">
+                    <nav className="flex items-center gap-4">
+                        <LevelBadge />
+                        <AchievementPopup />
                         <Link href="https://github.com/RohitBit-25/speech-trainer-agent" target="_blank" rel="noopener noreferrer">
                             <Button variant="ghost" size="icon" className="h-8 w-8 px-0 hover:bg-primary/20 hover:text-primary transition-colors">
                                 <Github className="h-4 w-4" />

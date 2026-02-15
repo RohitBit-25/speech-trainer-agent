@@ -15,6 +15,8 @@ export default function Home() {
     const setAnalyzing = useAppStore((state) => state.setAnalyzing);
     const setResult = useAppStore((state) => state.setResult);
     const setVideoFile = useAppStore((state) => state.setVideoFile);
+    const addXP = useAppStore((state) => state.addXP);
+    const unlockAchievement = useAppStore((state) => state.unlockAchievement);
     const router = useRouter();
 
     const handleUpload = async (file: File) => {
@@ -34,6 +36,16 @@ export default function Home() {
             const result = await pollAnalysis(newTaskId);
 
             setResult(result);
+
+            // Gamification Triggers
+            addXP(500);
+            unlockAchievement('first_upload');
+            // Check for perfect pitch (mock check)
+            if (result.voice.pitch > 80 && result.voice.pitch < 120) {
+                // Just a dummy condition for valid pitch detection
+                unlockAchievement('perfect_pitch');
+            }
+
             toast.success("Mission Accomplished!", { description: "Analysis complete." });
 
             // Small delay to let user see "Analysis Completed" in console
