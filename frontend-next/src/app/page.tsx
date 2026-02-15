@@ -4,27 +4,35 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Hero } from "@/components/home/Hero";
 import { VideoDropzone } from "@/components/upload/VideoDropzone";
-import { useToast } from "@/components/ui/use-toast"; // Check if this exists, actually default shadcn doesn't have toast unless added
-import { Toaster } from "@/components/ui/toaster"; // Need to add toast component
+import { toast } from "sonner";
+import { useAppStore } from "@/lib/store";
+import { uploadVideo } from "@/lib/api";
 
 export default function Home() {
-    const [isUploading, setIsUploading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false); // Local loading state for UI
+    const setAnalyzing = useAppStore((state) => state.setAnalyzing);
+    const setResult = useAppStore((state) => state.setResult);
+    const setVideoFile = useAppStore((state) => state.setVideoFile);
     const router = useRouter();
 
     const handleUpload = async (file: File) => {
         setIsUploading(true);
+        setAnalyzing(true);
+        setVideoFile(file);
 
-        // Simulate upload delay for now
-        setTimeout(() => {
-            setIsUploading(false);
-            // Store file/result in session/context (TODO)
+        try {
+            toast.info("Starting analysis...", { description: "This may take a moment." });
+            const result = await uploadVideo(file);
+            setResult(result);
+            toast.success("Analysis complete!");
             router.push("/analysis");
-        }, 2000);
-
-        // TODO: Implement actual backend call
-        // const formData = new FormData();
-        // formData.append("video", file);
-        // await fetch("http://localhost:8000/analyze", ...)
+        } catch (error) {
+            toast.error("Analysis failed", { description: "Please try again." });
+            console.error(error);
+        } finally {
+            setIsUploading(false);
+            setAnalyzing(false);
+        }
     };
 
     return (
