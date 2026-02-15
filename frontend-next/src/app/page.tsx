@@ -53,10 +53,26 @@ export default function Home() {
                 router.push("/analysis");
             }, 1000);
 
-        } catch (error) {
-            toast.error("System Failure", { description: "Analysis sequence aborted." });
-            console.error(error);
-            setIsUploading(false); // Only reset if failed, otherwise navigate away
+        } catch (error: any) {
+            console.error("Analysis error:", error);
+
+            // Provide specific error messages
+            let errorTitle = "System Failure";
+            let errorDescription = "Analysis sequence aborted.";
+
+            if (error.message?.includes("Failed to fetch") || error.message?.includes("NetworkError")) {
+                errorTitle = "Connection Error";
+                errorDescription = "Cannot reach backend server. Please ensure the backend is running on port 8000.";
+            } else if (error.message?.includes("timeout")) {
+                errorTitle = "Timeout Error";
+                errorDescription = "Analysis took too long. Please try with a shorter video.";
+            } else if (error.message?.includes("API key")) {
+                errorTitle = "API Configuration Error";
+                errorDescription = "Gemini API key is missing or invalid. Check backend .env file.";
+            }
+
+            toast.error(errorTitle, { description: errorDescription });
+            setIsUploading(false);
             setAnalyzing(false);
             setTaskId(null);
         }
