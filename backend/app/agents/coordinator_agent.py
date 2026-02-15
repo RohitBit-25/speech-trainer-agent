@@ -51,7 +51,6 @@ coordinator_agent = Team(
         "The final response MUST not include any backslashes in the JSON response.",
         "The final response MUST be a valid JSON object and MUST not have any unterminated strings in the JSON response."
     ],
-    add_datetime_to_instructions=True,
     add_member_tools_to_system_message=False,  # This can be tried to make the agent more consistently get the transfer tool call correct
     enable_agentic_context=True,  # Allow the agent to maintain a shared context and send that to members.
     share_member_interactions=True,  # Share all member responses with subsequent member requests.
