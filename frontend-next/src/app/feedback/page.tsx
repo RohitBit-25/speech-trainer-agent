@@ -30,43 +30,54 @@ export default function FeedbackPage() {
     }));
 
     return (
-        <div className="container py-6 space-y-6 max-w-screen-2xl">
-            <div className="flex items-center justify-between">
+        <div className="container py-8 space-y-8 max-w-screen-2xl">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b-4 border-zinc-700 pb-6">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" onClick={() => router.back()}>
+                    <Button
+                        variant="ghost"
+                        onClick={() => router.back()}
+                        className="font-pixel text-xs text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    >
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back
+                        BACK_TO_HITCH
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Detailed Feedback</h1>
-                        <p className="text-muted-foreground">Comprehensive breakdown of your performance.</p>
+                        <h1 className="text-2xl md:text-3xl font-pixel text-white flex items-center gap-2">
+                            SYSTEM_DIAGNOSTICS
+                            <span className="animate-pulse w-2 h-2 bg-red-500 rounded-full"></span>
+                        </h1>
+                        <p className="text-xs font-mono text-zinc-500 mt-1">
+                            LOG_ID: <span className="text-zinc-300">#EVAL_{Date.now().toString().slice(-6)}</span>
+                        </p>
                     </div>
                 </div>
-                <Button variant="outline">
+                <Button variant="outline" className="font-pixel text-xs border-2 border-primary bg-primary/10 text-primary hover:bg-primary hover:text-black">
                     <Download className="mr-2 h-4 w-4" />
-                    Export Report
+                    EXPORT_LOGS
                 </Button>
             </div>
 
+            {/* Diagnostics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Left Col: Radar Chart */}
-                <div className="lg:col-span-1 h-[400px]">
+                <div className="lg:col-span-1 h-[450px]">
                     <FeedbackRadarChart data={radarData} />
                 </div>
 
                 {/* Middle Col: Summary */}
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 h-full">
                     <EvaluationSummary
                         scores={result.feedback.scores}
                         totalScore={result.feedback.total_score}
-                        averageScore={result.feedback.total_score / 5} // Approximate or calculate from scores
+                        averageScore={result.feedback.total_score / 5}
                         interpretation={result.feedback.interpretation}
                         summary={result.feedback.feedback_summary}
                     />
                 </div>
 
-                {/* Right Col: Details */}
-                <div className="lg:col-span-1">
+                {/* Right Col: Details (Scrollable if needed) */}
+                <div className="lg:col-span-1 h-full">
                     <FeedbackPoints
                         strengths={result.strengths}
                         weaknesses={result.weaknesses}
