@@ -1,53 +1,33 @@
 "use client";
 
+import { useEffect } from "react";
 import { FeedbackRadarChart } from "@/components/feedback/RadarChart";
 import { EvaluationSummary } from "@/components/feedback/EvaluationSummary";
 import { FeedbackPoints } from "@/components/feedback/FeedbackPoints";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAppStore } from "@/lib/store";
 
 export default function FeedbackPage() {
     const router = useRouter();
+    const result = useAppStore((state) => state.result);
 
-    // Mock data
-    const evaluationData = {
-        scores: {
-            "Content & Organization": 4,
-            "Delivery & Vocal": 3.5,
-            "Body Language": 4.5,
-            "Engagement": 3,
-            "Clarity": 5
-        },
-        totalScore: 20,
-        averageScore: 4.0,
-        interpretation: "Great job! Your content is well-structured and clear.",
-        summary: "Strong opening and clear message. Work on vocal variety to keep the audience engaged throughout."
-    };
+    useEffect(() => {
+        if (!result) {
+            router.push("/");
+        }
+    }, [result, router]);
 
-    const radarData = [
-        { subject: 'Content', A: 4, fullMark: 5 },
-        { subject: 'Delivery', A: 3.5, fullMark: 5 },
-        { subject: 'Body Lang', A: 4.5, fullMark: 5 },
-        { subject: 'Engagement', A: 3, fullMark: 5 },
-        { subject: 'Clarity', A: 5, fullMark: 5 },
-    ];
+    if (!result) return null;
 
-    const strengths = [
-        "Used effective pauses",
-        "Clear problem statement",
-        "Good eye contact"
-    ];
-
-    const weaknesses = [
-        "Monotone voice in middle section",
-        "Slight swaying"
-    ];
-
-    const suggestions = [
-        "Try to vary your pitch for emphasis",
-        "Plant your feet firmly to avoid swaying"
-    ];
+    // Transform scores for Radar Chart
+    const scores = result.feedback.scores;
+    const radarData = Object.keys(scores).map((key) => ({
+        subject: key.split(" ")[0], // Shorten name for chart
+        A: scores[key],
+        fullMark: 5
+    }));
 
     return (
         <div className="container py-6 space-y-6 max-w-screen-2xl">
@@ -77,20 +57,20 @@ export default function FeedbackPage() {
                 {/* Middle Col: Summary */}
                 <div className="lg:col-span-1">
                     <EvaluationSummary
-                        scores={evaluationData.scores}
-                        totalScore={evaluationData.totalScore}
-                        averageScore={evaluationData.averageScore}
-                        interpretation={evaluationData.interpretation}
-                        summary={evaluationData.summary}
+                        scores={result.feedback.scores}
+                        totalScore={result.feedback.total_score}
+                        averageScore={result.feedback.total_score / 5} // Approximate or calculate from scores
+                        interpretation={result.feedback.interpretation}
+                        summary={result.feedback.feedback_summary}
                     />
                 </div>
 
                 {/* Right Col: Details */}
                 <div className="lg:col-span-1">
                     <FeedbackPoints
-                        strengths={strengths}
-                        weaknesses={weaknesses}
-                        suggestions={suggestions}
+                        strengths={result.strengths}
+                        weaknesses={result.weaknesses}
+                        suggestions={result.suggestions}
                     />
                 </div>
             </div>
