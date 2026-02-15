@@ -1,14 +1,19 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.worker import analyze_video_task
 from celery.result import AsyncResult
+from sqlalchemy.orm import Session
+from app.db import models, database
 import shutil
 import os
 import uuid
 
 # Initialize FastAPI app
 app = FastAPI()
+
+# Create tables
+models.Base.metadata.create_all(bind=database.engine)
 
 # Configure CORS to allow requests from your frontend
 app.add_middleware(
@@ -23,6 +28,14 @@ app.add_middleware(
 class AnalysisRequest(BaseModel):
     video_url: str
 
+# Dependency
+def get_db():
+    db = database.SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 # Define the entry point
 @app.get("/")
 async def root():
@@ -30,7 +43,19 @@ async def root():
 
 # Define the analysis endpoint
 @app.post("/analyze")
-async def analyze(video: UploadFile = File(...)):
+async def analyze(video: UploadFile = File(...), db: Session = Depends(get_db)):
+    # Validate file type
+    allowed_types = ["video/mp4", "video/quicktime", "video/x-matroska", "video/webm"]
+    if video.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"Invalid file type. Allowed: {', '.join(allowed_types)}")
+        
+    # Validate file size (approximate, using seek/tell if needed, or reading chunks)
+    # Using spooled file, we can check size if rolled over to disk or internal attribute
+    # For now, let's rely on content-length header if available or limit read
+    # Better: check file size after saving or check content-length header
+    if video.size and video.size > 50 * 1024 * 1024: # 50MB
+         raise HTTPException(status_code=400, detail="File too large. Maximum size is 50MB.")
+         
     # Create temp directory if not exists
     temp_dir = "temp_uploads"
     os.makedirs(temp_dir, exist_ok=True)
@@ -45,11 +70,26 @@ async def analyze(video: UploadFile = File(...)):
         with open(temp_file_path, "wb") as buffer:
             shutil.copyfileobj(video.file, buffer)
             
+        # Check size after save to be sure
+        file_size = os.path.getsize(temp_file_path)
+        if file_size > 50 * 1024 * 1024:
+            os.remove(temp_file_path)
+            raise HTTPException(status_code=400, detail="File too large. Maximum size is 50MB.")
+            
         # Get absolute path for the agent
         absolute_path = os.path.abspath(temp_file_path)
         
         # Trigger Celery task
         task = analyze_video_task.delay(absolute_path)
+        
+        # Create DB Record
+        db_record = models.AnalysisResult(
+            task_id=task.id,
+            video_filename=video.filename,
+            status="PENDING"
+        )
+        db.add(db_record)
+        db.commit()
             
         return JSONResponse(content={"task_id": task.id, "status": "processing"})
         
