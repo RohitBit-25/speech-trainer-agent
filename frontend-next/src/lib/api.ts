@@ -2,53 +2,89 @@ import { ParsedAnalysisResult } from "./types";
 
 const API_URL = "http://localhost:8000";
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export async function uploadVideo(file: File): Promise<ParsedAnalysisResult> {
     const formData = new FormData();
     formData.append("video", file);
 
     try {
-        const response = await fetch(`${API_URL}/analyze`, {
+        // Step 1: Initiate Analysis
+        const uploadResponse = await fetch(`${API_URL}/analyze`, {
             method: "POST",
             body: formData,
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Analysis failed: ${response.status} ${response.statusText} - ${errorText}`);
+        if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText} - ${errorText}`);
         }
 
-        const data = await response.json();
+        const { task_id } = await uploadResponse.json();
 
-        // Parse JSON strings from the backend response
-        // The backend returns strings for these fields because they are from sub-agents
-        const facial = typeof data.facial_expression_response === 'string'
-            ? JSON.parse(data.facial_expression_response)
-            : data.facial_expression_response;
+        if (!task_id) {
+            throw new Error("No task_id received from backend");
+        }
 
-        const voice = typeof data.voice_analysis_response === 'string'
-            ? JSON.parse(data.voice_analysis_response)
-            : data.voice_analysis_response;
+        // Step 2: Poll for Results
+        let retries = 0;
+        const maxRetries = 60; // Timeout after ~2 minutes (assuming 2s interval)
 
-        const content = typeof data.content_analysis_response === 'string'
-            ? JSON.parse(data.content_analysis_response)
-            : data.content_analysis_response;
+        while (retries < maxRetries) {
+            const statusResponse = await fetch(`${API_URL}/status/${task_id}`);
 
-        const feedback = typeof data.feedback_response === 'string'
-            ? JSON.parse(data.feedback_response)
-            : data.feedback_response;
+            if (!statusResponse.ok) {
+                // If status check fails, wait and retry
+                await sleep(2000);
+                retries++;
+                continue;
+            }
 
-        return {
-            facial,
-            voice,
-            content,
-            feedback,
-            strengths: data.strengths,
-            weaknesses: data.weaknesses,
-            suggestions: data.suggestions
-        } as ParsedAnalysisResult;
+            const statusData = await statusResponse.json();
+
+            if (statusData.state === "SUCCESS") {
+                const data = statusData.result;
+
+                // Parse JSON strings from the backend response
+                const facial = typeof data.facial_expression_response === 'string'
+                    ? JSON.parse(data.facial_expression_response)
+                    : data.facial_expression_response;
+
+                const voice = typeof data.voice_analysis_response === 'string'
+                    ? JSON.parse(data.voice_analysis_response)
+                    : data.voice_analysis_response;
+
+                const content = typeof data.content_analysis_response === 'string'
+                    ? JSON.parse(data.content_analysis_response)
+                    : data.content_analysis_response;
+
+                const feedback = typeof data.feedback_response === 'string'
+                    ? JSON.parse(data.feedback_response)
+                    : data.feedback_response;
+
+                return {
+                    facial,
+                    voice,
+                    content,
+                    feedback,
+                    strengths: data.strengths,
+                    weaknesses: data.weaknesses,
+                    suggestions: data.suggestions
+                } as ParsedAnalysisResult;
+
+            } else if (statusData.state === "FAILURE") {
+                throw new Error(`Analysis failed: ${statusData.error || "Unknown error"}`);
+            }
+
+            // Still processing
+            await sleep(2000);
+            retries++;
+        }
+
+        throw new Error("Analysis timed out");
 
     } catch (error) {
-        console.error("Error uploading video:", error);
+        console.error("Error uploading/analyzing video:", error);
         throw error;
     }
 }
