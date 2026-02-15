@@ -24,22 +24,34 @@ export default function AnalysisPage() {
     if (!result) return null;
 
     return (
-        <div className="container py-6 space-y-6 max-w-screen-2xl">
-            <div className="flex items-center justify-between">
+        <div className="container py-8 space-y-8 max-w-screen-2xl">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b-4 border-zinc-700 pb-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Analysis Dashboard</h1>
-                    <p className="text-muted-foreground">Review your speech performance metrics.</p>
+                    <h1 className="text-2xl md:text-4xl font-pixel text-white mb-2 flex items-center gap-3">
+                        <span className="text-primary">MISSION_REPORT</span>
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-sm border border-primary/50">FINALIZED</span>
+                    </h1>
+                    <p className="font-mono text-zinc-400 text-sm">
+                        Performance analytics for mission ID: <span className="text-zinc-200">#SPEECH_{Math.floor(Math.random() * 9999)}</span>
+                    </p>
                 </div>
-                <Button onClick={() => router.push("/feedback")}>
-                    View Detailed Feedback
+                <Button
+                    onClick={() => router.push("/feedback")}
+                    className="font-pixel text-xs bg-zinc-800 hover:bg-zinc-700 border-2 border-zinc-500 hover:border-primary text-white h-12 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] transition-all hover:translate-x-1"
+                >
+                    FULL_DIAGNOSTICS
                     <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[600px]">
+                {/* Video Feed */}
                 <div className="lg:col-span-2 h-full">
                     <VideoPlayer src={videoFile ? URL.createObjectURL(videoFile) : undefined} />
                 </div>
+                {/* Comm Logs */}
                 <div className="lg:col-span-1 h-full">
                     <Transcript
                         text={result.voice.transcription}
@@ -47,24 +59,25 @@ export default function AnalysisPage() {
                 </div>
             </div>
 
+            {/* Analysis Modules Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <AgentCard
-                    title="Facial Expressions"
+                    title="FACIAL_RECOGNITION"
                     icon={Smile}
                     content={result.facial.summary}
-                    className="border-blue-500/20"
+                    className="border-blue-500/50 text-blue-400"
                 />
                 <AgentCard
-                    title="Voice Analysis"
+                    title="AUDIO_WAVEFORM"
                     icon={Mic2}
-                    content={`Pitch: ${result.voice.pitch}Hz | Pace: ${result.voice.pace}wpm. Volume: ${result.voice.volume}`}
-                    className="border-purple-500/20"
+                    content={`Pitch: ${result.voice.pitch}Hz | Pace: ${result.voice.pace}wpm | Vol: ${result.voice.volume}`}
+                    className="border-purple-500/50 text-purple-400"
                 />
                 <AgentCard
-                    title="Content Structure"
+                    title="CONTENT_SYNTAX"
                     icon={FileText}
-                    content={`Structure: ${result.content.structure}. Clarity Score: ${result.content.clarity}/10.`}
-                    className="border-green-500/20"
+                    content={`Structure: ${result.content.structure} | Clarity Index: ${result.content.clarity}/10`}
+                    className="border-green-500/50 text-green-400"
                 />
             </div>
         </div>
