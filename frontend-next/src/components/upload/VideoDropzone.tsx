@@ -50,106 +50,119 @@ export function VideoDropzone({ onUpload, isUploading = false }: VideoDropzonePr
             transition={{ duration: 0.5, delay: 0.6 }}
             className="w-full max-w-3xl mx-auto mt-8"
         >
-            <div
-                {...getRootProps()}
-                className={cn(
-                    "relative border-2 border-dashed rounded-xl p-10 transition-all duration-300 ease-in-out cursor-pointer group overflow-hidden bg-card/30 backdrop-blur-sm",
-                    isDragActive ? "border-primary bg-primary/10" : "border-border hover:border-primary/50 hover:bg-muted/50",
-                    file ? "border-primary/50" : ""
-                )}
-            >
-                <input {...getInputProps()} />
-
-                {/* Scanning effect overlay */}
-                {isUploading && (
-                    <div className="absolute inset-0 pointer-events-none z-0">
-                        <div className="absolute inset-0 bg-primary/5 animate-pulse" />
-                        <div className="h-1 w-full bg-primary/50 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-scan-line" />
+            <div className="bg-zinc-900 border-4 border-zinc-700 shadow-[8px_8px_0px_rgba(0,0,0,0.5)] p-2">
+                {/* Scanner Header */}
+                <div className="flex justify-between items-center bg-zinc-800 px-4 py-2 border-b-4 border-zinc-700 mb-2">
+                    <span className="font-pixel text-xs text-zinc-400">DATA_INPUT_TERMINAL</span>
+                    <div className="flex gap-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-sm"></div>
+                        <div className="w-2 h-2 bg-green-500 rounded-sm animate-pulse"></div>
                     </div>
-                )}
+                </div>
 
-                <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-4">
-                    <AnimatePresence mode="wait">
-                        {!file ? (
-                            <motion.div
-                                key="drop-prompt"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="flex flex-col items-center"
-                            >
-                                <div className="p-4 rounded-full bg-muted group-hover:bg-background transition-colors mb-4">
-                                    <Upload className="h-10 w-10 text-muted-foreground group-hover:text-primary transition-colors" />
-                                </div>
-                                <h3 className="text-xl font-semibold">
-                                    {isDragActive ? "Drop video here" : "Upload your recording"}
-                                </h3>
-                                <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-                                    Drag and drop your video file here, or click to browse.
-                                    <br />
-                                    <span className="text-xs opacity-70">Supports MP4, MOV, WEBM (Max 500MB)</span>
-                                </p>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="file-preview"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="flex flex-col items-center w-full"
-                            >
-                                <div className="relative p-6 rounded-xl bg-card border shadow-sm w-full max-w-md flex items-center gap-4">
-                                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <FileVideo className="h-6 w-6 text-primary" />
-                                    </div>
-                                    <div className="flex-1 min-w-0 text-left">
-                                        <p className="text-sm font-medium truncate">{file.name}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {(file.size / (1024 * 1024)).toFixed(2)} MB
-                                        </p>
-                                    </div>
-                                    {!isUploading && (
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                            onClick={removeFile}
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
+                <div
+                    {...getRootProps()}
+                    className={cn(
+                        "relative border-4 border-dashed min-h-[300px] flex flex-col items-center justify-center transition-all duration-300 ease-in-out cursor-pointer group overflow-hidden bg-black/40",
+                        isDragActive ? "border-primary bg-primary/10" : "border-zinc-600 hover:border-primary hover:bg-zinc-800/50",
+                        file ? "border-primary bg-zinc-900" : ""
+                    )}
+                >
+                    <input {...getInputProps()} />
 
-                                <div className="mt-8 flex gap-4">
-                                    {!isUploading ? (
-                                        <>
-                                            <Button
-                                                variant="outline"
-                                                onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                                            >
-                                                Change Video
-                                            </Button>
-                                            <Button
-                                                className="min-w-[150px]"
-                                                onClick={(e) => { e.stopPropagation(); handleUploadClick(); }}
-                                            >
-                                                Analyze Video
-                                                <Sparkles className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-2">
-                                            <div className="flex items-center gap-2 text-primary font-medium">
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                Processing Video...
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">This may take a few moments</p>
+                    {/* Scanning effect overlay */}
+                    {isUploading && (
+                        <div className="absolute inset-0 pointer-events-none z-0">
+                            <div className="absolute inset-0 bg-primary/10 animate-pulse" />
+                            <div className="h-2 w-full bg-primary/50 shadow-[0_0_20px_rgba(34,197,94,0.8)] animate-scan-line" />
+                        </div>
+                    )}
+
+                    <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-4 p-8">
+                        <AnimatePresence mode="wait">
+                            {!file ? (
+                                <motion.div
+                                    key="drop-prompt"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex flex-col items-center"
+                                >
+                                    <div className="p-6 mb-4 border-2 border-dashed border-zinc-500 group-hover:border-primary group-hover:scale-110 transition-all duration-300">
+                                        <Upload className="h-12 w-12 text-zinc-500 group-hover:text-primary transition-colors" />
+                                    </div>
+                                    <h3 className="text-xl md:text-2xl font-pixel text-white mb-2">
+                                        {isDragActive ? "INSERT DISK..." : "UPLOAD_SOURCE_FILE"}
+                                    </h3>
+                                    <p className="font-mono text-zinc-400 text-sm max-w-sm">
+                                        Drag & drop video data module [.MP4, .MOV]
+                                    </p>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="file-preview"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="flex flex-col items-center w-full"
+                                >
+                                    <div className="relative p-6 bg-zinc-800 border-2 border-zinc-600 w-full max-w-md flex items-center gap-4 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
+                                        <div className="h-16 w-16 bg-black border border-zinc-600 flex items-center justify-center shrink-0">
+                                            <FileVideo className="h-8 w-8 text-primary animate-pulse" />
                                         </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                        <div className="flex-1 min-w-0 text-left font-mono">
+                                            <p className="text-sm font-bold text-white truncate text-ellipsis">{file.name}</p>
+                                            <p className="text-xs text-primary">
+                                                SIZE: {(file.size / (1024 * 1024)).toFixed(2)} MB
+                                            </p>
+                                            <p className="text-[10px] text-zinc-500 mt-1">STATUS: READY_TO_SCAN</p>
+                                        </div>
+                                        {!isUploading && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-zinc-400 hover:text-red-500 hover:bg-transparent"
+                                                onClick={removeFile}
+                                            >
+                                                <X className="h-5 w-5" />
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-8 flex gap-4">
+                                        {!isUploading ? (
+                                            <>
+                                                <Button
+                                                    variant="outline"
+                                                    className="font-pixel text-xs border-2 hover:bg-zinc-800 h-12"
+                                                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                                                >
+                                                    EJECT
+                                                </Button>
+                                                <Button
+                                                    className="min-w-[180px] font-pixel text-xs border-2 border-primary bg-primary text-black hover:bg-primary/90 h-12 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all"
+                                                    onClick={(e) => { e.stopPropagation(); handleUploadClick(); }}
+                                                >
+                                                    <span className="mr-2">INITIALIZE_SCAN</span>
+                                                    <Sparkles className="h-3 w-3" />
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-4 w-full max-w-xs">
+                                                <div className="w-full h-4 bg-zinc-800 border border-zinc-600 relative overflow-hidden">
+                                                    <div className="absolute inset-y-0 left-0 bg-primary w-full animate-[scan-line_2s_linear_infinite]" style={{ transformOrigin: 'left' }}></div>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-primary font-pixel text-xs animate-pulse">
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                    PROCESSING_DATA...
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
             </div>
         </motion.div>
