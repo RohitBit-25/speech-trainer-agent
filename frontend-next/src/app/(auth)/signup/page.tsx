@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { Loader2, UserPlus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
+import { setAuthData } from "@/lib/auth";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -63,12 +64,8 @@ export default function SignupPage() {
 
             const data = await response.json();
 
-            // Store token in localStorage and cookie
-            localStorage.setItem("token", data.access_token);
-            localStorage.setItem("user", JSON.stringify(data.user));
-
-            // Set cookie for middleware
-            document.cookie = `auth_token=${data.access_token}; path=/; max-age=604800`; // 7 days
+            // Store user info (no token handling needed, backend sets cookie)
+            setAuthData(data.user);
 
             toast.success("Account Created", { description: `Welcome to the mission, ${data.user.name}.` });
 

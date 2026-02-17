@@ -38,8 +38,6 @@ export default function LoginPage() {
 
             const data = await response.json();
 
-            const data = await response.json();
-
             // Store user info (no token handling needed, backend sets cookie)
             setAuthData(data.user);
 
