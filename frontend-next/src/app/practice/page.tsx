@@ -14,6 +14,8 @@ import { LiveTranscript } from '@/components/realtime/LiveTranscript';
 import { PerformanceMonitor } from '@/components/realtime/PerformanceMonitor';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { QuickHelp } from '@/components/tutorial/HelpTooltip';
+import { DifficultySelector } from '@/components/practice/DifficultySelector';
+import { MultiplierDisplay } from '@/components/game/MultiplierDisplay';
 import { Button } from '@/components/ui/button';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -27,6 +29,9 @@ export default function PracticePage() {
     const [audioEnabled, setAudioEnabled] = useState(true);
     const [newAchievements, setNewAchievements] = useState<any[]>([]);
     const [showTutorial, setShowTutorial] = useState(false);
+    const [showDifficultySelector, setShowDifficultySelector] = useState(false);
+    const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
+    const [multiplierBreakdown, setMultiplierBreakdown] = useState<any>({});
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const frameIntervalRef = useRef<NodeJS.Timeout>();
