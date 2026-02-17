@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { useState, useEffect } from "react";
+import { getUser, checkSession, logout } from "@/lib/auth";
 import { toast } from "sonner";
 import {
     DropdownMenu,
@@ -23,18 +24,23 @@ export function Navbar() {
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        // Check if user is logged in
-        const userData = localStorage.getItem("user");
-        if (userData) {
-            setUser(JSON.parse(userData));
-        }
+        // Check session validity with backend
+        checkSession().then((isValid) => {
+            if (isValid) {
+                const userData = getUser();
+                if (userData) setUser(userData);
+            } else {
+                // Clear stale user data if session is invalid
+                localStorage.removeItem("user");
+                setUser(null);
+            }
+        });
     }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+    const handleLogout = async () => {
+        await logout();
         toast.success("Logged Out", { description: "Mission terminated successfully." });
-        router.push("/");
+        // logout function handles redirect
     };
 
     const navLinks = user ? [
