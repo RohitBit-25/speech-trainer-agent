@@ -13,10 +13,11 @@ faster-whisper
 websockets
 redis
 sse-starlette
-sqlalchemy
 celery
 motor
 pymongo
 passlib[bcrypt]
 python-multipart
 google-generativeai
+email-validator
+argon2-cffi
