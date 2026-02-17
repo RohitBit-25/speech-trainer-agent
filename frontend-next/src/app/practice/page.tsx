@@ -11,6 +11,7 @@ import { ComboCounter } from '@/components/realtime/ComboCounter';
 import { LiveFeedback } from '@/components/realtime/LiveFeedback';
 import { AchievementPopup } from '@/components/realtime/AchievementPopup';
 import { LiveTranscript } from '@/components/realtime/LiveTranscript';
+import { PerformanceMonitor } from '@/components/realtime/PerformanceMonitor';
 import { Button } from '@/components/ui/button';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -362,6 +363,13 @@ export default function PracticePage() {
             <AchievementPopup
                 achievements={newAchievements}
                 onDismiss={() => setNewAchievements([])}
+            />
+
+            {/* Performance Monitor */}
+            <PerformanceMonitor
+                wsLatency={metrics?.latency || 0}
+                messageQueue={0}
+                show={isRecording}
             />
         </div>
     );
