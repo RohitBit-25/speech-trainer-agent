@@ -31,7 +31,12 @@ interface UseRealtimeAnalysisReturn {
     requestFeedback: () => void;
 }
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+const getWebSocketUrl = () => {
+    if (typeof window === 'undefined') return '';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    return `${protocol}//${host}`;
+};
 const RECONNECT_DELAY = 1000; // Start with 1 second
 const MAX_RECONNECT_DELAY = 30000; // Max 30 seconds
 const MESSAGE_BATCH_SIZE = 5; // Batch messages for better performance
@@ -92,7 +97,8 @@ export function useRealtimeAnalysis(): UseRealtimeAnalysisReturn {
         }
 
         try {
-            const ws = new WebSocket(`${WS_URL}/ws/realtime-analysis/${sessionId}`);
+            const wsUrl = getWebSocketUrl();
+            const ws = new WebSocket(`${wsUrl}/ws/realtime-analysis/${sessionId}`);
 
             ws.onopen = () => {
                 console.log('WebSocket connected');
