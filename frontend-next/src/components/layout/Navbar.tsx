@@ -39,6 +39,7 @@ export function Navbar() {
 
     const navLinks = user ? [
         { href: "/studio", label: "Studio", icon: "🎬" },
+        { href: "/practice", label: "Practice", icon: "🎮" },
         { href: "/history", label: "Logs", icon: "📊" },
         { href: "/analysis", label: "Analysis", icon: "🔍" },
         { href: "/settings", label: "Settings", icon: "⚙️" }
@@ -66,8 +67,8 @@ export function Navbar() {
                                 key={link.href}
                                 href={link.href}
                                 className={`font-mono text-sm transition-colors ${pathname === link.href
-                                        ? "text-primary"
-                                        : "text-zinc-400 hover:text-white"
+                                    ? "text-primary"
+                                    : "text-zinc-400 hover:text-white"
                                     }`}
                             >
                                 <span className="mr-1">{link.icon}</span>
@@ -147,8 +148,8 @@ export function Navbar() {
                                 href={link.href}
                                 onClick={() => setMobileMenuOpen(false)}
                                 className={`block px-4 py-2 font-mono text-sm transition-colors ${pathname === link.href
-                                        ? "text-primary bg-zinc-900"
-                                        : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+                                    ? "text-primary bg-zinc-900"
+                                    : "text-zinc-400 hover:text-white hover:bg-zinc-900"
                                     }`}
                             >
                                 <span className="mr-2">{link.icon}</span>
