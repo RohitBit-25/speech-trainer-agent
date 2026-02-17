@@ -50,11 +50,11 @@ export default function RootLayout({
                 </div>
 
                 {/* Desktop OS Container */}
-                <div className="relative flex min-h-screen flex-col items-center justify-center p-4 md:p-8">
-                    <div className="w-full max-w-7xl min-h-[85vh] bg-card border-4 border-primary shadow-[10px_10px_0px_0px_rgba(0,0,0,0.5)] rounded-lg overflow-hidden flex flex-col relative">
+                <div className="relative flex min-h-screen flex-col p-2 md:p-4">
+                    <div className="w-full h-[calc(100vh-1rem)] md:h-[calc(100vh-2rem)] bg-card border-4 border-primary shadow-[10px_10px_0px_0px_rgba(0,0,0,0.5)] rounded-lg overflow-hidden flex flex-col relative">
 
                         {/* OS Window Title Bar */}
-                        <div className="h-10 bg-primary flex items-center justify-between px-4 select-none">
+                        <div className="h-10 bg-primary flex items-center justify-between px-4 select-none flex-shrink-0">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 bg-red-500 rounded-full border border-black"></div>
                                 <div className="w-3 h-3 bg-yellow-500 rounded-full border border-black"></div>
@@ -69,7 +69,7 @@ export default function RootLayout({
                         </div>
 
                         {/* Content Area */}
-                        <div className="flex-1 flex flex-col relative bg-zinc-900/90 backdrop-blur-md">
+                        <div className="flex-1 flex flex-col relative bg-zinc-900/90 backdrop-blur-md overflow-hidden">
                             <Navbar />  {/* Navbar inside the window now */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar">
                                 <ErrorBoundary>
