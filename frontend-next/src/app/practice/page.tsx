@@ -117,6 +117,9 @@ export default function PracticePage() {
         // Stop recording
         setIsRecording(false);
 
+        // Stop speech recognition
+        stopListening();
+
         // Disconnect WebSocket
         disconnect();
 
@@ -135,6 +138,11 @@ export default function PracticePage() {
         }
 
         setSessionId(null);
+
+        // Reset transcript after a short delay to allow viewing
+        setTimeout(() => {
+            resetTranscript();
+        }, 1000);
     };
 
     return (
