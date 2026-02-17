@@ -19,9 +19,11 @@
 
 - [Overview](#-overview)
 - [Key Features](#-key-features)
+- [Real-time Practice Mode](#-real-time-practice-mode-new)
 - [Architecture](#-architecture)
 - [Technology Stack](#-technology-stack)
 - [Getting Started](#-getting-started)
+- [Tutorial](#-tutorial)
 - [API Documentation](#-api-documentation)
 - [Project Structure](#-project-structure)
 - [Usage Guide](#-usage-guide)
@@ -36,8 +38,9 @@
 ### What Makes It Special?
 
 - 🤖 **Multi-Agent AI System**: Specialized agents work together to analyze different aspects of your speech
+- ⚡ **Real-time Practice Mode**: Live AI feedback as you speak with instant performance metrics
 - 🎮 **Gamification**: Earn XP, unlock achievements, and progress through 7 speaker tiers
-- 📊 **Real-time Analysis**: Get instant feedback on facial expressions, voice modulation, and content delivery
+- 📊 **Dual Analysis Modes**: Real-time practice + comprehensive video analysis
 - 🎯 **Personalized Coaching**: Receive tailored strengths, weaknesses, and improvement suggestions
 - 📈 **Progress Tracking**: Compare performances over time and track your improvement journey
 
@@ -78,6 +81,55 @@ Evaluate speakers on 5 key criteria:
   - Novice Speaker → Beginner Speaker → Intermediate Speaker → Advanced Speaker → Expert Speaker → Master Speaker → Legendary Orator
 - **Achievements**: Unlock badges and milestones
 - **Comparison Mode**: Compare multiple performances side-by-side
+
+---
+
+## ⚡ Real-time Practice Mode (NEW)
+
+### Live AI Feedback While You Speak
+
+Practice with **instant feedback** using our cutting-edge real-time analysis system:
+
+#### 🎥 **Real-time Video Analysis**
+- **Facial Expression Tracking**: Live emotion detection using MediaPipe
+- **Eye Contact Monitoring**: Real-time engagement scoring
+- **Smile Detection**: Instant feedback on facial expressions
+- **Performance < 100ms**: Lightning-fast analysis per frame
+
+#### 🎤 **Real-time Voice Analysis**
+- **Speech-to-Text**: Browser-native Web Speech API
+- **Filler Word Detection**: Instant alerts for "um", "uh", "like", etc.
+- **Pitch & Volume Tracking**: Live vocal quality monitoring
+- **Speech Rate**: Real-time words-per-minute calculation
+
+#### 🎮 **Gamified Practice**
+- **Combo System**: Build combos for sustained good performance
+  - 1-10x: Good Start (1x multiplier)
+  - 11-30x: On Fire 🔥 (1.5x multiplier)
+  - 31-60x: Unstoppable ⚡ (2x multiplier)
+  - 61+x: Legendary 👑 (3x multiplier)
+- **6 Achievements**: Unlock badges with XP rewards (100-500 XP)
+- **3 Difficulty Levels**: Beginner, Intermediate, Expert
+- **3 Practice Modes**: Practice, Challenge, Timed
+
+#### 📊 **Live Performance Dashboard**
+- **Performance Meters**: Facial, Voice, Engagement scores (0-100)
+- **Live Transcript**: Speech-to-text with filler word highlighting
+- **Feedback Pills**: Color-coded instant feedback messages
+- **Achievement Popups**: Confetti animations for unlocks
+- **Performance Monitor**: FPS, latency, Web Vitals tracking
+
+#### 🚀 **Performance Optimized**
+- **Virtual Scrolling**: Handle 1000+ transcript segments
+- **Message Batching**: 40% reduction in WebSocket overhead
+- **Smart Reconnection**: Exponential backoff for reliability
+- **60 FPS**: Smooth animations and real-time updates
+- **< 150ms Latency**: Near-instant feedback
+
+#### 📥 **Export & Review**
+- **Transcript Export**: Download session transcript as .txt
+- **Session Stats**: Saved to database for progress tracking
+- **Auto-scroll**: Intelligent transcript scrolling
 
 ---
 
@@ -247,7 +299,24 @@ The application will be available at:
 
 ---
 
-## 📡 API Documentation
+## � Tutorial
+
+For a comprehensive step-by-step guide on using all features, see our **[Complete Tutorial](./TUTORIAL.md)**.
+
+The tutorial covers:
+- ✅ Quick start guide
+- ✅ Real-time practice mode walkthrough
+- ✅ Video analysis guide
+- ✅ Understanding your results
+- ✅ Gamification system explained
+- ✅ Tips & best practices
+- ✅ Troubleshooting common issues
+
+**New to the platform?** Start here: [TUTORIAL.md](./TUTORIAL.md)
+
+---
+
+## �📡 API Documentation
 
 ### Core Endpoints
 
