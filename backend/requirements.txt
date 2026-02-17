@@ -10,3 +10,8 @@ deepface
 librosa
 moviepy
 faster-whisper
+websockets
+redis
+sse-starlette
+sqlalchemy
+celery
