@@ -185,8 +185,8 @@ export default function LandingPage() {
                                 <span className="font-pixel text-xs text-primary">GAMIFICATION_SYSTEM</span>
                             </div>
 
-                            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white font-pixel">
-                                EARN_XP_&_LEVEL_UP
+                            <h2 className="text-2xl md:text-4xl font-bold mb-4 text-white font-pixel break-words leading-tight">
+                                EARN_XP_<wbr />&_<wbr />LEVEL_UP
                             </h2>
                             <p className="text-zinc-400 font-mono mb-6">
                                 Track your progress with our advanced gamification system. Earn XP for every analysis, unlock achievements, and climb the ranks from NOVICE_SPEAKER to LEGENDARY_ORATOR.
