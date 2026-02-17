@@ -31,13 +31,15 @@ interface DifficultyConfigs {
     expert: DifficultyConfig;
 }
 
+
 interface DifficultySelector {
     onSelect: (difficulty: string) => void;
     currentLevel?: number;
     selectedDifficulty?: string;
+    variant?: 'default' | 'compact';
 }
 
-export function DifficultySelector({ onSelect, currentLevel = 1, selectedDifficulty = "intermediate" }: DifficultySelector) {
+export function DifficultySelector({ onSelect, currentLevel = 1, selectedDifficulty = "intermediate", variant = "default" }: DifficultySelector) {
     const [configs, setConfigs] = useState<DifficultyConfigs | null>(null);
     const [selected, setSelected] = useState(selectedDifficulty);
 
@@ -50,7 +52,7 @@ export function DifficultySelector({ onSelect, currentLevel = 1, selectedDifficu
     }, []);
 
     if (!configs) {
-        return <div className="text-center text-zinc-400">Loading difficulties...</div>;
+        return <div className="text-center text-zinc-400">Loading...</div>;
     }
 
     const difficulties: Array<keyof DifficultyConfigs> = ["beginner", "intermediate", "expert"];
@@ -63,6 +65,53 @@ export function DifficultySelector({ onSelect, currentLevel = 1, selectedDifficu
         }
     };
 
+    if (variant === "compact") {
+        return (
+            <div className="grid grid-cols-3 gap-2">
+                {difficulties.map((difficulty) => {
+                    const config = configs[difficulty];
+                    const isLocked = currentLevel < config.unlock_level;
+                    const isSelected = selected === difficulty;
+
+                    return (
+                        <button
+                            key={difficulty}
+                            onClick={() => !isLocked && handleSelect(difficulty)}
+                            disabled={isLocked}
+                            className={`
+                                relative py-2 px-1 rounded-lg border transition-all duration-200 flex flex-col items-center justify-center gap-1
+                                ${isLocked ? 'opacity-50 cursor-not-allowed bg-zinc-900 border-zinc-800' : ''}
+                                ${isSelected
+                                    ? 'bg-zinc-800 border-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]'
+                                    : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800'
+                                }
+                            `}
+                        >
+                            <span
+                                className={`font-pixel text-[9px] uppercase tracking-wider ${isSelected ? 'text-primary' : 'text-zinc-500'}`}
+                            >
+                                {difficulty}
+                            </span>
+
+                            {/* Visual Indicator Dots */}
+                            <div className="flex gap-0.5">
+                                {[...Array(difficulty === 'beginner' ? 1 : difficulty === 'intermediate' ? 2 : 3)].map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className={`w-1 h-1 rounded-full ${isSelected ? 'bg-primary' : 'bg-zinc-600'}`}
+                                    />
+                                ))}
+                            </div>
+
+                            {isLocked && <Lock className="absolute top-1 right-1 h-3 w-3 text-zinc-600" />}
+                        </button>
+                    );
+                })}
+            </div>
+        );
+    }
+
+    // Default Full Card Layout
     return (
         <div className="space-y-6">
             <div className="text-center">
@@ -85,10 +134,10 @@ export function DifficultySelector({ onSelect, currentLevel = 1, selectedDifficu
                         >
                             <Card
                                 className={`relative cursor-pointer transition-all ${isLocked
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : isSelected
-                                            ? "border-4 shadow-[0_0_20px_rgba(255,153,51,0.5)]"
-                                            : "border-2 hover:border-primary/50"
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : isSelected
+                                        ? "border-4 shadow-[0_0_20px_rgba(255,153,51,0.5)]"
+                                        : "border-2 hover:border-primary/50"
                                     } bg-zinc-900`}
                                 style={{
                                     borderColor: isSelected ? config.color : undefined
