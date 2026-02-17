@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -7,9 +7,11 @@ from celery.result import AsyncResult
 from sqlalchemy.orm import Session
 from app.db import models, database
 from app.api.auth import router as auth_router
+from app.api.websocket import manager, handle_websocket_message
 import shutil
 import os
 import uuid
+from datetime import datetime
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -32,6 +34,10 @@ app.add_middleware(
 # Define the request body model
 class AnalysisRequest(BaseModel):
     video_url: str
+
+class RealtimeSessionRequest(BaseModel):
+    mode: str = "practice"  # practice, challenge, timed
+    difficulty: str = "intermediate"  # beginner, intermediate, expert
 
 # Dependency
 def get_db():
@@ -187,3 +193,136 @@ async def get_analysis(task_id: str, db: Session = Depends(get_db)):
         "suggestions": result.suggestions,
         "created_at": result.created_at
     }
+
+
+# ============= REAL-TIME ANALYSIS ENDPOINTS =============
+
+@app.post("/realtime/start-session")
+async def start_realtime_session(request: RealtimeSessionRequest, db: Session = Depends(get_db)):
+    """Start a new real-time practice session"""
+    session_id = str(uuid.uuid4())
+    
+    # Create session record
+    session = models.RealtimeSession(
+        session_id=session_id,
+        mode=request.mode,
+        difficulty=request.difficulty
+    )
+    db.add(session)
+    db.commit()
+    
+    return {
+        "session_id": session_id,
+        "mode": request.mode,
+        "difficulty": request.difficulty,
+        "started_at": session.started_at
+    }
+
+
+@app.post("/realtime/end-session/{session_id}")
+async def end_realtime_session(session_id: str, db: Session = Depends(get_db)):
+    """End a real-time practice session and calculate final stats"""
+    session = db.query(models.RealtimeSession).filter(
+        models.RealtimeSession.session_id == session_id
+    ).first()
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Update session end time
+    session.ended_at = datetime.utcnow()
+    session.duration_seconds = int((session.ended_at - session.started_at).total_seconds())
+    
+    # Calculate stats from metrics
+    metrics = db.query(models.RealtimeMetrics).filter(
+        models.RealtimeMetrics.session_id == session_id
+    ).all()
+    
+    if metrics:
+        session.average_score = sum(m.total_score for m in metrics) / len(metrics)
+        session.max_combo = max(m.combo_count for m in metrics)
+    
+    # Calculate total XP from achievements
+    achievements = db.query(models.RealtimeAchievement).filter(
+        models.RealtimeAchievement.session_id == session_id
+    ).all()
+    
+    session.total_xp_earned = sum(a.xp_earned for a in achievements)
+    
+    db.commit()
+    
+    return {
+        "session_id": session_id,
+        "duration_seconds": session.duration_seconds,
+        "average_score": session.average_score,
+        "max_combo": session.max_combo,
+        "total_xp_earned": session.total_xp_earned,
+        "achievements_count": len(achievements)
+    }
+
+
+@app.get("/realtime/session/{session_id}/stats")
+async def get_session_stats(session_id: str, db: Session = Depends(get_db)):
+    """Get detailed statistics for a session"""
+    session = db.query(models.RealtimeSession).filter(
+        models.RealtimeSession.session_id == session_id
+    ).first()
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Get achievements
+    achievements = db.query(models.RealtimeAchievement).filter(
+        models.RealtimeAchievement.session_id == session_id
+    ).all()
+    
+    return {
+        "session_id": session.session_id,
+        "mode": session.mode,
+        "difficulty": session.difficulty,
+        "started_at": session.started_at,
+        "ended_at": session.ended_at,
+        "duration_seconds": session.duration_seconds,
+        "average_score": session.average_score,
+        "max_combo": session.max_combo,
+        "total_xp_earned": session.total_xp_earned,
+        "filler_words_count": session.filler_words_count,
+        "achievements": [
+            {
+                "type": a.achievement_type,
+                "name": a.achievement_name,
+                "description": a.achievement_description,
+                "xp_earned": a.xp_earned,
+                "unlocked_at": a.unlocked_at
+            }
+            for a in achievements
+        ]
+    }
+
+
+@app.websocket("/ws/realtime-analysis/{session_id}")
+async def realtime_analysis_websocket(websocket: WebSocket, session_id: str):
+    """WebSocket endpoint for real-time video/audio analysis"""
+    await manager.connect(session_id, websocket)
+    
+    # Get database session
+    db = next(get_db())
+    
+    try:
+        while True:
+            # Receive message from client
+            data = await websocket.receive_json()
+            
+            # Process message and get response
+            response = await handle_websocket_message(session_id, data, db)
+            
+            # Send response back to client
+            await manager.send_message(session_id, response)
+            
+    except WebSocketDisconnect:
+        manager.disconnect(session_id)
+        db.close()
+    except Exception as e:
+        await manager.send_message(session_id, {"error": str(e)})
+        manager.disconnect(session_id)
+        db.close()
