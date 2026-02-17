@@ -36,13 +36,13 @@ export default function PracticePage() {
     const [user, setUser] = useState<any>(null);
 
     const videoRef = useRef<HTMLVideoElement>(null);
-    const frameIntervalRef = useRef<NodeJS.Timeout>();
+    const frameIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     const { stream, isStreaming, error: webrtcError, startStream, stopStream, captureFrame } = useWebRTC({
         video: videoEnabled,
         audio: audioEnabled,
         frameRate: 30
-    } as any);
+    });
 
     const {
         isConnected,
@@ -354,6 +354,16 @@ export default function PracticePage() {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Difficulty Selection */}
+                            <div>
+                                <label className="block text-sm font-pixel text-zinc-400 mb-3">DIFFICULTY</label>
+                                <DifficultySelector
+                                    onSelect={(diff) => setDifficulty(diff as 'beginner' | 'intermediate' | 'expert')}
+                                    currentLevel={1}
+                                    selectedDifficulty={difficulty}
+                                />
+                            </div>
                         </div>
                     )}
 
@@ -435,8 +445,16 @@ export default function PracticePage() {
             </div>
 
             {/* Live feedback pills */}
-            {metrics && (
-                <LiveFeedback messages={metrics.feedback_messages} />
+            {metrics && metrics.feedback_messages && (
+                <LiveFeedback
+                    messages={metrics.feedback_messages.map(msg => ({
+                        type: msg.type as 'positive' | 'warning' | 'error',
+                        message: msg.message,
+                        icon: msg.type === 'positive' ? 'smile' :
+                            msg.type === 'warning' ? 'alert-triangle' :
+                                'camera-off'
+                    }))}
+                />
             )}
 
             {/* Achievement popup */}
