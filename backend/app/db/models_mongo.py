@@ -164,3 +164,96 @@ class RealtimeAchievementInDB(RealtimeAchievementBase):
         populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
+
+
+# ============= DIFFICULTY CONFIG MODELS =============
+
+class DifficultyConfig(BaseModel):
+    level: str  # "beginner", "intermediate", "expert"
+    target_scores: Dict[str, int]  # Minimum scores required
+    time_limit: Optional[int] = None  # Seconds (None = unlimited)
+    filler_word_tolerance: int  # Max allowed filler words
+    pace_range: tuple[int, int]  # Min/max WPM
+    multiplier_base: float  # Score multiplier
+    xp_multiplier: float  # XP multiplier
+    unlock_level: int  # User level required to unlock
+
+
+# ============= CHALLENGE MODELS =============
+
+class ChallengeBase(BaseModel):
+    challenge_id: str
+    type: str  # "daily", "weekly", "achievement"
+    title: str
+    description: str
+    difficulty: str = "intermediate"
+    
+class ChallengeRequirements(BaseModel):
+    min_score: Optional[float] = None
+    min_duration: Optional[int] = None  # seconds
+    max_filler_words: Optional[int] = None
+    min_sessions: Optional[int] = None
+    perfect_categories: Optional[List[str]] = None  # ["facial", "voice", "content"]
+    specific_metrics: Optional[Dict[str, Any]] = None
+
+class ChallengeRewards(BaseModel):
+    xp: int
+    badge_id: Optional[str] = None
+    title: Optional[str] = None
+
+class ChallengeInDB(ChallengeBase):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    requirements: ChallengeRequirements
+    rewards: ChallengeRewards
+    expires_at: Optional[datetime] = None
+    active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+
+
+# ============= USER CHALLENGE MODELS =============
+
+class UserChallengeBase(BaseModel):
+    user_id: str
+    challenge_id: str
+    
+class UserChallengeInDB(UserChallengeBase):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    progress: float = 0.0  # 0-100
+    current_value: float = 0.0  # Current metric value
+    target_value: float = 0.0  # Target metric value
+    completed: bool = False
+    completed_at: Optional[datetime] = None
+    claimed: bool = False
+    claimed_at: Optional[datetime] = None
+    started_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+
+
+# ============= LEADERBOARD MODELS =============
+
+class LeaderboardEntryBase(BaseModel):
+    user_id: str
+    username: str
+    score: float
+    difficulty: str
+    session_id: str
+    
+class LeaderboardEntryInDB(LeaderboardEntryBase):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    rank: Optional[int] = None
+    category: str  # "daily", "weekly", "all_time"
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
