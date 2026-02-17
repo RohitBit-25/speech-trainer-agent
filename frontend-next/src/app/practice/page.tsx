@@ -5,10 +5,12 @@ import { motion } from 'framer-motion';
 import { Camera, CameraOff, Mic, MicOff, Play, Square, Settings } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useRealtimeAnalysis } from '@/hooks/useRealtimeAnalysis';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { PerformanceMeters } from '@/components/realtime/PerformanceMeters';
 import { ComboCounter } from '@/components/realtime/ComboCounter';
 import { LiveFeedback } from '@/components/realtime/LiveFeedback';
 import { AchievementPopup } from '@/components/realtime/AchievementPopup';
+import { LiveTranscript } from '@/components/realtime/LiveTranscript';
 import { Button } from '@/components/ui/button';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -41,6 +43,17 @@ export default function PracticePage() {
         requestFeedback
     } = useRealtimeAnalysis();
 
+    // Speech recognition
+    const {
+        transcript,
+        interimTranscript,
+        segments,
+        isListening: isTranscribing,
+        startListening,
+        stopListening,
+        resetTranscript
+    } = useSpeechRecognition();
+
     // Set video stream to video element
     useEffect(() => {
         if (videoRef.current && stream) {
@@ -59,6 +72,9 @@ export default function PracticePage() {
         try {
             // Start camera/mic
             await startStream();
+
+            // Start speech recognition
+            startListening();
 
             // Create session on backend
             const response = await fetch(`${API_URL}/realtime/start-session`, {
@@ -238,8 +254,8 @@ export default function PracticePage() {
                                             key={m}
                                             onClick={() => setMode(m)}
                                             className={`px-4 py-2 font-pixel text-sm border-2 transition-colors ${mode === m
-                                                    ? 'bg-primary text-black border-primary'
-                                                    : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500'
+                                                ? 'bg-primary text-black border-primary'
+                                                : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500'
                                                 }`}
                                         >
                                             {m.toUpperCase()}
@@ -257,8 +273,8 @@ export default function PracticePage() {
                                             key={d}
                                             onClick={() => setDifficulty(d)}
                                             className={`px-4 py-2 font-pixel text-sm border-2 transition-colors ${difficulty === d
-                                                    ? 'bg-primary text-black border-primary'
-                                                    : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500'
+                                                ? 'bg-primary text-black border-primary'
+                                                : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500'
                                                 }`}
                                         >
                                             {d.toUpperCase()}
