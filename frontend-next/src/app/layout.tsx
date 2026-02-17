@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/Navbar";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -71,7 +72,9 @@ export default function RootLayout({
                         <div className="flex-1 flex flex-col relative bg-zinc-900/90 backdrop-blur-md">
                             <Navbar />  {/* Navbar inside the window now */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                {children}
+                                <ErrorBoundary>
+                                    {children}
+                                </ErrorBoundary>
                             </div>
                         </div>
                     </div>
