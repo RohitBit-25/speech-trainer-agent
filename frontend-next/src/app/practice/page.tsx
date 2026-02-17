@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, CameraOff, Mic, MicOff, Play, Square, Settings } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, Play, Square, Settings, BookOpen } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useRealtimeAnalysis } from '@/hooks/useRealtimeAnalysis';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
@@ -12,6 +12,8 @@ import { LiveFeedback } from '@/components/realtime/LiveFeedback';
 import { AchievementPopup } from '@/components/realtime/AchievementPopup';
 import { LiveTranscript } from '@/components/realtime/LiveTranscript';
 import { PerformanceMonitor } from '@/components/realtime/PerformanceMonitor';
+import { TutorialModal } from '@/components/tutorial/TutorialModal';
+import { QuickHelp } from '@/components/tutorial/HelpTooltip';
 import { Button } from '@/components/ui/button';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -24,6 +26,7 @@ export default function PracticePage() {
     const [videoEnabled, setVideoEnabled] = useState(true);
     const [audioEnabled, setAudioEnabled] = useState(true);
     const [newAchievements, setNewAchievements] = useState<any[]>([]);
+    const [showTutorial, setShowTutorial] = useState(false);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const frameIntervalRef = useRef<NodeJS.Timeout>();
@@ -370,6 +373,26 @@ export default function PracticePage() {
                 wsLatency={metrics?.latency || 0}
                 messageQueue={0}
                 show={isRecording}
+            />
+
+            {/* Tutorial Modal */}
+            <TutorialModal
+                isOpen={showTutorial}
+                onClose={() => setShowTutorial(false)}
+                mode="practice"
+            />
+
+            {/* Quick Help */}
+            <QuickHelp
+                title="Practice Mode Tips"
+                tips={[
+                    "Maintain eye contact with the camera",
+                    "Speak clearly at 120-160 words per minute",
+                    "Avoid filler words (um, uh, like)",
+                    "Build combos for higher multipliers",
+                    "Watch the performance meters for real-time feedback",
+                    "Export your transcript after each session"
+                ]}
             />
         </div>
     );
