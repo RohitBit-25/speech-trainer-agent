@@ -1,37 +1,29 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useDebounce } from 'use-debounce';
 
 interface RealtimeMetrics {
     facial_score: number;
     voice_score: number;
-    base_score: number;
-    final_score: number;
+    engagement_score: number;
     combo: number;
-    max_combo: number;
     multiplier: number;
     combo_status: string;
-    feedback_messages: FeedbackMessage[];
-    new_achievements: Achievement[];
     total_score: number;
     average_score: number;
-}
-
-interface FeedbackMessage {
-    type: 'positive' | 'warning' | 'error';
-    message: string;
-    icon: string;
-}
-
-interface Achievement {
-    id: string;
-    name: string;
-    description: string;
-    xp: number;
+    feedback_messages: Array<{
+        type: string;
+        message: string;
+        timestamp: number;
+    }>;
+    new_achievements?: Array<any>;
 }
 
 interface UseRealtimeAnalysisReturn {
     isConnected: boolean;
     metrics: RealtimeMetrics | null;
     error: string | null;
+    latency: number;
+    messageQueue: number;
     connect: (sessionId: string) => void;
     disconnect: () => void;
     sendVideoFrame: (frameData: string) => void;
@@ -39,17 +31,66 @@ interface UseRealtimeAnalysisReturn {
     requestFeedback: () => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-const WS_URL = API_URL.replace('http', 'ws');
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+const RECONNECT_DELAY = 1000; // Start with 1 second
+const MAX_RECONNECT_DELAY = 30000; // Max 30 seconds
+const MESSAGE_BATCH_SIZE = 5; // Batch messages for better performance
 
 export function useRealtimeAnalysis(): UseRealtimeAnalysisReturn {
     const [isConnected, setIsConnected] = useState(false);
     const [metrics, setMetrics] = useState<RealtimeMetrics | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [latency, setLatency] = useState(0);
+    const [messageQueue, setMessageQueue] = useState(0);
+
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+    const reconnectDelayRef = useRef(RECONNECT_DELAY);
+    const sessionIdRef = useRef<string | null>(null);
+    const messageQueueRef = useRef<any[]>([]);
+    const lastPingRef = useRef<number>(0);
+    const batchTimeoutRef = useRef<NodeJS.Timeout>();
+
+    // Debounce metrics updates to reduce re-renders
+    const [debouncedMetrics] = useDebounce(metrics, 50);
+
+    // Batch message sending for better performance
+    const flushMessageQueue = useCallback(() => {
+        if (messageQueueRef.current.length === 0 || !wsRef.current) return;
+
+        const messages = messageQueueRef.current.splice(0, MESSAGE_BATCH_SIZE);
+        messages.forEach(msg => {
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+            }
+        });
+
+        setMessageQueue(messageQueueRef.current.length);
+
+        // Schedule next batch if queue not empty
+        if (messageQueueRef.current.length > 0) {
+            batchTimeoutRef.current = setTimeout(flushMessageQueue, 16); // ~60fps
+        }
+    }, []);
+
+    const queueMessage = useCallback((message: any) => {
+        messageQueueRef.current.push(message);
+        setMessageQueue(messageQueueRef.current.length);
+
+        // Start flushing if not already running
+        if (!batchTimeoutRef.current) {
+            batchTimeoutRef.current = setTimeout(flushMessageQueue, 16);
+        }
+    }, [flushMessageQueue]);
 
     const connect = useCallback((sessionId: string) => {
+        sessionIdRef.current = sessionId;
+
+        // Close existing connection
+        if (wsRef.current) {
+            wsRef.current.close();
+        }
+
         try {
             const ws = new WebSocket(`${WS_URL}/ws/realtime-analysis/${sessionId}`);
 
@@ -57,22 +98,30 @@ export function useRealtimeAnalysis(): UseRealtimeAnalysisReturn {
                 console.log('WebSocket connected');
                 setIsConnected(true);
                 setError(null);
+                reconnectDelayRef.current = RECONNECT_DELAY; // Reset delay on successful connection
+
+                // Flush any queued messages
+                flushMessageQueue();
             };
 
             ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
 
-                    if (data.error) {
-                        setError(data.error);
+                    // Calculate latency
+                    if (data.type === 'pong') {
+                        const now = Date.now();
+                        setLatency(now - lastPingRef.current);
                         return;
                     }
 
                     if (data.type === 'feedback') {
                         setMetrics(data.data);
+                    } else if (data.type === 'error') {
+                        setError(data.message);
                     }
                 } catch (err) {
-                    console.error('Message parse error:', err);
+                    console.error('Failed to parse WebSocket message:', err);
                 }
             };
 
@@ -85,23 +134,37 @@ export function useRealtimeAnalysis(): UseRealtimeAnalysisReturn {
                 console.log('WebSocket disconnected');
                 setIsConnected(false);
 
-                // Attempt reconnect after 3 seconds
-                reconnectTimeoutRef.current = setTimeout(() => {
-                    if (wsRef.current?.readyState === WebSocket.CLOSED) {
-                        connect(sessionId);
-                    }
-                }, 3000);
+                // Attempt to reconnect with exponential backoff
+                if (sessionIdRef.current) {
+                    reconnectTimeoutRef.current = setTimeout(() => {
+                        console.log(`Reconnecting in ${reconnectDelayRef.current}ms...`);
+                        connect(sessionIdRef.current!);
+
+                        // Exponential backoff
+                        reconnectDelayRef.current = Math.min(
+                            reconnectDelayRef.current * 2,
+                            MAX_RECONNECT_DELAY
+                        );
+                    }, reconnectDelayRef.current);
+                }
             };
 
             wsRef.current = ws;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Connection failed');
+            console.error('Failed to create WebSocket:', err);
+            setError('Failed to establish connection');
         }
-    }, []);
+    }, [flushMessageQueue]);
 
     const disconnect = useCallback(() => {
+        sessionIdRef.current = null;
+
         if (reconnectTimeoutRef.current) {
             clearTimeout(reconnectTimeoutRef.current);
+        }
+
+        if (batchTimeoutRef.current) {
+            clearTimeout(batchTimeoutRef.current);
         }
 
         if (wsRef.current) {
@@ -110,39 +173,40 @@ export function useRealtimeAnalysis(): UseRealtimeAnalysisReturn {
         }
 
         setIsConnected(false);
-        setMetrics(null);
+        messageQueueRef.current = [];
+        setMessageQueue(0);
     }, []);
 
     const sendVideoFrame = useCallback((frameData: string) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({
-                type: 'video_frame',
-                data: frameData
-            }));
-        }
-    }, []);
+        queueMessage({
+            type: 'video_frame',
+            data: frameData
+        });
+    }, [queueMessage]);
 
     const sendAudioChunk = useCallback((audioData: ArrayBuffer) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            // Convert ArrayBuffer to base64
-            const base64 = btoa(
-                new Uint8Array(audioData).reduce((data, byte) => data + String.fromCharCode(byte), '')
-            );
+        // Convert ArrayBuffer to base64
+        const base64 = btoa(
+            new Uint8Array(audioData).reduce(
+                (data, byte) => data + String.fromCharCode(byte),
+                ''
+            )
+        );
 
-            wsRef.current.send(JSON.stringify({
-                type: 'audio_chunk',
-                data: base64
-            }));
-        }
-    }, []);
+        queueMessage({
+            type: 'audio_chunk',
+            data: base64
+        });
+    }, [queueMessage]);
 
     const requestFeedback = useCallback(() => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({
-                type: 'request_feedback'
-            }));
-        }
-    }, []);
+        // Send ping for latency measurement
+        lastPingRef.current = Date.now();
+
+        queueMessage({
+            type: 'request_feedback'
+        });
+    }, [queueMessage]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -151,10 +215,26 @@ export function useRealtimeAnalysis(): UseRealtimeAnalysisReturn {
         };
     }, [disconnect]);
 
+    // Health check ping every 5 seconds
+    useEffect(() => {
+        if (!isConnected) return;
+
+        const interval = setInterval(() => {
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+                lastPingRef.current = Date.now();
+                wsRef.current.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [isConnected]);
+
     return {
         isConnected,
-        metrics,
+        metrics: debouncedMetrics,
         error,
+        latency,
+        messageQueue,
         connect,
         disconnect,
         sendVideoFrame,

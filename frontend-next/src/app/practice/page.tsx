@@ -301,6 +301,14 @@ export default function PracticePage() {
                             </p>
                         </div>
                     )}
+
+                    {/* Live Transcript */}
+                    <LiveTranscript
+                        transcript={transcript}
+                        interimTranscript={interimTranscript}
+                        segments={segments}
+                        isListening={isTranscribing}
+                    />
                 </div>
 
                 {/* Right column - Stats */}
