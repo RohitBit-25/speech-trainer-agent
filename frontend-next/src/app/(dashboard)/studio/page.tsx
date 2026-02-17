@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Hero } from "@/components/home/Hero";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { BookOpen } from 'lucide-react';
+import { Hero } from '@/components/home/Hero';
 import { VideoDropzone } from "@/components/upload/VideoDropzone";
 import { SystemConsole } from "@/components/analysis/SystemConsole";
+import { TutorialModal } from '@/components/tutorial/TutorialModal';
+import { QuickHelp } from '@/components/tutorial/HelpTooltip';
+import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import { startAnalysis, pollAnalysis } from "@/lib/api";
 
-export default function Home() {
+export default function StudioPage() {
+    const [showTutorial, setShowTutorial] = useState(false);
     const [isUploading, setIsUploading] = useState(false); // Local loading state for UI
     const [taskId, setTaskId] = useState<string | null>(null);
     const setAnalyzing = useAppStore((state) => state.setAnalyzing);
@@ -93,6 +98,26 @@ export default function Home() {
                     <SystemConsole taskId={taskId} isAnalyzing={isUploading} />
                 )}
             </div>
+
+            {/* Tutorial Modal */}
+            <TutorialModal
+                isOpen={showTutorial}
+                onClose={() => setShowTutorial(false)}
+                mode="studio"
+            />
+
+            {/* Quick Help */}
+            <QuickHelp
+                title="Video Analysis Tips"
+                tips={[
+                    "Record in landscape mode with good lighting",
+                    "Keep videos under 50MB (2-5 minutes ideal)",
+                    "Ensure clear audio and visible face",
+                    "Use 720p or 1080p resolution",
+                    "Minimize background noise",
+                    "Practice your speech before recording"
+                ]}
+            />
 
         </main>
     );

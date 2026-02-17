@@ -150,15 +150,23 @@ export default function PracticePage() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white p-6">
-            {/* Header */}
-            <div className="max-w-7xl mx-auto mb-8">
-                <h1 className="text-4xl font-pixel font-bold text-primary mb-2">
-                    LIVE PRACTICE MODE
-                </h1>
-                <p className="text-zinc-400 font-mono">
-                    Real-time feedback • Combo system • Achievements
-                </p>
+        <div className="container mx-auto px-4 py-8">
+            {/* Header with Tutorial Button */}
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h1 className="font-pixel text-4xl text-primary mb-2">PRACTICE MODE</h1>
+                    <p className="font-mono text-sm text-zinc-400">
+                        Real-time AI feedback as you speak
+                    </p>
+                </div>
+                <Button
+                    onClick={() => setShowTutorial(true)}
+                    variant="outline"
+                    className="font-pixel text-xs border-2 border-primary"
+                >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    HOW TO USE
+                </Button>
             </div>
 
             {/* Main content */}
