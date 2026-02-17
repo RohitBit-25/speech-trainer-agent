@@ -1,6 +1,6 @@
 import { ParsedAnalysisResult, HistoryItem } from "./types";
 
-const API_URL = "http://localhost:8000";
+const API_URL = "/api";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 

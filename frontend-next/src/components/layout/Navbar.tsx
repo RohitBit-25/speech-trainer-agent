@@ -24,17 +24,29 @@ export function Navbar() {
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        // Check session validity with backend
-        checkSession().then((isValid) => {
-            if (isValid) {
-                const userData = getUser();
-                if (userData) setUser(userData);
-            } else {
-                // Clear stale user data if session is invalid
-                localStorage.removeItem("user");
-                setUser(null);
-            }
-        });
+        const checkAuth = () => {
+            // Check session validity with backend
+            checkSession().then((isValid) => {
+                if (isValid) {
+                    const userData = getUser();
+                    if (userData) setUser(userData);
+                } else {
+                    // Clear stale user data if session is invalid
+                    localStorage.removeItem("user");
+                    setUser(null);
+                }
+            });
+        };
+
+        // Check on mount
+        checkAuth();
+
+        // Listen for auth changes
+        window.addEventListener('auth-change', checkAuth);
+
+        return () => {
+            window.removeEventListener('auth-change', checkAuth);
+        };
     }, []);
 
     const handleLogout = async () => {

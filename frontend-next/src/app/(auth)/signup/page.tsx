@@ -47,14 +47,15 @@ export default function SignupPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8000/auth/signup", {
+            const response = await fetch("/api/auth/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: formData.name,
                     email: formData.email,
                     password: formData.password
-                })
+                }),
+                credentials: "include"
             });
 
             if (!response.ok) {

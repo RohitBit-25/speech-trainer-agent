@@ -1,5 +1,5 @@
 // Authentication utilities
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 // Note: Token is now stored in an HTTP-only cookie, not accessible to JS.
 // We only store user info in localStorage for UI display purposes.
@@ -50,6 +50,9 @@ export async function logout() {
 
     // Redirect to home
     window.location.href = '/';
+
+    // Notify listeners
+    window.dispatchEvent(new Event('auth-change'));
 }
 
 export function setAuthData(user: any) {
@@ -57,4 +60,7 @@ export function setAuthData(user: any) {
     localStorage.setItem('user', JSON.stringify(user));
 
     // We do NOT store the token anymore; backend sets the cookie.
+
+    // Notify listeners
+    window.dispatchEvent(new Event('auth-change'));
 }
