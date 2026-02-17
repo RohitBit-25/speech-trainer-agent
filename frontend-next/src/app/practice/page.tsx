@@ -1,23 +1,31 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, CameraOff, Mic, MicOff, Play, Square, Settings, BookOpen } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, Play, Square, Settings, BookOpen, Loader2 } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useRealtimeAnalysis } from '@/hooks/useRealtimeAnalysis';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
-import { PerformanceMeters } from '@/components/realtime/PerformanceMeters';
-import { ComboCounter } from '@/components/realtime/ComboCounter';
-import { LiveFeedback } from '@/components/realtime/LiveFeedback';
-import { AchievementPopup } from '@/components/realtime/AchievementPopup';
-import { LiveTranscript } from '@/components/realtime/LiveTranscript';
-import { PerformanceMonitor } from '@/components/realtime/PerformanceMonitor';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { QuickHelp } from '@/components/tutorial/HelpTooltip';
 import { DifficultySelector } from '@/components/practice/DifficultySelector';
 import { MultiplierDisplay } from '@/components/game/MultiplierDisplay';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+
+// Lazy load heavy real-time components
+const PerformanceMeters = lazy(() => import('@/components/realtime/PerformanceMeters').then(mod => ({ default: mod.PerformanceMeters })));
+const ComboCounter = lazy(() => import('@/components/realtime/ComboCounter').then(mod => ({ default: mod.ComboCounter })));
+const LiveFeedback = lazy(() => import('@/components/realtime/LiveFeedback').then(mod => ({ default: mod.LiveFeedback })));
+const AchievementPopup = lazy(() => import('@/components/realtime/AchievementPopup').then(mod => ({ default: mod.AchievementPopup })));
+const LiveTranscript = lazy(() => import('@/components/realtime/LiveTranscript').then(mod => ({ default: mod.LiveTranscript })));
+const PerformanceMonitor = lazy(() => import('@/components/realtime/PerformanceMonitor').then(mod => ({ default: mod.PerformanceMonitor })));
+
+const ComponentLoader = () => (
+    <div className="flex items-center justify-center p-4 bg-zinc-900/50 rounded-lg animate-pulse h-full min-h-[100px]">
+        <Loader2 className="h-6 w-6 text-primary animate-spin" />
+    </div>
+);
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -202,12 +210,12 @@ export default function PracticePage() {
     };
 
     return (
-        <div className="w-full h-full px-4 md:px-6 py-6 md:py-8">
+        <div className="w-full h-full flex flex-col px-4 md:px-6 py-4 md:py-6 overflow-hidden">
             {/* Header with Tutorial Button */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-4 flex-shrink-0">
                 <div>
-                    <h1 className="font-pixel text-4xl text-primary mb-2">PRACTICE MODE</h1>
-                    <p className="font-mono text-sm text-zinc-400">
+                    <h1 className="font-pixel text-2xl md:text-3xl text-primary mb-1">PRACTICE MODE</h1>
+                    <p className="font-mono text-xs md:text-sm text-zinc-400">
                         Real-time AI feedback as you speak
                     </p>
                 </div>
@@ -221,12 +229,12 @@ export default function PracticePage() {
                 </Button>
             </div>
 
-            {/* Main content */}
-            <div className="w-full px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left column - Video preview */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Video container */}
-                    <div className="relative aspect-video bg-zinc-900 border-4 border-primary shadow-[8px_8px_0px_rgba(var(--primary-rgb),0.5)]">
+            {/* Main content - Dashboard Layout */}
+            <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+                {/* Left column - Video & Main Controls - Takes 2/3 width */}
+                <div className="flex-[2] flex flex-col gap-4 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
+                    {/* Video container - Flexible height */}
+                    <div className="flex-1 min-h-[300px] relative bg-zinc-900 border-4 border-primary shadow-[8px_8px_0px_rgba(var(--primary-rgb),0.5)] flex flex-col">
                         {isStreaming ? (
                             <video
                                 ref={videoRef}
@@ -267,8 +275,8 @@ export default function PracticePage() {
                         )}
                     </div>
 
-                    {/* Controls */}
-                    <div className="flex items-center justify-between gap-4">
+                    {/* Controls Bar */}
+                    <div className="flex items-center justify-between gap-4 bg-zinc-900/50 p-3 rounded-lg border-2 border-zinc-800 flex-shrink-0">
                         <div className="flex gap-2">
                             <Button
                                 variant={videoEnabled ? "default" : "outline"}
@@ -292,7 +300,7 @@ export default function PracticePage() {
                             {!isRecording ? (
                                 <Button
                                     onClick={handleStartSession}
-                                    className="font-pixel"
+                                    className="font-pixel w-full md:w-auto"
                                     size="lg"
                                 >
                                     <Play className="h-4 w-4 mr-2" />
@@ -302,7 +310,7 @@ export default function PracticePage() {
                                 <Button
                                     onClick={handleStopSession}
                                     variant="destructive"
-                                    className="font-pixel"
+                                    className="font-pixel w-full md:w-auto"
                                     size="lg"
                                 >
                                     <Square className="h-4 w-4 mr-2" />
@@ -314,55 +322,46 @@ export default function PracticePage() {
 
                     {/* Settings (when not recording) */}
                     {!isRecording && (
-                        <div className="border-2 border-zinc-800 p-6 space-y-4">
-                            <h3 className="text-lg font-pixel text-primary mb-4">SESSION SETTINGS</h3>
-
-                            {/* Mode selection */}
-                            <div>
-                                <label className="block text-sm font-pixel text-zinc-400 mb-2">MODE</label>
-                                <div className="flex gap-2">
-                                    {(['practice', 'challenge', 'timed'] as const).map((m) => (
-                                        <button
-                                            key={m}
-                                            onClick={() => setMode(m)}
-                                            className={`px-4 py-2 font-pixel text-sm border-2 transition-colors ${mode === m
-                                                ? 'bg-primary text-black border-primary'
-                                                : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500'
-                                                }`}
-                                        >
-                                            {m.toUpperCase()}
-                                        </button>
-                                    ))}
+                        <div className="border-2 border-zinc-800 p-4 lg:p-6 space-y-4 flex-shrink-0 bg-zinc-900/30">
+                            <h3 className="text-sm font-pixel text-primary mb-3">SESSION SETTINGS</h3>
+                            <div className="flex flex-col md:flex-row gap-6">
+                                {/* Mode selection */}
+                                <div>
+                                    <label className="block text-xs font-pixel text-zinc-500 mb-2">MODE</label>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {(['practice', 'challenge', 'timed'] as const).map((m) => (
+                                            <button
+                                                key={m}
+                                                onClick={() => setMode(m)}
+                                                className={`px-3 py-1.5 font-pixel text-xs border-2 transition-all ${mode === m
+                                                    ? 'bg-primary text-black border-primary shadow-[2px_2px_0px_rgba(var(--primary-rgb),0.5)]'
+                                                    : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500'
+                                                    }`}
+                                            >
+                                                {m.toUpperCase()}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Difficulty selection */}
-                            <div>
-                                <label className="block text-sm font-pixel text-zinc-400 mb-2">DIFFICULTY</label>
-                                <div className="flex gap-2">
-                                    {(['beginner', 'intermediate', 'expert'] as const).map((d) => (
-                                        <button
-                                            key={d}
-                                            onClick={() => setDifficulty(d)}
-                                            className={`px-4 py-2 font-pixel text-sm border-2 transition-colors ${difficulty === d
-                                                ? 'bg-primary text-black border-primary'
-                                                : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500'
-                                                }`}
-                                        >
-                                            {d.toUpperCase()}
-                                        </button>
-                                    ))}
+                                {/* Difficulty selection */}
+                                <div>
+                                    <label className="block text-xs font-pixel text-zinc-500 mb-2">DIFFICULTY</label>
+                                    <div className="flex gap-2">
+                                        {(['beginner', 'intermediate', 'expert'] as const).map((d) => (
+                                            <button
+                                                key={d}
+                                                onClick={() => setDifficulty(d)}
+                                                className={`px-3 py-1.5 font-pixel text-xs border-2 transition-all ${difficulty === d
+                                                    ? 'bg-primary text-black border-primary shadow-[2px_2px_0px_rgba(var(--primary-rgb),0.5)]'
+                                                    : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500'
+                                                    }`}
+                                            >
+                                                {d.toUpperCase()}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-
-                            {/* Difficulty Selection */}
-                            <div>
-                                <label className="block text-sm font-pixel text-zinc-400 mb-3">DIFFICULTY</label>
-                                <DifficultySelector
-                                    onSelect={(diff) => setDifficulty(diff as 'beginner' | 'intermediate' | 'expert')}
-                                    currentLevel={1}
-                                    selectedDifficulty={difficulty}
-                                />
                             </div>
                         </div>
                     )}
@@ -376,17 +375,21 @@ export default function PracticePage() {
                         </div>
                     )}
 
-                    {/* Live Transcript */}
-                    <LiveTranscript
-                        transcript={transcript}
-                        interimTranscript={interimTranscript}
-                        segments={segments}
-                        isListening={isTranscribing}
-                    />
+                    {/* Live Transcript - Flexible height */}
+                    <div className="flex-1 min-h-[200px] border-2 border-zinc-800 bg-black/50 overflow-hidden rounded-lg">
+                        <Suspense fallback={<ComponentLoader />}>
+                            <LiveTranscript
+                                transcript={transcript}
+                                interimTranscript={interimTranscript}
+                                segments={segments}
+                                isListening={isTranscribing}
+                            />
+                        </Suspense>
+                    </div>
                 </div>
 
-                {/* Right column - Stats */}
-                <div className="space-y-6">
+                {/* Right column - Stats - Takes 1/3 width */}
+                <div className="flex-1 flex flex-col gap-4 min-h-0 overflow-y-auto pl-1 pr-2 custom-scrollbar">
                     {/* Multiplier Display */}
                     {isRecording && metrics && (
                         <MultiplierDisplay
@@ -396,79 +399,95 @@ export default function PracticePage() {
                         />
                     )}
 
-                    {/* Performance meters */}
-                    {metrics && (
-                        <div className="border-2 border-zinc-800 p-6">
-                            <h3 className="text-lg font-pixel text-primary mb-4">PERFORMANCE</h3>
-                            <PerformanceMeters
-                                facialScore={metrics.facial_score}
-                                voiceScore={metrics.voice_score}
-                                engagementScore={(metrics.facial_score + metrics.voice_score) / 2}
-                            />
-                        </div>
-                    )}
-
-                    {/* Live feedback */}
-                    <LiveFeedback
-                        messages={[
-                            { type: 'positive', message: 'Great eye contact!', icon: 'eye' },
-                            { type: 'warning', message: 'Speak a bit slower', icon: 'trending-up' }
-                        ]}
-                    />
-
-                    {/* Combo counter */}
-                    {metrics && (
-                        <div>
-                            <ComboCounter
-                                combo={metrics.combo}
-                                multiplier={metrics.multiplier}
-                                status={metrics.combo_status}
-                            />
-                        </div>
-                    )}
-
                     {/* Score display */}
                     {metrics && (
-                        <div className="border-2 border-primary p-6 bg-primary/10">
+                        <div className="border-2 border-primary p-4 bg-primary/10">
                             <div className="text-center">
-                                <div className="text-sm font-pixel text-zinc-400 mb-1">TOTAL SCORE</div>
-                                <div className="text-5xl font-pixel font-bold text-primary">
+                                <div className="text-xs font-pixel text-zinc-400 mb-1">TOTAL SCORE</div>
+                                <div className="text-4xl md:text-5xl font-pixel font-bold text-primary">
                                     {metrics.total_score.toLocaleString()}
                                 </div>
-                                <div className="text-xs font-pixel text-zinc-500 mt-2">
+                                <div className="text-xs font-pixel text-zinc-500 mt-1">
                                     AVG: {metrics.average_score.toFixed(1)}
                                 </div>
                             </div>
                         </div>
                     )}
+
+                    {/* Performance meters */}
+                    {metrics && (
+                        <div className="border-2 border-zinc-800 p-4">
+                            <h3 className="text-sm font-pixel text-primary mb-3">PERFORMANCE</h3>
+                            <Suspense fallback={<ComponentLoader />}>
+                                <PerformanceMeters
+                                    facialScore={metrics.facial_score}
+                                    voiceScore={metrics.voice_score}
+                                    engagementScore={(metrics.facial_score + metrics.voice_score) / 2}
+                                />
+                            </Suspense>
+                        </div>
+                    )}
+
+                    {/* Combo counter */}
+                    {metrics && (
+                        <div>
+                            <Suspense fallback={null}>
+                                <ComboCounter
+                                    combo={metrics.combo}
+                                    multiplier={metrics.multiplier}
+                                    status={metrics.combo_status}
+                                />
+                            </Suspense>
+                        </div>
+                    )}
+
+                    {/* Live feedback */}
+                    <div className="flex-1 min-h-[100px]">
+                        <Suspense fallback={null}>
+                            <LiveFeedback
+                                messages={[
+                                    { type: 'positive', message: 'Great eye contact!', icon: 'eye' },
+                                    { type: 'warning', message: 'Speak a bit slower', icon: 'trending-up' }
+                                ]}
+                            />
+                        </Suspense>
+                    </div>
+
+                    {/* Live feedback pills - Dynamic/Backend */}
+                    {metrics && metrics.feedback_messages && (
+                        <div className="flex-shrink-0">
+                            <Suspense fallback={null}>
+                                <LiveFeedback
+                                    messages={metrics.feedback_messages.map(msg => ({
+                                        type: msg.type as 'positive' | 'warning' | 'error',
+                                        message: msg.message,
+                                        icon: msg.type === 'positive' ? 'smile' :
+                                            msg.type === 'warning' ? 'alert-triangle' :
+                                                'camera-off'
+                                    }))}
+                                />
+                            </Suspense>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Live feedback pills */}
-            {metrics && metrics.feedback_messages && (
-                <LiveFeedback
-                    messages={metrics.feedback_messages.map(msg => ({
-                        type: msg.type as 'positive' | 'warning' | 'error',
-                        message: msg.message,
-                        icon: msg.type === 'positive' ? 'smile' :
-                            msg.type === 'warning' ? 'alert-triangle' :
-                                'camera-off'
-                    }))}
-                />
-            )}
-
             {/* Achievement popup */}
-            <AchievementPopup
-                achievements={newAchievements}
-                onDismiss={() => setNewAchievements([])}
-            />
+            <Suspense fallback={null}>
+                <AchievementPopup
+                    achievements={newAchievements}
+                    onDismiss={() => setNewAchievements([])}
+                />
+            </Suspense>
 
             {/* Performance Monitor */}
-            <PerformanceMonitor
-                wsLatency={0}
-                messageQueue={0}
-                show={isRecording}
-            />
+            <Suspense fallback={null}>
+                <PerformanceMonitor
+                    wsLatency={0}
+                    messageQueue={0}
+                    show={isRecording}
+                />
+            </Suspense>
 
             {/* Tutorial Modal */}
             <TutorialModal

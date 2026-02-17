@@ -4,11 +4,18 @@ const API_URL = "http://localhost:8000";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+    return fetch(url, {
+        ...options,
+        credentials: 'include', // Ensure cookies are sent
+    });
+}
+
 export async function startAnalysis(file: File): Promise<string> {
     const formData = new FormData();
     formData.append("video", file);
 
-    const uploadResponse = await fetch(`${API_URL}/analyze`, {
+    const uploadResponse = await fetchWithAuth(`${API_URL}/analyze`, {
         method: "POST",
         body: formData,
     });
@@ -32,7 +39,7 @@ export async function pollAnalysis(task_id: string): Promise<ParsedAnalysisResul
     const maxRetries = 600; // Timeout after ~20 minutes (assuming 2s interval) - increased for long analysis
 
     while (retries < maxRetries) {
-        const statusResponse = await fetch(`${API_URL}/status/${task_id}`);
+        const statusResponse = await fetchWithAuth(`${API_URL}/status/${task_id}`);
 
         if (!statusResponse.ok) {
             await sleep(2000);
@@ -88,7 +95,7 @@ export async function uploadVideo(file: File): Promise<ParsedAnalysisResult> {
 }
 
 export async function getHistory(): Promise<HistoryItem[]> {
-    const response = await fetch(`${API_URL}/history`);
+    const response = await fetchWithAuth(`${API_URL}/history`);
     if (!response.ok) {
         throw new Error("Failed to fetch history");
     }
@@ -96,7 +103,7 @@ export async function getHistory(): Promise<HistoryItem[]> {
 }
 
 export async function getAnalysis(taskId: string): Promise<ParsedAnalysisResult> {
-    const response = await fetch(`${API_URL}/analysis/${taskId}`);
+    const response = await fetchWithAuth(`${API_URL}/analysis/${taskId}`);
     if (!response.ok) {
         throw new Error("Failed to fetch analysis");
     }

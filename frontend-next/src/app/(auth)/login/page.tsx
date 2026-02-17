@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Loader2, LogIn, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { setAuthData } from "@/lib/auth";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -37,12 +38,10 @@ export default function LoginPage() {
 
             const data = await response.json();
 
-            // Store token in localStorage and cookie
-            localStorage.setItem("token", data.access_token);
-            localStorage.setItem("user", JSON.stringify(data.user));
+            const data = await response.json();
 
-            // Set cookie for middleware
-            document.cookie = `auth_token=${data.access_token}; path=/; max-age=604800`; // 7 days
+            // Store user info (no token handling needed, backend sets cookie)
+            setAuthData(data.user);
 
             toast.success("Access Granted", { description: `Welcome back, ${data.user.name}.` });
 

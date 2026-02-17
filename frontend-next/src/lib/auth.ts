@@ -1,9 +1,8 @@
 // Authentication utilities
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export function getAuthToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('token');
-}
+// Note: Token is now stored in an HTTP-only cookie, not accessible to JS.
+// We only store user info in localStorage for UI display purposes.
 
 export function getUser(): any | null {
     if (typeof window === 'undefined') return null;
@@ -11,27 +10,51 @@ export function getUser(): any | null {
     return userStr ? JSON.parse(userStr) : null;
 }
 
-export function isAuthenticated(): boolean {
-    return !!getAuthToken();
+export async function checkSession(): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_URL}/auth/me`, {
+            credentials: 'include'
+        });
+        if (response.ok) {
+            const user = await response.json();
+            // Update local user data if needed
+            localStorage.setItem('user', JSON.stringify(user));
+            return true;
+        }
+        return false;
+    } catch (e) {
+        return false;
+    }
 }
 
-export function logout() {
-    // Clear localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+export function isAuthenticated(): boolean {
+    // This checks if we *think* we are logged in based on local user data.
+    // For critical actions, the backend will enforce the cookie.
+    return !!getUser();
+}
 
-    // Clear cookie
-    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+export async function logout() {
+    try {
+        // Call backend to clear cookie
+        await fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+    } catch (e) {
+        console.error("Logout failed", e);
+    }
+
+    // Clear localStorage
+    localStorage.removeItem('user');
+    localStorage.removeItem('token'); // Cleanup old tokens if any
 
     // Redirect to home
     window.location.href = '/';
 }
 
-export function setAuthData(token: string, user: any) {
-    // Store in localStorage
-    localStorage.setItem('token', token);
+export function setAuthData(user: any) {
+    // Only store user info in localStorage
     localStorage.setItem('user', JSON.stringify(user));
 
-    // Set cookie for middleware (7 days)
-    document.cookie = `auth_token=${token}; path=/; max-age=604800`;
+    // We do NOT store the token anymore; backend sets the cookie.
 }

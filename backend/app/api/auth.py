@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
@@ -44,9 +44,19 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def verify_token(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     try:
-        token = credentials.credentials
+        # Try to get token from cookie first, then Bearer header
+        token = request.cookies.get("auth_token")
+        if not token and credentials:
+            token = credentials.credentials
+            
+        if not token:
+             raise HTTPException(status_code=401, detail="Not authenticated")
+
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
@@ -65,7 +75,7 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
         raise HTTPException(status_code=401, detail="Invalid token")
 
 @router.post("/signup", response_model=TokenResponse)
-async def signup(user_data: UserSignup):
+async def signup(user_data: UserSignup, response: Response):
     # Check if user exists
     existing_user = await users_collection.find_one({"email": user_data.email})
     if existing_user:
@@ -89,6 +99,16 @@ async def signup(user_data: UserSignup):
     # Create token
     access_token = create_access_token(data={"sub": user_id})
     
+    # Set HttpOnly cookie
+    response.set_cookie(
+        key="auth_token",
+        value=access_token,
+        httponly=True,
+        samesite="lax",
+        secure=False, # Set to True in production with HTTPS
+        max_age=60 * 60 * 24 * 7 # 7 days
+    )
+    
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
@@ -101,7 +121,7 @@ async def signup(user_data: UserSignup):
     )
 
 @router.post("/login", response_model=TokenResponse)
-async def login(credentials: UserLogin):
+async def login(credentials: UserLogin, response: Response):
     # Find user
     user = await users_collection.find_one({"email": credentials.email})
     if not user or not pwd_context.verify(credentials.password, user["password_hash"]):
@@ -110,6 +130,16 @@ async def login(credentials: UserLogin):
     # Create token
     user_id = str(user["_id"])
     access_token = create_access_token(data={"sub": user_id})
+    
+    # Set HttpOnly cookie
+    response.set_cookie(
+        key="auth_token",
+        value=access_token,
+        httponly=True,
+        samesite="lax",
+        secure=False, # Set to True in production with HTTPS
+        max_age=60 * 60 * 24 * 7 # 7 days
+    )
     
     return TokenResponse(
         access_token=access_token,
@@ -130,3 +160,8 @@ async def get_current_user(current_user: dict = Depends(verify_token)):
         email=current_user["email"],
         created_at=current_user["created_at"]
     )
+
+@router.post("/logout")
+async def logout(response: Response):
+    response.delete_cookie("auth_token")
+    return {"message": "Logged out successfully"}
