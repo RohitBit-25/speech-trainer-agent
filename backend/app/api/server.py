@@ -13,6 +13,7 @@ from app.db.mongodb import (
     init_db
 )
 from app.api.auth import router as auth_router
+from app.api.game import router as game_router
 from app.api.websocket import manager, handle_websocket_message
 import shutil
 import os
@@ -22,8 +23,9 @@ from datetime import datetime
 # Initialize FastAPI app
 app = FastAPI()
 
-# Include authentication router
+# Include routers
 app.include_router(auth_router)
+app.include_router(game_router)
 
 # Initialize MongoDB on startup
 @app.on_event("startup")

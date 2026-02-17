@@ -24,6 +24,11 @@ realtime_sessions_collection = async_db.realtime_sessions
 realtime_metrics_collection = async_db.realtime_metrics
 realtime_achievements_collection = async_db.realtime_achievements
 
+# Game Mechanics Collections
+challenges_collection = async_db.challenges
+user_challenges_collection = async_db.user_challenges
+leaderboard_collection = async_db.leaderboard
+
 # Sync collections for Celery
 sync_users_collection = sync_db.users
 sync_analysis_results_collection = sync_db.analysis_results
@@ -39,9 +44,17 @@ async def init_db():
         await realtime_sessions_collection.create_index("session_id", unique=True)
         await realtime_sessions_collection.create_index("user_id")
         
+        # Game mechanics indexes
+        await challenges_collection.create_index("challenge_id", unique=True)
+        await challenges_collection.create_index([("active", 1), ("expires_at", 1)])
+        await user_challenges_collection.create_index([("user_id", 1), ("challenge_id", 1)])
+        await leaderboard_collection.create_index([("category", 1), ("score", -1)])
+        await leaderboard_collection.create_index([("user_id", 1), ("category", 1)])
+        
         print("✅ MongoDB initialized with indexes")
     except Exception as e:
         print(f"⚠️  MongoDB initialization warning: {str(e)}")
+
 
 
 async def close_db():
