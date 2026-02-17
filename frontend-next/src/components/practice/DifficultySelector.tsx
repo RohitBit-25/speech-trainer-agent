@@ -66,47 +66,86 @@ export function DifficultySelector({ onSelect, currentLevel = 1, selectedDifficu
     };
 
     if (variant === "compact") {
+        const selectedConfig = configs[selected as keyof DifficultyConfigs];
         return (
-            <div className="grid grid-cols-3 gap-2">
-                {difficulties.map((difficulty) => {
-                    const config = configs[difficulty];
-                    const isLocked = currentLevel < config.unlock_level;
-                    const isSelected = selected === difficulty;
+            <div className="space-y-3">
+                {/* Horizontal Tabs */}
+                <div className="grid grid-cols-3 gap-2">
+                    {difficulties.map((difficulty) => {
+                        const config = configs[difficulty];
+                        const isLocked = currentLevel < config.unlock_level;
+                        const isSelected = selected === difficulty;
 
-                    return (
-                        <button
-                            key={difficulty}
-                            onClick={() => !isLocked && handleSelect(difficulty)}
-                            disabled={isLocked}
-                            className={`
-                                relative py-2 px-1 rounded-lg border transition-all duration-200 flex flex-col items-center justify-center gap-1
-                                ${isLocked ? 'opacity-50 cursor-not-allowed bg-zinc-900 border-zinc-800' : ''}
-                                ${isSelected
-                                    ? 'bg-zinc-800 border-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]'
-                                    : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800'
-                                }
-                            `}
-                        >
-                            <span
-                                className={`font-pixel text-[9px] uppercase tracking-wider ${isSelected ? 'text-primary' : 'text-zinc-500'}`}
+                        return (
+                            <button
+                                key={difficulty}
+                                onClick={() => !isLocked && handleSelect(difficulty)}
+                                disabled={isLocked}
+                                className={`
+                                    relative py-2 px-1 rounded-lg border transition-all duration-200 flex flex-col items-center justify-center gap-1
+                                    ${isLocked ? 'opacity-50 cursor-not-allowed bg-zinc-900 border-zinc-800' : ''}
+                                    ${isSelected
+                                        ? 'bg-zinc-800 border-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]'
+                                        : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800'
+                                    }
+                                `}
                             >
-                                {difficulty}
-                            </span>
+                                <span
+                                    className={`font-pixel text-[9px] uppercase tracking-wider ${isSelected ? 'text-primary' : 'text-zinc-500'}`}
+                                >
+                                    {difficulty}
+                                </span>
+                                {isLocked && <Lock className="absolute top-1 right-1 h-2 w-2 text-zinc-600" />}
+                            </button>
+                        );
+                    })}
+                </div>
 
-                            {/* Visual Indicator Dots */}
-                            <div className="flex gap-0.5">
-                                {[...Array(difficulty === 'beginner' ? 1 : difficulty === 'intermediate' ? 2 : 3)].map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className={`w-1 h-1 rounded-full ${isSelected ? 'bg-primary' : 'bg-zinc-600'}`}
-                                    />
-                                ))}
+                {/* Selected Detail View */}
+                <motion.div
+                    key={selected}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <Card className="bg-zinc-900/50 border-2 border-zinc-800 relative overflow-hidden">
+                        <div
+                            className="absolute top-0 left-0 w-1 h-full"
+                            style={{ backgroundColor: selectedConfig.color }}
+                        />
+                        <CardContent className="p-3 space-y-2">
+                            <div className="flex justify-between items-start">
+                                <p className="text-[10px] font-mono text-zinc-400 leading-tight w-3/4">
+                                    {selectedConfig.description}
+                                </p>
+                                <Badge variant="outline" className="text-[9px] font-pixel border-zinc-700">
+                                    {selectedConfig.xp_multiplier}x XP
+                                </Badge>
                             </div>
 
-                            {isLocked && <Lock className="absolute top-1 right-1 h-3 w-3 text-zinc-600" />}
-                        </button>
-                    );
-                })}
+                            <div className="grid grid-cols-2 gap-2 pt-1">
+                                <div className="flex items-center gap-1.5 text-zinc-300">
+                                    <Target className="h-3 w-3 text-primary/70" />
+                                    <span className="text-[10px] font-mono">{selectedConfig.target_scores.overall}+ Score</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-zinc-300">
+                                    <Clock className="h-3 w-3 text-blue-400/70" />
+                                    <span className="text-[10px] font-mono">
+                                        {selectedConfig.time_limit ? `${selectedConfig.time_limit / 60}m Limit` : "No Limit"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-zinc-300">
+                                    <AlertTriangle className="h-3 w-3 text-yellow-500/70" />
+                                    <span className="text-[10px] font-mono">Max {selectedConfig.filler_word_tolerance} Fillers</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-zinc-300">
+                                    <Trophy className="h-3 w-3 text-purple-400/70" />
+                                    <span className="text-[10px] font-mono">{selectedConfig.pace_range[0]}-{selectedConfig.pace_range[1]} WPM</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
             </div>
         );
     }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, CameraOff, Mic, MicOff, Play, Square, Settings, BookOpen, Loader2 } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, Play, Square, Settings, BookOpen, Loader2, Trophy } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useRealtimeAnalysis } from '@/hooks/useRealtimeAnalysis';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
@@ -333,22 +333,23 @@ export default function PracticePage() {
                 <div className="flex-1 flex flex-col gap-3 md:gap-4 min-h-0 lg:h-full lg:overflow-hidden">
 
                     {/* SCROLLABLE ANALYTICS CONTAINER */}
-                    <div className="flex-1 flex flex-col gap-3 md:gap-4 overflow-y-auto custom-scrollbar min-h-0 pr-1">
+                    <div className="flex-1 flex flex-col gap-3 md:gap-4 overflow-y-auto custom-scrollbar min-h-0 pr-1 pb-2">
 
                         {/* SCORE CARD */}
-                        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group">
+                        <div className="flex-shrink-0 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                             <div className="flex items-start justify-between relative z-10">
                                 <div>
                                     <label className="text-[10px] font-pixel text-zinc-500 mb-1 block uppercase tracking-wider">Session Score</label>
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-4xl md:text-5xl font-pixel text-primary tracking-tighter drop-shadow-[0_2px_10px_rgba(var(--primary-rgb),0.3)]">
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-4xl md:text-5xl font-pixel text-primary tracking-tighter leading-none drop-shadow-[0_2px_10px_rgba(var(--primary-rgb),0.3)]">
                                             {metrics ? metrics.total_score.toLocaleString() : "0000"}
                                         </span>
+                                        <span className="text-xs font-pixel text-zinc-600">PTS</span>
                                     </div>
                                 </div>
-                                <div className="p-2 bg-zinc-800/50 rounded-lg">
-                                    <Settings className="h-5 w-5 text-zinc-500" />
+                                <div className="p-2 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
+                                    <Trophy className="h-5 w-5 text-zinc-400" />
                                 </div>
                             </div>
 
@@ -357,7 +358,6 @@ export default function PracticePage() {
                                     <MultiplierDisplay
                                         multiplier={currentMultiplier}
                                         breakdown={multiplierBreakdown}
-                                        showBreakdown={true}
                                     />
                                 </div>
                             )}
