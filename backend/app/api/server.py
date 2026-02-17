@@ -30,12 +30,17 @@ app.include_router(auth_router)
 async def startup_db_client():
     await init_db()
 
-# Configure CORS to allow requests from your frontend
+# Configure CORS with restricted origins for security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # To be replaced with the frontend's origin in production
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        # Add production domain here when deploying
+        # "https://yourdomain.com"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
