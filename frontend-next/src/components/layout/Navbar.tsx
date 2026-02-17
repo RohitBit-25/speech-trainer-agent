@@ -40,6 +40,8 @@ export function Navbar() {
     const navLinks = user ? [
         { href: "/studio", label: "Studio", icon: "🎬" },
         { href: "/practice", label: "Practice", icon: "🎮" },
+        { href: "/challenges", label: "Challenges", icon: "🏆" },
+        { href: "/leaderboard", label: "Leaderboard", icon: "👑" },
         { href: "/history", label: "Logs", icon: "📊" },
         { href: "/analysis", label: "Analysis", icon: "🔍" },
         { href: "/settings", label: "Settings", icon: "⚙️" }

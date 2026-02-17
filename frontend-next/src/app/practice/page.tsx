@@ -17,6 +17,7 @@ import { QuickHelp } from '@/components/tutorial/HelpTooltip';
 import { DifficultySelector } from '@/components/practice/DifficultySelector';
 import { MultiplierDisplay } from '@/components/game/MultiplierDisplay';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -32,6 +33,7 @@ export default function PracticePage() {
     const [showDifficultySelector, setShowDifficultySelector] = useState(false);
     const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
     const [multiplierBreakdown, setMultiplierBreakdown] = useState<any>({});
+    const [user, setUser] = useState<any>(null);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const frameIntervalRef = useRef<NodeJS.Timeout>();
@@ -40,7 +42,7 @@ export default function PracticePage() {
         video: videoEnabled,
         audio: audioEnabled,
         frameRate: 30
-    });
+    } as any);
 
     const {
         isConnected,
@@ -70,12 +72,34 @@ export default function PracticePage() {
         }
     }, [stream]);
 
+    // Load user data
+    useEffect(() => {
+        const userData = localStorage.getItem("user");
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+    }, []);
+
     // Handle new achievements
     useEffect(() => {
         if (metrics?.new_achievements && metrics.new_achievements.length > 0) {
             setNewAchievements(metrics.new_achievements);
         }
     }, [metrics?.new_achievements]);
+
+    // Update multiplier from metrics
+    useEffect(() => {
+        if (metrics?.multiplier) {
+            setCurrentMultiplier(metrics.multiplier);
+            // Calculate breakdown
+            setMultiplierBreakdown({
+                base: difficulty === 'beginner' ? 1.0 : difficulty === 'intermediate' ? 1.5 : 2.0,
+                combo: metrics.combo > 5 ? 0.1 * Math.floor(metrics.combo / 5) : 0,
+                streak: 0, // TODO: Get from user profile
+                perfect: (metrics.facial_score > 90 && metrics.voice_score > 90) ? 0.5 : 0
+            });
+        }
+    }, [metrics?.multiplier, metrics?.combo, metrics?.facial_score, metrics?.voice_score, difficulty]);
 
     const handleStartSession = async () => {
         try {
@@ -138,9 +162,32 @@ export default function PracticePage() {
         // End session on backend
         if (sessionId) {
             try {
-                await fetch(`${API_URL}/realtime/end-session/${sessionId}`, {
+                const response = await fetch(`${API_URL}/realtime/end-session/${sessionId}`, {
                     method: 'POST'
                 });
+                const sessionData = await response.json();
+
+                // Submit to leaderboard if score is good
+                if (sessionData.average_score && sessionData.average_score > 50) {
+                    const userId = localStorage.getItem("user_id") || "";
+                    const username = user?.name || "Anonymous";
+
+                    await fetch(`${API_URL}/game/leaderboard/submit`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            username: username,
+                            score: sessionData.average_score * currentMultiplier,
+                            difficulty: difficulty,
+                            session_id: sessionId
+                        })
+                    });
+
+                    toast.success(`Score submitted to leaderboard!`, {
+                        description: `${Math.round(sessionData.average_score * currentMultiplier)} points`
+                    });
+                }
             } catch (error) {
                 console.error('Failed to end session:', error);
             }
@@ -330,6 +377,15 @@ export default function PracticePage() {
 
                 {/* Right column - Stats */}
                 <div className="space-y-6">
+                    {/* Multiplier Display */}
+                    {isRecording && metrics && (
+                        <MultiplierDisplay
+                            multiplier={currentMultiplier}
+                            breakdown={multiplierBreakdown}
+                            showBreakdown={true}
+                        />
+                    )}
+
                     {/* Performance meters */}
                     {metrics && (
                         <div className="border-2 border-zinc-800 p-6">
@@ -341,6 +397,14 @@ export default function PracticePage() {
                             />
                         </div>
                     )}
+
+                    {/* Live feedback */}
+                    <LiveFeedback
+                        messages={[
+                            { type: 'positive', message: 'Great eye contact!', icon: 'eye' },
+                            { type: 'warning', message: 'Speak a bit slower', icon: 'trending-up' }
+                        ]}
+                    />
 
                     {/* Combo counter */}
                     {metrics && (
@@ -383,7 +447,7 @@ export default function PracticePage() {
 
             {/* Performance Monitor */}
             <PerformanceMonitor
-                wsLatency={metrics?.latency || 0}
+                wsLatency={0}
                 messageQueue={0}
                 show={isRecording}
             />
