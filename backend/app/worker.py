@@ -61,19 +61,15 @@ def analyze_video_task(self, file_path: str):
         # Serialize the response
         result = jsonable_encoder(response.content)
         
-        # Save to Database
-        from app.db.database import SessionLocal
-        from app.db import models
+        # Save to MongoDB
+        from app.db.mongodb import sync_analysis_results_collection
         import json
         from datetime import datetime
         
-        db = SessionLocal()
         try:
-            db_record = db.query(models.AnalysisResult).filter(models.AnalysisResult.task_id == self.request.id).first()
-            if db_record:
-                db_record.status = "COMPLETED"
-                db_record.completed_at = datetime.utcnow()
-                
+            # Find and update the analysis result
+            result_doc = sync_analysis_results_collection.find_one({"task_id": self.request.id})
+            if result_doc:
                 def parse_if_string(val):
                     if isinstance(val, str):
                         try:
@@ -82,29 +78,36 @@ def analyze_video_task(self, file_path: str):
                             return val
                     return val
 
-                db_record.facial_analysis = parse_if_string(result.get('facial_expression_response'))
-                db_record.voice_analysis = parse_if_string(result.get('voice_analysis_response'))
-                db_record.content_analysis = parse_if_string(result.get('content_analysis_response'))
-                db_record.feedback_analysis = parse_if_string(result.get('feedback_response'))
+                # Update document with analysis results
+                update_data = {
+                    "status": "COMPLETED",
+                    "completed_at": datetime.utcnow(),
+                    "facial_analysis": parse_if_string(result.get('facial_expression_response')),
+                    "voice_analysis": parse_if_string(result.get('voice_analysis_response')),
+                    "content_analysis": parse_if_string(result.get('content_analysis_response')),
+                    "feedback_analysis": parse_if_string(result.get('feedback_response')),
+                    "strengths": result.get('strengths'),
+                    "weaknesses": result.get('weaknesses'),
+                    "suggestions": result.get('suggestions')
+                }
                 
-                db_record.strengths = result.get('strengths')
-                db_record.weaknesses = result.get('weaknesses')
-                db_record.suggestions = result.get('suggestions')
-                
-                # Extract total score if possible (it's inside feedback)
+                # Extract total score if possible
                 try:
-                    db_record.total_score = float(db_record.feedback_analysis.get('total_score', 0))
+                    feedback = update_data["feedback_analysis"]
+                    if feedback and isinstance(feedback, dict):
+                        update_data["total_score"] = float(feedback.get('total_score', 0))
                 except:
                     pass
                 
-                db.commit()
+                sync_analysis_results_collection.update_one(
+                    {"task_id": self.request.id},
+                    {"$set": update_data}
+                )
                 r.publish(f"task_logs:{self.request.id}", "Analysis Completed Successfully.\n")
                 r.publish(f"task_logs:{self.request.id}", "DONE") # Signal end of stream
         except Exception as db_e:
             r.publish(f"task_logs:{self.request.id}", f"Database Error: {str(db_e)}\n")
             print(f"Database error: {db_e}")
-        finally:
-            db.close()
         
         return result
     except Exception as e:

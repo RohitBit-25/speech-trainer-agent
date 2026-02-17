@@ -1,6 +1,4 @@
-from fastapi import WebSocket, WebSocketDisconnect, Depends, HTTPException
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from fastapi import WebSocket, WebSocketDisconnect
 from typing import Dict, Optional
 import json
 import uuid
@@ -10,8 +8,7 @@ import numpy as np
 import cv2
 from datetime import datetime
 
-from app.db.database import SessionLocal
-from app.db import models
+from app.db.mongodb import realtime_metrics_collection, realtime_achievements_collection
 from app.agents.realtime.realtime_facial_agent import RealtimeFacialAgent
 from app.agents.realtime.realtime_voice_agent import RealtimeVoiceAgent
 from app.agents.realtime.realtime_feedback_agent import RealtimeFeedbackAgent
@@ -68,13 +65,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-def get_db():
-    """Database dependency"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
 
 
 async def process_video_frame(session_id: str, frame_data: str) -> Dict:
@@ -146,7 +137,7 @@ async def process_audio_chunk(session_id: str, audio_data: bytes, transcript: Op
         return {"error": f"Audio processing error: {str(e)}"}
 
 
-async def generate_feedback(session_id: str, db: Session) -> Dict:
+async def generate_feedback(session_id: str) -> Dict:
     """
     Generate real-time feedback based on latest analysis.
     
@@ -189,30 +180,33 @@ async def generate_feedback(session_id: str, db: Session) -> Dict:
         # Generate feedback
         feedback = feedback_agent.analyze_performance(facial_analysis, voice_analysis)
         
-        # Store metrics in database
-        metric = models.RealtimeMetrics(
-            session_id=session_id,
-            facial_score=feedback["facial_score"],
-            voice_score=feedback["voice_score"],
-            engagement_score=facial_analysis["engagement_score"],
-            combo_count=feedback["combo"],
-            multiplier=feedback["multiplier"],
-            total_score=feedback["final_score"]
-        )
-        db.add(metric)
+        # Store metrics in MongoDB
+        metric_doc = {
+            "session_id": session_id,
+            "timestamp": datetime.utcnow(),
+            "facial_score": feedback["facial_score"],
+            "voice_score": feedback["voice_score"],
+            "total_score": feedback["final_score"],
+            "combo_count": feedback["combo"],
+            "combo_multiplier": feedback["multiplier"],
+            "engagement_score": facial_analysis["engagement_score"],
+            "eye_contact_score": facial_analysis["eye_contact_score"] * 100,
+            "smile_score": facial_analysis["smile_score"] * 100,
+            "speech_rate_wpm": voice_analysis["speech_rate_wpm"]
+        }
+        await realtime_metrics_collection.insert_one(metric_doc)
         
         # Store achievements if any
         for achievement in feedback.get("new_achievements", []):
-            achievement_record = models.RealtimeAchievement(
-                session_id=session_id,
-                achievement_type=achievement["id"],
-                achievement_name=achievement["name"],
-                achievement_description=achievement["description"],
-                xp_earned=achievement["xp"]
-            )
-            db.add(achievement_record)
-        
-        db.commit()
+            achievement_doc = {
+                "session_id": session_id,
+                "achievement_type": achievement["id"],
+                "achievement_name": achievement["name"],
+                "achievement_description": achievement["description"],
+                "xp_earned": achievement["xp"],
+                "unlocked_at": datetime.utcnow()
+            }
+            await realtime_achievements_collection.insert_one(achievement_doc)
         
         return {
             "type": "feedback",
@@ -220,11 +214,10 @@ async def generate_feedback(session_id: str, db: Session) -> Dict:
         }
     
     except Exception as e:
-        db.rollback()
         return {"error": f"Feedback generation error: {str(e)}"}
 
 
-async def handle_websocket_message(session_id: str, message: dict, db: Session) -> Dict:
+async def handle_websocket_message(session_id: str, message: dict) -> Dict:
     """
     Handle incoming WebSocket messages and route to appropriate processor.
     
@@ -251,7 +244,7 @@ async def handle_websocket_message(session_id: str, message: dict, db: Session) 
     
     elif message_type == "request_feedback":
         # Generate and send feedback
-        return await generate_feedback(session_id, db)
+        return await generate_feedback(session_id)
     
     elif message_type == "ping":
         # Heartbeat

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Protected routes that require authentication
-const protectedRoutes = ['/studio', '/analysis', '/feedback', '/history', '/comparison', '/settings'];
-
-// Public routes (accessible without auth)
+// Define public routes that don't require authentication
 const publicRoutes = ['/', '/login', '/signup'];
+
+// Define protected routes that require authentication
+const protectedRoutes = ['/studio', '/practice', '/history', '/analysis', '/feedback', '/comparison', '/settings'];
 
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -14,24 +14,28 @@ export function middleware(request: NextRequest) {
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
     const isPublicRoute = publicRoutes.includes(pathname);
 
-    // Get token from cookie or header (we'll use localStorage on client, but check cookie for SSR)
-    const token = request.cookies.get('token')?.value;
+    // Get token from cookie or check localStorage (we'll use a cookie for SSR)
+    const token = request.cookies.get('auth_token')?.value;
 
-    // If trying to access protected route without token, redirect to login
+    // If accessing a protected route without a token, redirect to login
     if (isProtectedRoute && !token) {
-        const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('redirect', pathname);
-        return NextResponse.redirect(loginUrl);
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        url.searchParams.set('redirect', pathname);
+        return NextResponse.redirect(url);
     }
 
-    // If logged in and trying to access login/signup, redirect to studio
+    // If accessing login/signup with a token, redirect to studio
     if ((pathname === '/login' || pathname === '/signup') && token) {
-        return NextResponse.redirect(new URL('/studio', request.url));
+        const url = request.nextUrl.clone();
+        url.pathname = '/studio';
+        return NextResponse.redirect(url);
     }
 
     return NextResponse.next();
 }
 
+// Configure which routes to run middleware on
 export const config = {
     matcher: [
         /*

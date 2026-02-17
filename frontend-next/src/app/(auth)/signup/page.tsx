@@ -63,12 +63,19 @@ export default function SignupPage() {
 
             const data = await response.json();
 
-            // Store token and user data
+            // Store token in localStorage and cookie
             localStorage.setItem("token", data.access_token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            toast.success("Account Created", { description: "Welcome to the mission, agent." });
-            router.push("/studio");
+            // Set cookie for middleware
+            document.cookie = `auth_token=${data.access_token}; path=/; max-age=604800`; // 7 days
+
+            toast.success("Account Created", { description: `Welcome to the mission, ${data.user.name}.` });
+
+            // Small delay to show toast
+            setTimeout(() => {
+                router.push("/studio");
+            }, 500);
         } catch (error: any) {
             toast.error("Registration Failed", { description: error.message });
         } finally {

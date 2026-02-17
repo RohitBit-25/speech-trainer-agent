@@ -4,8 +4,14 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from app.worker import analyze_video_task
 from celery.result import AsyncResult
-from sqlalchemy.orm import Session
-from app.db import models, database
+from bson import ObjectId
+from app.db.mongodb import (
+    analysis_results_collection,
+    realtime_sessions_collection,
+    realtime_metrics_collection,
+    realtime_achievements_collection,
+    init_db
+)
 from app.api.auth import router as auth_router
 from app.api.websocket import manager, handle_websocket_message
 import shutil
@@ -19,8 +25,10 @@ app = FastAPI()
 # Include authentication router
 app.include_router(auth_router)
 
-# Create tables
-models.Base.metadata.create_all(bind=database.engine)
+# Initialize MongoDB on startup
+@app.on_event("startup")
+async def startup_db_client():
+    await init_db()
 
 # Configure CORS to allow requests from your frontend
 app.add_middleware(
@@ -39,13 +47,7 @@ class RealtimeSessionRequest(BaseModel):
     mode: str = "practice"  # practice, challenge, timed
     difficulty: str = "intermediate"  # beginner, intermediate, expert
 
-# Dependency
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
 
 # Define the entry point
 @app.get("/")
@@ -54,7 +56,7 @@ async def root():
 
 # Define the analysis endpoint
 @app.post("/analyze")
-async def analyze(video: UploadFile = File(...), db: Session = Depends(get_db)):
+async def analyze(video: UploadFile = File(...)):
     # Validate file type
     allowed_types = ["video/mp4", "video/quicktime", "video/x-matroska", "video/webm"]
     if video.content_type not in allowed_types:
@@ -93,14 +95,14 @@ async def analyze(video: UploadFile = File(...), db: Session = Depends(get_db)):
         # Trigger Celery task
         task = analyze_video_task.delay(absolute_path)
         
-        # Create DB Record
-        db_record = models.AnalysisResult(
-            task_id=task.id,
-            video_filename=video.filename,
-            status="PENDING"
-        )
-        db.add(db_record)
-        db.commit()
+        # Create MongoDB Record
+        result_doc = {
+            "task_id": task.id,
+            "video_filename": video.filename,
+            "status": "PENDING",
+            "created_at": datetime.utcnow()
+        }
+        await analysis_results_collection.insert_one(result_doc)
             
         return JSONResponse(content={"task_id": task.id, "status": "processing"})
         
@@ -158,142 +160,139 @@ async def stream_logs(task_id: str):
 
 # History Endpoint
 @app.get("/history")
-async def get_history(db: Session = Depends(get_db)):
-    results = db.query(models.AnalysisResult).order_by(models.AnalysisResult.created_at.desc()).all()
+async def get_history():
+    results = await analysis_results_collection.find().sort("created_at", -1).to_list(100)
     return [
         {
-            "id": r.id,
-            "task_id": r.task_id,
-            "video_filename": r.video_filename,
-            "status": r.status,
-            "created_at": r.created_at,
-            "total_score": r.total_score,
-            "feedback_summary": r.feedback_analysis.get("feedback_summary") if r.feedback_analysis else None
+            "id": str(r["_id"]),
+            "task_id": r["task_id"],
+            "video_filename": r["video_filename"],
+            "status": r["status"],
+            "created_at": r["created_at"],
+            "total_score": r.get("total_score"),
+            "feedback_summary": r.get("feedback_analysis", {}).get("feedback_summary") if r.get("feedback_analysis") else None
         }
         for r in results
     ]
 
 @app.get("/analysis/{task_id}")
-async def get_analysis(task_id: str, db: Session = Depends(get_db)):
-    result = db.query(models.AnalysisResult).filter(models.AnalysisResult.task_id == task_id).first()
+async def get_analysis(task_id: str):
+    result = await analysis_results_collection.find_one({"task_id": task_id})
     if not result:
         raise HTTPException(status_code=404, detail="Analysis not found")
     
-    # Reconstruct the full response format expected by frontend
-    # Note: The stored JSON might need parsing if it was stored as string, but here it is defined as JSON type in older steps. 
-    # Let's assume it's dict.
-    
     return {
-        "facial": result.facial_analysis,
-        "voice": result.voice_analysis,
-        "content": result.content_analysis,
-        "feedback": result.feedback_analysis,
-        "strengths": result.strengths,
-        "weaknesses": result.weaknesses,
-        "suggestions": result.suggestions,
-        "created_at": result.created_at
+        "facial": result.get("facial_analysis"),
+        "voice": result.get("voice_analysis"),
+        "content": result.get("content_analysis"),
+        "feedback": result.get("feedback_analysis"),
+        "strengths": result.get("strengths"),
+        "weaknesses": result.get("weaknesses"),
+        "suggestions": result.get("suggestions"),
+        "created_at": result.get("created_at")
     }
 
 
 # ============= REAL-TIME ANALYSIS ENDPOINTS =============
 
 @app.post("/realtime/start-session")
-async def start_realtime_session(request: RealtimeSessionRequest, db: Session = Depends(get_db)):
+async def start_realtime_session(request: RealtimeSessionRequest):
     """Start a new real-time practice session"""
     session_id = str(uuid.uuid4())
     
-    # Create session record
-    session = models.RealtimeSession(
-        session_id=session_id,
-        mode=request.mode,
-        difficulty=request.difficulty
-    )
-    db.add(session)
-    db.commit()
+    # Create session document
+    session_doc = {
+        "session_id": session_id,
+        "mode": request.mode,
+        "difficulty": request.difficulty,
+        "started_at": datetime.utcnow()
+    }
+    await realtime_sessions_collection.insert_one(session_doc)
     
     return {
         "session_id": session_id,
         "mode": request.mode,
         "difficulty": request.difficulty,
-        "started_at": session.started_at
+        "started_at": session_doc["started_at"]
     }
 
 
 @app.post("/realtime/end-session/{session_id}")
-async def end_realtime_session(session_id: str, db: Session = Depends(get_db)):
+async def end_realtime_session(session_id: str):
     """End a real-time practice session and calculate final stats"""
-    session = db.query(models.RealtimeSession).filter(
-        models.RealtimeSession.session_id == session_id
-    ).first()
+    session = await realtime_sessions_collection.find_one({"session_id": session_id})
     
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Update session end time
-    session.ended_at = datetime.utcnow()
-    session.duration_seconds = int((session.ended_at - session.started_at).total_seconds())
+    # Calculate end time and duration
+    ended_at = datetime.utcnow()
+    duration_seconds = int((ended_at - session["started_at"]).total_seconds())
     
     # Calculate stats from metrics
-    metrics = db.query(models.RealtimeMetrics).filter(
-        models.RealtimeMetrics.session_id == session_id
-    ).all()
+    metrics = await realtime_metrics_collection.find({"session_id": session_id}).to_list(1000)
     
+    average_score = None
+    max_combo = None
     if metrics:
-        session.average_score = sum(m.total_score for m in metrics) / len(metrics)
-        session.max_combo = max(m.combo_count for m in metrics)
+        average_score = sum(m["total_score"] for m in metrics) / len(metrics)
+        max_combo = max(m["combo_count"] for m in metrics)
     
     # Calculate total XP from achievements
-    achievements = db.query(models.RealtimeAchievement).filter(
-        models.RealtimeAchievement.session_id == session_id
-    ).all()
+    achievements = await realtime_achievements_collection.find({"session_id": session_id}).to_list(100)
+    total_xp_earned = sum(a["xp_earned"] for a in achievements)
     
-    session.total_xp_earned = sum(a.xp_earned for a in achievements)
-    
-    db.commit()
+    # Update session
+    await realtime_sessions_collection.update_one(
+        {"session_id": session_id},
+        {"$set": {
+            "ended_at": ended_at,
+            "duration_seconds": duration_seconds,
+            "average_score": average_score,
+            "max_combo": max_combo,
+            "total_xp_earned": total_xp_earned
+        }}
+    )
     
     return {
         "session_id": session_id,
-        "duration_seconds": session.duration_seconds,
-        "average_score": session.average_score,
-        "max_combo": session.max_combo,
-        "total_xp_earned": session.total_xp_earned,
+        "duration_seconds": duration_seconds,
+        "average_score": average_score,
+        "max_combo": max_combo,
+        "total_xp_earned": total_xp_earned,
         "achievements_count": len(achievements)
     }
 
 
 @app.get("/realtime/session/{session_id}/stats")
-async def get_session_stats(session_id: str, db: Session = Depends(get_db)):
+async def get_session_stats(session_id: str):
     """Get detailed statistics for a session"""
-    session = db.query(models.RealtimeSession).filter(
-        models.RealtimeSession.session_id == session_id
-    ).first()
+    session = await realtime_sessions_collection.find_one({"session_id": session_id})
     
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     
     # Get achievements
-    achievements = db.query(models.RealtimeAchievement).filter(
-        models.RealtimeAchievement.session_id == session_id
-    ).all()
+    achievements = await realtime_achievements_collection.find({"session_id": session_id}).to_list(100)
     
     return {
-        "session_id": session.session_id,
-        "mode": session.mode,
-        "difficulty": session.difficulty,
-        "started_at": session.started_at,
-        "ended_at": session.ended_at,
-        "duration_seconds": session.duration_seconds,
-        "average_score": session.average_score,
-        "max_combo": session.max_combo,
-        "total_xp_earned": session.total_xp_earned,
-        "filler_words_count": session.filler_words_count,
+        "session_id": session["session_id"],
+        "mode": session["mode"],
+        "difficulty": session["difficulty"],
+        "started_at": session["started_at"],
+        "ended_at": session.get("ended_at"),
+        "duration_seconds": session.get("duration_seconds"),
+        "average_score": session.get("average_score"),
+        "max_combo": session.get("max_combo"),
+        "total_xp_earned": session.get("total_xp_earned"),
+        "filler_words_count": session.get("filler_words_count"),
         "achievements": [
             {
-                "type": a.achievement_type,
-                "name": a.achievement_name,
-                "description": a.achievement_description,
-                "xp_earned": a.xp_earned,
-                "unlocked_at": a.unlocked_at
+                "type": a["achievement_type"],
+                "name": a["achievement_name"],
+                "description": a["achievement_description"],
+                "xp_earned": a["xp_earned"],
+                "unlocked_at": a["unlocked_at"]
             }
             for a in achievements
         ]
@@ -305,24 +304,19 @@ async def realtime_analysis_websocket(websocket: WebSocket, session_id: str):
     """WebSocket endpoint for real-time video/audio analysis"""
     await manager.connect(session_id, websocket)
     
-    # Get database session
-    db = next(get_db())
-    
     try:
         while True:
             # Receive message from client
             data = await websocket.receive_json()
             
             # Process message and get response
-            response = await handle_websocket_message(session_id, data, db)
+            response = await handle_websocket_message(session_id, data)
             
             # Send response back to client
             await manager.send_message(session_id, response)
             
     except WebSocketDisconnect:
         manager.disconnect(session_id)
-        db.close()
     except Exception as e:
         await manager.send_message(session_id, {"error": str(e)})
         manager.disconnect(session_id)
-        db.close()
