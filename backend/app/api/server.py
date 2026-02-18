@@ -309,21 +309,37 @@ async def get_session_stats(session_id: str):
 @app.websocket("/ws/realtime-analysis/{session_id}")
 async def realtime_analysis_websocket(websocket: WebSocket, session_id: str):
     """WebSocket endpoint for real-time video/audio analysis"""
-    await manager.connect(session_id, websocket)
-    
     try:
-        while True:
-            # Receive message from client
-            data = await websocket.receive_json()
+        print(f"WS Connecting session {session_id}...")
+        await manager.connect(session_id, websocket)
+        print(f"WS Connected session {session_id}")
+        
+        try:
+            while True:
+                # Receive message from client
+                data = await websocket.receive_json()
+                
+                # Process message and get response
+                response = await handle_websocket_message(session_id, data)
+                
+                # Send response back to client
+                await manager.send_message(session_id, response)
+                
+        except WebSocketDisconnect:
+            print(f"WS Disconnect session {session_id}")
+            manager.disconnect(session_id)
+        except Exception as e:
+            print(f"WS Error session {session_id}: {e}")
+            import traceback
+            traceback.print_exc()
+            await manager.send_message(session_id, {"error": str(e)})
+            manager.disconnect(session_id)
             
-            # Process message and get response
-            response = await handle_websocket_message(session_id, data)
-            
-            # Send response back to client
-            await manager.send_message(session_id, response)
-            
-    except WebSocketDisconnect:
-        manager.disconnect(session_id)
     except Exception as e:
-        await manager.send_message(session_id, {"error": str(e)})
-        manager.disconnect(session_id)
+        print(f"WS Connection Setup Error for {session_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        try:
+            await websocket.close()
+        except:
+            pass
