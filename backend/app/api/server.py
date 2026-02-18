@@ -310,9 +310,9 @@ async def get_session_stats(session_id: str):
 async def realtime_analysis_websocket(websocket: WebSocket, session_id: str):
     """WebSocket endpoint for real-time video/audio analysis"""
     try:
-        print(f"WS Connecting session {session_id}...")
+        logging.info(f"WS Connecting session {session_id}...")
         await manager.connect(session_id, websocket)
-        print(f"WS Connected session {session_id}")
+        logging.info(f"WS Connected session {session_id}")
         
         try:
             while True:
@@ -326,17 +326,17 @@ async def realtime_analysis_websocket(websocket: WebSocket, session_id: str):
                 await manager.send_message(session_id, response)
                 
         except WebSocketDisconnect:
-            print(f"WS Disconnect session {session_id}")
+            logging.info(f"WS Disconnect session {session_id}")
             manager.disconnect(session_id)
         except Exception as e:
-            print(f"WS Error session {session_id}: {e}")
+            logging.error(f"WS Error session {session_id}: {e}")
             import traceback
             traceback.print_exc()
             await manager.send_message(session_id, {"error": str(e)})
             manager.disconnect(session_id)
             
     except Exception as e:
-        print(f"WS Connection Setup Error for {session_id}: {e}")
+        logging.error(f"WS Connection Setup Error for {session_id}: {e}")
         import traceback
         traceback.print_exc()
         try:

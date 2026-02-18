@@ -38,7 +38,7 @@ class RealtimeFeedbackAgent:
         # AI Coach Initialization
         self.last_ai_feedback_time = 0
         self.ai_coach = Agent(
-            model=Gemini(id="gemini-1.5-flash", api_key=settings.GEMINI_API_KEY),
+            model=Gemini(id="gemini-2.0-flash", api_key=os.getenv("GEMINI_API_KEY")),
             instructions=[
                 "You are an expert speech coach providing real-time feedback.",
                 "Give ONE concise, actionable tip (max 10 words) based on the user's current performance metrics.",
