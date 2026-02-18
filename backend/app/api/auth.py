@@ -9,7 +9,7 @@ from app.db.mongodb import users_collection
 from app.db.models_mongo import UserInDB, UserCreate, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 # Use argon2id instead of bcrypt (more modern, secure, and no 72-byte limit)
 pwd_context = CryptContext(

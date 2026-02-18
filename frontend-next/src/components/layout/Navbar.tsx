@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LevelBadge } from "@/components/gamification/LevelBadge";
 import { Menu, X, LogOut, User, Zap } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
-import { getUser, logout } from "@/lib/auth";
+import { getUser, logout, checkSession } from "@/lib/auth";
 import { toast } from "sonner";
 import {
     DropdownMenu,
@@ -36,6 +36,9 @@ export function Navbar() {
 
         // Read user immediately from localStorage (synchronous, instant)
         syncUser();
+
+        // Also verify session with backend to handle cookie-based persistence
+        checkSession();
 
         // Listen for auth changes dispatched by login/logout/signup
         window.addEventListener("auth-change", syncUser);
