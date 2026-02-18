@@ -1,13 +1,15 @@
 import cv2
 import mediapipe as mp
 import numpy as np
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 import time
 import os
+from app.core.emotion_detector import EmotionDetector
 
 class RealtimeFacialAgent:
     """
-    Lightweight facial analysis agent optimized for real-time processing.
+    Advanced real-time facial analysis with ML-based emotion detection.
+    Combines MediaPipe landmarks with TensorFlow emotion classification.
     Analyzes video frames for emotions, engagement, and eye contact.
     Target: < 100ms per frame
     """
@@ -18,6 +20,14 @@ class RealtimeFacialAgent:
         self.face_mesh = None
         self.mp_face_detection = None
         self.face_detection = None
+        
+        # Initialize ML-based emotion detector
+        self.emotion_detector = None
+        try:
+            self.emotion_detector = EmotionDetector()
+            print("✅ RealtimeFacialAgent: Emotion detector initialized")
+        except Exception as e:
+            print(f"⚠️ RealtimeFacialAgent: Emotion detector failed ({e})")
         
         # Try to initialize MediaPipe
         try:
@@ -60,7 +70,8 @@ class RealtimeFacialAgent:
         
     def analyze_frame(self, frame: np.ndarray) -> Dict:
         """
-        Analyze a single video frame for facial metrics.
+        Analyze a single video frame for facial metrics using ML models.
+        Uses EmotionDetector for accurate emotion classification.
         """
         start_time = time.time()
         
@@ -70,14 +81,73 @@ class RealtimeFacialAgent:
             "smile_score": 0.0,
             "engagement_score": 0.0,
             "emotion": "neutral",
-            "confidence": 0.0,
+            "emotion_confidence": 0.0,
+            "emotional_state": None,
+            "engagement_level": "low",
             "processing_time_ms": 0.0
         }
         
         try:
-            if self.use_mediapipe:
+            # Use ML-based emotion detection if available
+            if self.emotion_detector:
+                emotion_result = self.emotion_detector.detect_emotion_in_frame(frame)
+                if emotion_result['faces_detected'] > 0:
+                    analysis['face_detected'] = True
+                    analysis['emotion'] = emotion_result['primary_emotion']
+                    analysis['emotion_confidence'] = emotion_result['primary_confidence']
+                    analysis['engagement_score'] = emotion_result['engagement_score']
+                    analysis['engagement_level'] = self._classify_engagement(
+                        emotion_result['engagement_score']
+                    )
+                    
+                    # Also do MediaPipe analysis for eye contact
+                    if self.use_mediapipe:
+                        self._enhance_with_mediapipe(frame, analysis)
+            
+            # Fallback to MediaPipe if emotion detector unavailable
+            elif self.use_mediapipe:
                 analysis = self._analyze_with_mediapipe(frame, analysis)
             else:
+                analysis = self._analyze_with_opencv(frame, analysis)
+                
+            self.emotion_history.append(analysis.copy())
+            if len(self.emotion_history) > self.max_history:
+                self.emotion_history.pop(0)
+                
+        except Exception as e:
+            print(f"Analysis Error: {e}")
+            pass
+            
+        # Track processing time
+        processing_time = (time.time() - start_time) * 1000
+        analysis["processing_time_ms"] = round(processing_time, 2)
+        
+        return analysis
+    
+    def _enhance_with_mediapipe(self, frame: np.ndarray, analysis: Dict) -> Dict:
+        """Enhance analysis with MediaPipe eye contact detection"""
+        try:
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = self.face_mesh.process(rgb_frame)
+            
+            if results.multi_face_landmarks:
+                face_landmarks = results.multi_face_landmarks[0]
+                eye_contact = self._calculate_eye_contact(face_landmarks, rgb_frame.shape)
+                smile = self._calculate_smile(face_landmarks)
+                
+                analysis['eye_contact_score'] = eye_contact
+                analysis['smile_score'] = smile
+                
+                # Recalculate engagement with all metrics
+                analysis['engagement_score'] = (
+                    (eye_contact * 0.5) + 
+                    (smile * 0.2) + 
+                    (analysis['engagement_score'] * 0.3)
+                )
+        except Exception as e:
+            print(f"MediaPipe enhancement error: {e}")
+        
+        return analysis
                 analysis = self._analyze_with_opencv(frame, analysis)
         except Exception as e:
             print(f"Analysis Error: {e}")
