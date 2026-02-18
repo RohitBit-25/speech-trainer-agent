@@ -1,17 +1,24 @@
+"""
+Advanced Real-time Facial Analysis with ML-based Emotion Detection
+Combines MediaPipe landmarks with TensorFlow emotion classification
+"""
+
 import cv2
 import mediapipe as mp
 import numpy as np
 from typing import Dict, Tuple, Optional
 import time
 import os
-from app.core.emotion_detector import EmotionDetector
+
+try:
+    from app.core.emotion_detector import EmotionDetector
+except ImportError:
+    EmotionDetector = None
 
 class RealtimeFacialAgent:
     """
     Advanced real-time facial analysis with ML-based emotion detection.
     Combines MediaPipe landmarks with TensorFlow emotion classification.
-    Analyzes video frames for emotions, engagement, and eye contact.
-    Target: < 100ms per frame
     """
     
     def __init__(self):
@@ -23,15 +30,15 @@ class RealtimeFacialAgent:
         
         # Initialize ML-based emotion detector
         self.emotion_detector = None
-        try:
-            self.emotion_detector = EmotionDetector()
-            print("✅ RealtimeFacialAgent: Emotion detector initialized")
-        except Exception as e:
-            print(f"⚠️ RealtimeFacialAgent: Emotion detector failed ({e})")
+        if EmotionDetector:
+            try:
+                self.emotion_detector = EmotionDetector()
+                print("✅ RealtimeFacialAgent: Emotion detector initialized")
+            except Exception as e:
+                print(f"⚠️ RealtimeFacialAgent: Emotion detector failed ({e})")
         
         # Try to initialize MediaPipe
         try:
-            # Check for solutions attribute
             if hasattr(mp, 'solutions'):
                 self.mp_face_mesh = mp.solutions.face_mesh
                 self.face_mesh = self.mp_face_mesh.FaceMesh(
@@ -53,20 +60,17 @@ class RealtimeFacialAgent:
         except Exception as e:
             print(f"⚠️ RealtimeFacialAgent: MediaPipe import failed ({e}). Using OpenCV fallback.")
             self.use_mediapipe = False
-            # Initialize OpenCV classifiers
-            cv2_base_dir = os.path.dirname(os.path.abspath(cv2.__file__))
-            # Try finding haarcascade
             haar_path = os.path.join(cv2.data.haarcascades, 'haarcascade_frontalface_default.xml')
-            if not os.path.exists(haar_path):
-                 print(f"❌ RealtimeFacialAgent: HAAR cascade not found at {haar_path}")
-            
-            self.face_cascade = cv2.CascadeClassifier(haar_path)
-            self.eye_cascade = cv2.CascadeClassifier(os.path.join(cv2.data.haarcascades, 'haarcascade_eye.xml'))
-            self.smile_cascade = cv2.CascadeClassifier(os.path.join(cv2.data.haarcascades, 'haarcascade_smile.xml'))
+            if os.path.exists(haar_path):
+                self.face_cascade = cv2.CascadeClassifier(haar_path)
+                self.eye_cascade = cv2.CascadeClassifier(os.path.join(cv2.data.haarcascades, 'haarcascade_eye.xml'))
+                self.smile_cascade = cv2.CascadeClassifier(os.path.join(cv2.data.haarcascades, 'haarcascade_smile.xml'))
+            else:
+                print(f"❌ RealtimeFacialAgent: HAAR cascade not found")
         
         # Emotion tracking
         self.emotion_history = []
-        self.max_history = 30  # Keep last 30 frames (3 seconds at 10 FPS)
+        self.max_history = 30
         
     def analyze_frame(self, frame: np.ndarray) -> Dict:
         """

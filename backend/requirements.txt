@@ -21,3 +21,9 @@ python-multipart
 google-generativeai
 email-validator
 argon2-cffi
+tensorflow>=2.13.0
+keras>=2.13.0
+scipy
+numpy
+scikit-learn
+h5py
