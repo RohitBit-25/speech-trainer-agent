@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 // Lazy load heavy real-time components
 const PerformanceMeters = lazy(() => import('@/components/realtime/PerformanceMeters').then(mod => ({ default: mod.PerformanceMeters })));
 const ComboCounter = lazy(() => import('@/components/realtime/ComboCounter').then(mod => ({ default: mod.ComboCounter })));
-const LiveFeedback = lazy(() => import('@/components/realtime/LiveFeedback').then(mod => ({ default: mod.LiveFeedback })));
+const AICoach = lazy(() => import('@/components/realtime/AICoach').then(mod => ({ default: mod.AICoach })));
 const AchievementPopup = lazy(() => import('@/components/realtime/AchievementPopup').then(mod => ({ default: mod.AchievementPopup })));
 const LiveTranscript = lazy(() => import('@/components/realtime/LiveTranscript').then(mod => ({ default: mod.LiveTranscript })));
 const PerformanceMonitor = lazy(() => import('@/components/realtime/PerformanceMonitor').then(mod => ({ default: mod.PerformanceMonitor })));
@@ -706,19 +706,19 @@ export default function PracticePage() {
                             </Suspense>
                         </div>
 
-                        {/* AI INSIGHTS */}
-                        <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 md:p-5 flex-1 min-h-[150px] backdrop-blur-sm">
-                            <h3 className="text-xs font-pixel text-zinc-400 mb-3 uppercase tracking-wide flex items-center gap-2">
-                                <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
-                                AI Feedback Feed
-                            </h3>
-                            <Suspense fallback={null}>
-                                <LiveFeedback
+                        {/* AI COACH */}
+                        <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-0 flex-1 min-h-[150px] backdrop-blur-sm overflow-hidden">
+                            <Suspense fallback={<ComponentLoader />}>
+                                <AICoach
+                                    isConnected={isConnected}
+                                    isListening={isRecording}
                                     messages={metrics?.feedback_messages?.map(msg => ({
                                         type: msg.type as 'positive' | 'warning' | 'error' | 'ai_insight',
                                         message: msg.message,
                                         icon: msg.type === 'ai_insight' ? 'sparkles' : (msg.type === 'positive' ? 'smile' : 'alert-triangle')
                                     })) || []}
+                                    facialScore={metrics?.facial_score || 0}
+                                    voiceScore={metrics?.voice_score || 0}
                                 />
                             </Suspense>
                         </div>

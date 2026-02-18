@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import mediapipe as mp
-from deepface import DeepFace
+# from deepface import DeepFace
 from agno.tools import tool
 import json
 

@@ -50,12 +50,12 @@ export function useRealtimeAnalysis(): UseRealtimeAnalysisReturn {
     const [messageQueue, setMessageQueue] = useState(0);
 
     const wsRef = useRef<WebSocket | null>(null);
-    const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+    const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const reconnectDelayRef = useRef(RECONNECT_DELAY);
     const sessionIdRef = useRef<string | null>(null);
     const messageQueueRef = useRef<any[]>([]);
     const lastPingRef = useRef<number>(0);
-    const batchTimeoutRef = useRef<NodeJS.Timeout>();
+    const batchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     // Debounce metrics updates to reduce re-renders
     const [debouncedMetrics] = useDebounce(metrics, 50);

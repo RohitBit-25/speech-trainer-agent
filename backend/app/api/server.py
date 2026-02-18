@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from app.worker import analyze_video_task
+import logging
 from celery.result import AsyncResult
 from bson import ObjectId
 from app.db.mongodb import (
