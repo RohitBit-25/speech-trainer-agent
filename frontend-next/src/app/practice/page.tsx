@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, Suspense, lazy } from 'react';
-import { motion } from 'framer-motion';
-import { Camera, CameraOff, Mic, MicOff, Play, Square, Settings, BookOpen, Loader2, Trophy } from 'lucide-react';
+import { useEffect, useRef, useState, Suspense, lazy, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Camera, CameraOff, Mic, MicOff, Play, Square, BookOpen, Loader2, Trophy, Zap, Clock, Target, ChevronRight, RotateCcw, Star } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useRealtimeAnalysis } from '@/hooks/useRealtimeAnalysis';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
@@ -29,6 +29,211 @@ const ComponentLoader = () => (
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
+// ─── AI Prompt Cards ───────────────────────────────────────────────────────────
+const SPEECH_PROMPTS = [
+    { topic: "Introduce yourself as if you're pitching to investors.", category: "Professional", emoji: "💼" },
+    { topic: "Describe your dream vacation in exactly 60 seconds.", category: "Storytelling", emoji: "🌍" },
+    { topic: "Explain AI to a 10-year-old child.", category: "Simplification", emoji: "🤖" },
+    { topic: "Convince someone to try a food they hate.", category: "Persuasion", emoji: "🍕" },
+    { topic: "Describe your morning routine as a movie trailer.", category: "Creative", emoji: "🎬" },
+    { topic: "Give a motivational speech to someone who just failed an exam.", category: "Empathy", emoji: "💪" },
+    { topic: "Explain why your city is the best place to live.", category: "Debate", emoji: "🏙️" },
+    { topic: "Tell a story about the most interesting person you've met.", category: "Storytelling", emoji: "👤" },
+    { topic: "Pitch a startup idea you just thought of.", category: "Entrepreneurship", emoji: "🚀" },
+    { topic: "Describe your favorite book/movie without naming it.", category: "Creative", emoji: "🎭" },
+    { topic: "Explain what leadership means to you.", category: "Leadership", emoji: "🎯" },
+    { topic: "Talk about a challenge you overcame and what you learned.", category: "Personal Growth", emoji: "🌱" },
+];
+
+const FILLER_WORDS = ['um', 'uh', 'like', 'you know', 'basically', 'literally', 'actually', 'so', 'right', 'okay'];
+
+// ─── Waveform Visualizer ───────────────────────────────────────────────────────
+function WaveformVisualizer({ isActive }: { isActive: boolean }) {
+    const bars = Array.from({ length: 20 });
+    return (
+        <div className="flex items-center justify-center gap-[3px] h-8">
+            {bars.map((_, i) => (
+                <motion.div
+                    key={i}
+                    className="w-[3px] rounded-full bg-primary"
+                    animate={isActive ? {
+                        height: [4, Math.random() * 24 + 4, 4],
+                        opacity: [0.4, 1, 0.4],
+                    } : { height: 4, opacity: 0.2 }}
+                    transition={{
+                        duration: 0.5 + Math.random() * 0.5,
+                        repeat: Infinity,
+                        delay: i * 0.05,
+                        ease: "easeInOut"
+                    }}
+                />
+            ))}
+        </div>
+    );
+}
+
+// ─── Session Summary Screen ────────────────────────────────────────────────────
+interface SessionSummaryProps {
+    score: number;
+    duration: number;
+    fillerCount: number;
+    facialScore: number;
+    voiceScore: number;
+    xpEarned: number;
+    onRestart: () => void;
+}
+
+function SessionSummary({ score, duration, fillerCount, facialScore, voiceScore, xpEarned, onRestart }: SessionSummaryProps) {
+    const mins = Math.floor(duration / 60);
+    const secs = duration % 60;
+    const overallGrade = score >= 80 ? 'S' : score >= 65 ? 'A' : score >= 50 ? 'B' : score >= 35 ? 'C' : 'D';
+    const gradeColor = score >= 80 ? 'text-yellow-400' : score >= 65 ? 'text-green-400' : score >= 50 ? 'text-blue-400' : score >= 35 ? 'text-orange-400' : 'text-red-400';
+
+    const stats = [
+        { label: "Session Score", value: score.toFixed(0), unit: "pts", icon: <Trophy className="h-4 w-4 text-yellow-500" />, color: "text-yellow-400" },
+        { label: "Duration", value: `${mins}:${secs.toString().padStart(2, '0')}`, unit: "min", icon: <Clock className="h-4 w-4 text-blue-400" />, color: "text-blue-400" },
+        { label: "Filler Words", value: fillerCount.toString(), unit: "used", icon: <Target className="h-4 w-4 text-red-400" />, color: fillerCount > 10 ? "text-red-400" : fillerCount > 5 ? "text-orange-400" : "text-green-400" },
+        { label: "XP Earned", value: `+${xpEarned}`, unit: "xp", icon: <Zap className="h-4 w-4 text-primary" />, color: "text-primary" },
+    ];
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6 overflow-y-auto"
+        >
+            {/* Grade */}
+            <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
+                className="mb-6 text-center"
+            >
+                <div className="text-xs font-pixel text-zinc-500 mb-2 tracking-widest uppercase">Mission Complete</div>
+                <div className={`text-8xl font-pixel ${gradeColor} drop-shadow-[0_0_30px_currentColor]`}>{overallGrade}</div>
+                <div className="text-xs font-mono text-zinc-500 mt-2">
+                    {score >= 80 ? 'Outstanding Performance!' : score >= 65 ? 'Great Job!' : score >= 50 ? 'Good Effort!' : 'Keep Practicing!'}
+                </div>
+            </motion.div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3 w-full max-w-sm mb-6">
+                {stats.map((stat, i) => (
+                    <motion.div
+                        key={stat.label}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + i * 0.1 }}
+                        className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 text-center"
+                    >
+                        <div className="flex justify-center mb-2">{stat.icon}</div>
+                        <div className={`text-2xl font-pixel ${stat.color}`}>{stat.value}</div>
+                        <div className="text-[10px] font-mono text-zinc-500 mt-1">{stat.label}</div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Performance Bars */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                className="w-full max-w-sm space-y-3 mb-6"
+            >
+                {[
+                    { label: "Facial Expression", value: facialScore, color: "bg-blue-500" },
+                    { label: "Voice Quality", value: voiceScore, color: "bg-green-500" },
+                    { label: "Filler Word Control", value: Math.max(0, 100 - fillerCount * 5), color: "bg-orange-500" },
+                ].map((bar) => (
+                    <div key={bar.label}>
+                        <div className="flex justify-between text-[10px] font-mono text-zinc-500 mb-1">
+                            <span>{bar.label}</span>
+                            <span>{bar.value.toFixed(0)}%</span>
+                        </div>
+                        <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${bar.value}%` }}
+                                transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
+                                className={`h-full ${bar.color} rounded-full`}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </motion.div>
+
+            {/* Action Buttons */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
+                className="flex gap-3 w-full max-w-sm"
+            >
+                <Button
+                    onClick={onRestart}
+                    className="flex-1 font-pixel text-xs h-12 bg-primary text-black hover:bg-primary/90 rounded-xl"
+                >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    PRACTICE AGAIN
+                </Button>
+            </motion.div>
+        </motion.div>
+    );
+}
+
+// ─── AI Prompt Card ────────────────────────────────────────────────────────────
+function PromptCard({ prompt, onNext }: { prompt: typeof SPEECH_PROMPTS[0]; onNext: () => void }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-zinc-900/60 border border-zinc-700 rounded-2xl p-4 space-y-3"
+        >
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <span className="text-lg">{prompt.emoji}</span>
+                    <span className="text-[10px] font-pixel text-zinc-500 uppercase tracking-wider">{prompt.category}</span>
+                </div>
+                <button
+                    onClick={onNext}
+                    className="text-[10px] font-pixel text-zinc-600 hover:text-primary transition-colors flex items-center gap-1"
+                >
+                    NEXT <ChevronRight className="h-3 w-3" />
+                </button>
+            </div>
+            <p className="text-sm font-mono text-zinc-200 leading-relaxed">{prompt.topic}</p>
+            <div className="flex items-center gap-1.5">
+                <Star className="h-3 w-3 text-primary/60" />
+                <span className="text-[10px] font-mono text-zinc-600">AI-generated prompt • speak for 60–90 seconds</span>
+            </div>
+        </motion.div>
+    );
+}
+
+// ─── Countdown Timer ───────────────────────────────────────────────────────────
+function CountdownTimer({ seconds, total }: { seconds: number; total: number }) {
+    const pct = (seconds / total) * 100;
+    const color = seconds > total * 0.5 ? 'text-green-400' : seconds > total * 0.25 ? 'text-yellow-400' : 'text-red-400';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+
+    return (
+        <motion.div
+            animate={seconds <= 10 ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ repeat: Infinity, duration: 0.5 }}
+            className="flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 border border-zinc-700/50 rounded-full"
+        >
+            <Clock className={`h-3.5 w-3.5 ${color}`} />
+            <span className={`font-pixel text-sm ${color}`}>
+                {mins}:{secs.toString().padStart(2, '0')}
+            </span>
+        </motion.div>
+    );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 export default function PracticePage() {
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [isRecording, setIsRecording] = useState(false);
@@ -38,13 +243,24 @@ export default function PracticePage() {
     const [audioEnabled, setAudioEnabled] = useState(true);
     const [newAchievements, setNewAchievements] = useState<any[]>([]);
     const [showTutorial, setShowTutorial] = useState(false);
-    const [showDifficultySelector, setShowDifficultySelector] = useState(false);
     const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
     const [multiplierBreakdown, setMultiplierBreakdown] = useState<any>({});
     const [user, setUser] = useState<any>(null);
 
+    // New state
+    const [currentPrompt, setCurrentPrompt] = useState(SPEECH_PROMPTS[0]);
+    const [promptIndex, setPromptIndex] = useState(0);
+    const [fillerCount, setFillerCount] = useState(0);
+    const [sessionDuration, setSessionDuration] = useState(0);
+    const [timedSeconds, setTimedSeconds] = useState(120); // 2 min timed mode
+    const [showSummary, setShowSummary] = useState(false);
+    const [summaryData, setSummaryData] = useState<any>(null);
+    const [sessionStartTime, setSessionStartTime] = useState<number>(0);
+
     const videoRef = useRef<HTMLVideoElement>(null);
     const frameIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const durationRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     const { stream, isStreaming, error: webrtcError, startStream, stopStream, captureFrame } = useWebRTC({
         video: videoEnabled,
@@ -62,7 +278,6 @@ export default function PracticePage() {
         requestFeedback
     } = useRealtimeAnalysis();
 
-    // Speech recognition
     const {
         transcript,
         interimTranscript,
@@ -72,6 +287,17 @@ export default function PracticePage() {
         stopListening,
         resetTranscript
     } = useSpeechRecognition();
+
+    // Count filler words in transcript
+    useEffect(() => {
+        if (!transcript) return;
+        const lower = transcript.toLowerCase();
+        const count = FILLER_WORDS.reduce((acc, word) => {
+            const regex = new RegExp(`\\b${word}\\b`, 'gi');
+            return acc + (lower.match(regex)?.length || 0);
+        }, 0);
+        setFillerCount(count);
+    }, [transcript]);
 
     // Set video stream to video element
     useEffect(() => {
@@ -84,8 +310,12 @@ export default function PracticePage() {
     useEffect(() => {
         const userData = localStorage.getItem("user");
         if (userData) {
-            setUser(JSON.parse(userData));
+            try { setUser(JSON.parse(userData)); } catch { }
         }
+        // Pick a random prompt
+        const idx = Math.floor(Math.random() * SPEECH_PROMPTS.length);
+        setPromptIndex(idx);
+        setCurrentPrompt(SPEECH_PROMPTS[idx]);
     }, []);
 
     // Handle new achievements
@@ -99,25 +329,28 @@ export default function PracticePage() {
     useEffect(() => {
         if (metrics?.multiplier) {
             setCurrentMultiplier(metrics.multiplier);
-            // Calculate breakdown
             setMultiplierBreakdown({
                 base: difficulty === 'beginner' ? 1.0 : difficulty === 'intermediate' ? 1.5 : 2.0,
                 combo: metrics.combo > 5 ? 0.1 * Math.floor(metrics.combo / 5) : 0,
-                streak: 0, // TODO: Get from user profile
+                streak: 0,
                 perfect: (metrics.facial_score > 90 && metrics.voice_score > 90) ? 0.5 : 0
             });
         }
     }, [metrics?.multiplier, metrics?.combo, metrics?.facial_score, metrics?.voice_score, difficulty]);
 
+    const nextPrompt = useCallback(() => {
+        const next = (promptIndex + 1) % SPEECH_PROMPTS.length;
+        setPromptIndex(next);
+        setCurrentPrompt(SPEECH_PROMPTS[next]);
+    }, [promptIndex]);
+
     const handleStartSession = async () => {
         try {
-            // Start camera/mic
             await startStream();
-
-            // Start speech recognition
             startListening();
+            setFillerCount(0);
+            setSessionStartTime(Date.now());
 
-            // Create session on backend
             const response = await fetch(`${API_URL}/realtime/start-session`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -126,74 +359,86 @@ export default function PracticePage() {
 
             const data = await response.json();
             setSessionId(data.session_id);
-
-            // Connect WebSocket
             connect(data.session_id);
-
-            // Start recording
             setIsRecording(true);
 
-            // Start sending frames (every 100ms = 10 FPS)
+            // Start frame capture
             frameIntervalRef.current = setInterval(() => {
                 const frame = captureFrame();
-                if (frame) {
-                    sendVideoFrame(frame);
-                }
-
-                // Request feedback every 500ms
+                if (frame) sendVideoFrame(frame);
                 requestFeedback();
             }, 100);
 
+            // Duration tracker
+            durationRef.current = setInterval(() => {
+                setSessionDuration(prev => prev + 1);
+            }, 1000);
+
+            // Timed mode countdown
+            if (mode === 'timed') {
+                setTimedSeconds(120);
+                timerRef.current = setInterval(() => {
+                    setTimedSeconds(prev => {
+                        if (prev <= 1) {
+                            handleStopSession();
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+            }
+
         } catch (error) {
             console.error('Failed to start session:', error);
+            toast.error("Failed to start session");
         }
     };
 
     const handleStopSession = async () => {
-        // Stop frame capture
-        if (frameIntervalRef.current) {
-            clearInterval(frameIntervalRef.current);
-        }
+        if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
+        if (timerRef.current) clearInterval(timerRef.current);
+        if (durationRef.current) clearInterval(durationRef.current);
 
-        // Stop recording
         setIsRecording(false);
-
-        // Stop speech recognition
         stopListening();
-
-        // Disconnect WebSocket
         disconnect();
-
-        // Stop camera/mic
         stopStream();
 
-        // End session on backend
+        const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+        const finalScore = metrics?.total_score || 0;
+        const finalFacial = metrics?.facial_score || 0;
+        const finalVoice = metrics?.voice_score || 0;
+        const xpEarned = Math.round(finalScore * currentMultiplier * 0.5) + 50;
+
+        // Show summary
+        setSummaryData({
+            score: finalScore,
+            duration: elapsed,
+            fillerCount,
+            facialScore: finalFacial,
+            voiceScore: finalVoice,
+            xpEarned,
+        });
+        setShowSummary(true);
+
         if (sessionId) {
             try {
-                const response = await fetch(`${API_URL}/realtime/end-session/${sessionId}`, {
-                    method: 'POST'
-                });
+                const response = await fetch(`${API_URL}/realtime/end-session/${sessionId}`, { method: 'POST' });
                 const sessionData = await response.json();
 
-                // Submit to leaderboard if score is good
                 if (sessionData.average_score && sessionData.average_score > 50) {
                     const userId = localStorage.getItem("user_id") || "";
                     const username = user?.name || "Anonymous";
-
                     await fetch(`${API_URL}/game/leaderboard/submit`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             user_id: userId,
-                            username: username,
+                            username,
                             score: sessionData.average_score * currentMultiplier,
-                            difficulty: difficulty,
+                            difficulty,
                             session_id: sessionId
                         })
-                    });
-
-                    toast.success(`Score submitted to leaderboard!`, {
-                        description: `${Math.round(sessionData.average_score * currentMultiplier)} points`
                     });
                 }
             } catch (error) {
@@ -202,15 +447,29 @@ export default function PracticePage() {
         }
 
         setSessionId(null);
+        setSessionDuration(0);
+        setTimeout(() => resetTranscript(), 1000);
+    };
 
-        // Reset transcript after a short delay to allow viewing
-        setTimeout(() => {
-            resetTranscript();
-        }, 1000);
+    const handleRestart = () => {
+        setShowSummary(false);
+        setSummaryData(null);
+        nextPrompt();
     };
 
     return (
-        <div className="flex flex-col h-screen bg-black text-zinc-100 overflow-hidden font-mono selection:bg-primary/30">
+        <div className="flex flex-col h-screen bg-black text-zinc-100 overflow-hidden font-mono selection:bg-primary/30 relative">
+
+            {/* Session Summary Overlay */}
+            <AnimatePresence>
+                {showSummary && summaryData && (
+                    <SessionSummary
+                        {...summaryData}
+                        onRestart={handleRestart}
+                    />
+                )}
+            </AnimatePresence>
+
             {/* --- TOP NAVIGATION BAR --- */}
             <header className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-3 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-md z-20">
                 <div className="flex items-center gap-3 md:gap-4">
@@ -218,12 +477,23 @@ export default function PracticePage() {
                         <Play className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                        <h1 className="font-pixel text-lg md:text-xl text-primary leading-none tracking-tight">PRACTICE_MODE<span className="opacity-50">.v1</span></h1>
+                        <h1 className="font-pixel text-lg md:text-xl text-primary leading-none tracking-tight">PRACTICE_MODE<span className="opacity-50">.v2</span></h1>
                         <p className="hidden md:block text-[10px] text-zinc-500 mt-1 uppercase tracking-widest">Real-time Analysis Engine</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* Filler word badge (always visible during session) */}
+                    {isRecording && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-pixel text-[10px] ${fillerCount > 10 ? 'border-red-500/50 bg-red-500/10 text-red-400' : fillerCount > 5 ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400' : 'border-green-500/50 bg-green-500/10 text-green-400'}`}
+                        >
+                            <span>UM</span>
+                            <span className="text-sm">{fillerCount}</span>
+                        </motion.div>
+                    )}
                     <div className="hidden md:flex flex-col items-end mr-2">
                         <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Pilot</span>
                         <span className="text-sm font-pixel text-zinc-300">{user?.name || "GUEST"}</span>
@@ -243,10 +513,10 @@ export default function PracticePage() {
             {/* --- MAIN DASHBOARD AREA --- */}
             <main className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-y-auto lg:overflow-hidden p-2 md:p-4 gap-3 md:gap-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900/50 via-black to-black">
 
-                {/* LEFT COLUMN: Video & Transcript (The Action) */}
+                {/* LEFT COLUMN: Video & Transcript */}
                 <div className="flex-[2] flex flex-col gap-3 md:gap-4 min-h-0 lg:h-full">
 
-                    {/* VIDEO STAGE - Dynamic Height */}
+                    {/* VIDEO STAGE */}
                     <div className="relative flex-1 min-h-[300px] md:min-h-[400px] bg-zinc-950 rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl flex flex-col group">
                         {isStreaming ? (
                             <div className="relative w-full h-full">
@@ -255,7 +525,7 @@ export default function PracticePage() {
                                     autoPlay
                                     playsInline
                                     muted
-                                    className="w-full h-full object-cover transform scale-x-[-1]" // Mirror video
+                                    className="w-full h-full object-cover transform scale-x-[-1]"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
                             </div>
@@ -282,16 +552,20 @@ export default function PracticePage() {
                                     </motion.div>
                                 )}
 
-                                {isRecording && (
-                                    <div className={`px-3 py-1.5 bg-black/40 backdrop-blur-md border rounded-full font-pixel text-[10px] flex items-center gap-2 ${isConnected ? 'border-green-500/30 text-green-400' : 'border-yellow-500/30 text-yellow-400'
-                                        }`}>
+                                {/* Timed countdown in HUD */}
+                                {isRecording && mode === 'timed' && (
+                                    <CountdownTimer seconds={timedSeconds} total={120} />
+                                )}
+
+                                {isRecording && mode !== 'timed' && (
+                                    <div className={`px-3 py-1.5 bg-black/40 backdrop-blur-md border rounded-full font-pixel text-[10px] flex items-center gap-2 ${isConnected ? 'border-green-500/30 text-green-400' : 'border-yellow-500/30 text-yellow-400'}`}>
                                         <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
                                         {isConnected ? 'ONLINE' : 'CONNECTING'}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Floating Multiplier in Video */}
+                            {/* Combo Counter */}
                             {isRecording && metrics && (
                                 <div className="flex justify-end">
                                     <Suspense fallback={null}>
@@ -308,13 +582,23 @@ export default function PracticePage() {
                         </div>
                     </div>
 
-                    {/* TRANSCRIPT AREA (Fixed Height) */}
-                    <div className="h-[180px] lg:h-[200px] flex-shrink-0 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl overflow-hidden flex flex-col backdrop-blur-sm">
-                        <div className="px-4 py-3 border-b border-zinc-800/50 bg-zinc-900/30 flex justify-between items-center">
+                    {/* WAVEFORM + TRANSCRIPT AREA */}
+                    <div className="h-[200px] lg:h-[220px] flex-shrink-0 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl overflow-hidden flex flex-col backdrop-blur-sm">
+                        <div className="px-4 py-2.5 border-b border-zinc-800/50 bg-zinc-900/30 flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <div className={`w-1.5 h-1.5 rounded-full ${isTranscribing ? 'bg-primary animate-pulse' : 'bg-zinc-700'}`} />
                                 <span className="text-[10px] font-pixel text-zinc-500 uppercase tracking-wider">Live Transcript</span>
                             </div>
+                            {/* Waveform */}
+                            <WaveformVisualizer isActive={isTranscribing} />
+                            {/* Filler word count inline */}
+                            {isRecording && (
+                                <div className="text-[10px] font-mono text-zinc-600">
+                                    <span className={fillerCount > 5 ? 'text-red-400' : 'text-zinc-500'}>
+                                        {fillerCount} filler{fillerCount !== 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                             <Suspense fallback={<ComponentLoader />}>
@@ -384,49 +668,58 @@ export default function PracticePage() {
                                 <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
                                 AI Feedback Feed
                             </h3>
-                            <div className="relative">
-                                <Suspense fallback={null}>
-                                    <LiveFeedback
-                                        messages={metrics?.feedback_messages?.map(msg => ({
-                                            type: msg.type as 'positive' | 'warning' | 'error',
-                                            message: msg.message,
-                                            icon: msg.type === 'positive' ? 'smile' : 'alert-triangle'
-                                        })) || [
-                                                { type: 'warning', message: 'Analyze system standing by...', icon: 'mic' }
-                                            ]}
-                                    />
-                                </Suspense>
-                            </div>
+                            <Suspense fallback={null}>
+                                <LiveFeedback
+                                    messages={metrics?.feedback_messages?.map(msg => ({
+                                        type: msg.type as 'positive' | 'warning' | 'error',
+                                        message: msg.message,
+                                        icon: msg.type === 'positive' ? 'smile' : 'alert-triangle'
+                                    })) || [
+                                            { type: 'warning', message: 'Analyze system standing by...', icon: 'mic' }
+                                        ]}
+                                />
+                            </Suspense>
                         </div>
 
-                        {/* CONFIGURATION (Idle Only) */}
+                        {/* AI PROMPT CARD + CONFIGURATION (Idle Only) */}
                         {!isRecording && (
-                            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 space-y-4">
-                                <div>
-                                    <label className="text-[10px] font-pixel text-zinc-500 mb-2 block uppercase">Training Mode</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {(['practice', 'challenge', 'timed'] as const).map((m) => (
-                                            <button
-                                                key={m}
-                                                onClick={() => setMode(m)}
-                                                className={`py-2 font-pixel text-[10px] rounded-lg border transition-all duration-200 ${mode === m
-                                                    ? 'bg-primary/10 text-primary border-primary/50 shadow-[0_0_10px_rgba(var(--primary-rgb),0.1)]'
-                                                    : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800'
-                                                    }`}
-                                            >
-                                                {m.toUpperCase()}
-                                            </button>
-                                        ))}
+                            <div className="space-y-3">
+                                {/* AI Prompt */}
+                                <AnimatePresence mode="wait">
+                                    <PromptCard key={promptIndex} prompt={currentPrompt} onNext={nextPrompt} />
+                                </AnimatePresence>
+
+                                {/* Config */}
+                                <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-pixel text-zinc-500 mb-2 block uppercase">Training Mode</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {(['practice', 'challenge', 'timed'] as const).map((m) => (
+                                                <button
+                                                    key={m}
+                                                    onClick={() => setMode(m)}
+                                                    className={`py-2 font-pixel text-[10px] rounded-lg border transition-all duration-200 ${mode === m
+                                                        ? 'bg-primary/10 text-primary border-primary/50 shadow-[0_0_10px_rgba(var(--primary-rgb),0.1)]'
+                                                        : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800'
+                                                        }`}
+                                                >
+                                                    {m === 'timed' ? '⏱ TIMED' : m.toUpperCase()}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {mode === 'timed' && (
+                                            <p className="text-[10px] font-mono text-zinc-600 mt-2">⏱ 2-minute countdown — auto-stops when time runs out</p>
+                                        )}
                                     </div>
-                                </div>
-                                <div className="pt-1">
-                                    <label className="text-[10px] font-pixel text-zinc-500 mb-2 block uppercase">Difficulty</label>
-                                    <DifficultySelector
-                                        onSelect={(diff) => setDifficulty(diff as 'beginner' | 'intermediate' | 'expert')}
-                                        currentLevel={1}
-                                        selectedDifficulty={difficulty}
-                                        variant="compact"
-                                    />
+                                    <div className="pt-1">
+                                        <label className="text-[10px] font-pixel text-zinc-500 mb-2 block uppercase">Difficulty</label>
+                                        <DifficultySelector
+                                            onSelect={(diff) => setDifficulty(diff as 'beginner' | 'intermediate' | 'expert')}
+                                            currentLevel={1}
+                                            selectedDifficulty={difficulty}
+                                            variant="compact"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -467,10 +760,10 @@ export default function PracticePage() {
                             <Button
                                 onClick={handleStopSession}
                                 variant="destructive"
-                                className="flex-1 font-pixel h-12 rounded-xl animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                                className="flex-1 font-pixel h-12 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.2)]"
                             >
                                 <Square className="h-4 w-4 mr-2 fill-current" />
-                                STOP ANALYSIS
+                                STOP & REVIEW
                             </Button>
                         )}
                     </div>
@@ -484,19 +777,16 @@ export default function PracticePage() {
                         <div className="mt-1 h-2 w-2 bg-red-500 rounded-full animate-ping flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                             <h4 className="text-red-400 font-pixel text-xs mb-1">SYSTEM_ERROR</h4>
-                            <p className="text-red-200 font-mono text-xs break-words">
-                                {webrtcError || wsError}
-                            </p>
+                            <p className="text-red-200 font-mono text-xs break-words">{webrtcError || wsError}</p>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Keep your modals and hidden monitors here */}
             <Suspense fallback={null}><AchievementPopup achievements={newAchievements} onDismiss={() => setNewAchievements([])} /></Suspense>
             <Suspense fallback={null}><PerformanceMonitor wsLatency={0} messageQueue={0} show={isRecording} /></Suspense>
             <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} mode="practice" />
-            <QuickHelp title="Practice Mode Tips" tips={["Maintain eye contact", "120-160 WPM speed", "Avoid filler words"]} />
+            <QuickHelp title="Practice Mode Tips" tips={["Maintain eye contact", "120-160 WPM speed", "Avoid filler words (um, uh, like)", "Use the AI prompt card for topic ideas", "Timed mode = 2 minute challenge"]} />
         </div>
     );
 }
