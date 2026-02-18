@@ -715,9 +715,9 @@ export default function PracticePage() {
                             <Suspense fallback={null}>
                                 <LiveFeedback
                                     messages={metrics?.feedback_messages?.map(msg => ({
-                                        type: msg.type as 'positive' | 'warning' | 'error',
+                                        type: msg.type as 'positive' | 'warning' | 'error' | 'ai_insight',
                                         message: msg.message,
-                                        icon: msg.type === 'positive' ? 'smile' : 'alert-triangle'
+                                        icon: msg.type === 'ai_insight' ? 'sparkles' : (msg.type === 'positive' ? 'smile' : 'alert-triangle')
                                     })) || []}
                                 />
                             </Suspense>

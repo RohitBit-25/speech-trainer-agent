@@ -1,11 +1,11 @@
 "use client";
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, EyeOff, Smile, Volume, TrendingUp, AlertTriangle, Zap, ZapOff, CameraOff } from 'lucide-react';
+import { X, Eye, EyeOff, Smile, Volume, TrendingUp, AlertTriangle, Zap, ZapOff, CameraOff, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface FeedbackMessage {
-    type: 'positive' | 'warning' | 'error';
+    type: 'positive' | 'warning' | 'error' | 'ai_insight';
     message: string;
     icon: string;
 }
@@ -48,7 +48,8 @@ export function LiveFeedback({ messages }: LiveFeedbackProps) {
             'alert-triangle': AlertTriangle,
             'zap': Zap,
             'zap-off': ZapOff,
-            'camera-off': CameraOff
+            'camera-off': CameraOff,
+            'sparkles': Sparkles
         };
         return icons[iconName] || AlertTriangle;
     };
@@ -69,9 +70,13 @@ export function LiveFeedback({ messages }: LiveFeedbackProps) {
                 };
             case 'error':
                 return {
-                    bg: 'bg-red-500/20',
-                    border: 'border-red-500',
                     text: 'text-red-400'
+                };
+            case 'ai_insight':
+                return {
+                    bg: 'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20',
+                    border: 'border-fuchsia-500',
+                    text: 'text-fuchsia-300'
                 };
             default:
                 return {
