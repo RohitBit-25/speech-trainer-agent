@@ -65,9 +65,6 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-
-
-
 async def process_video_frame(session_id: str, frame_data: str) -> Dict:
     """
     Process a video frame and return analysis results.
