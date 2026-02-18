@@ -1,6 +1,9 @@
 from typing import Dict, List, Optional
 from collections import deque
 import time
+from agno.agent import Agent
+from agno.models.google import Gemini
+from app.core.config import settings
 
 class RealtimeFeedbackAgent:
     """
@@ -31,6 +34,21 @@ class RealtimeFeedbackAgent:
         # Achievements tracking
         self.unlocked_achievements = []
         self.achievement_definitions = self._define_achievements()
+
+        # AI Coach Initialization
+        self.last_ai_feedback_time = 0
+        self.ai_coach = Agent(
+            model=Gemini(id="gemini-1.5-flash", api_key=settings.GEMINI_API_KEY),
+            instructions=[
+                "You are an expert speech coach providing real-time feedback.",
+                "Give ONE concise, actionable tip (max 10 words) based on the user's current performance metrics.",
+                "Focus on the most critical area for improvement.",
+                "Be encouraging but direct.",
+                "Examples: 'Slow down slightly to improve clarity.', 'Great energy! Keep maintaining eye contact.', 'Vary your pitch to sound more engaging.'"
+            ],
+            markdown=False,
+            show_tool_calls=False
+        )
         
     def _define_achievements(self) -> Dict:
         """Define all possible achievements"""
@@ -103,6 +121,21 @@ class RealtimeFeedbackAgent:
         
         # Generate real-time feedback
         feedback_messages = self._generate_feedback(facial_analysis, voice_analysis, base_score)
+        
+        # AI Feedback (every 15 seconds)
+        current_time = time.time()
+        if current_time - self.last_ai_feedback_time > 15:
+            ai_tip = self._generate_ai_feedback({
+                "pace": voice_analysis.get("speech_rate_wpm", 0),
+                "pitch_var": voice_analysis.get("pitch_variation", 0),
+                "volume": voice_analysis.get("volume_db", 0),
+                "fillers": voice_analysis.get("filler_word_detected"),
+                "eye_contact": facial_analysis.get("eye_contact_score", 0),
+                "score": base_score
+            })
+            if ai_tip:
+                feedback_messages.insert(0, {"type": "ai_insight", "message": f"{ai_tip} ✨", "icon": "sparkles"})
+                self.last_ai_feedback_time = current_time
         
         # Check for achievements
         new_achievements = self._check_achievements({
@@ -301,3 +334,23 @@ class RealtimeFeedbackAgent:
         self.total_frames = 0
         self.feedback_history.clear()
         self.unlocked_achievements = []
+    
+    def _generate_ai_feedback(self, metrics: Dict) -> Optional[str]:
+        """Generate a short AI coaching tip using Gemini"""
+        try:
+            # Construct a minimal prompt for speed
+            prompt = (
+                f"Metrics: pace={metrics['pace']}wpm (optimum 120-160), "
+                f"pitch_var={metrics['pitch_var']} (low<5, high>20), "
+                f"eye_contact={int(metrics['eye_contact']*100)}%, "
+                f"fillers={metrics['fillers']}, "
+                f"score={int(metrics['score'])}/100."
+            )
+            
+            response = self.ai_coach.run(prompt)
+            if response and response.content:
+                return response.content.strip()
+            return None
+        except Exception as e:
+            print(f"AI Feedback Error: {e}")
+            return None

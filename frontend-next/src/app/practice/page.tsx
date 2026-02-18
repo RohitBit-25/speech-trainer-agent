@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, Suspense, lazy, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, CameraOff, Mic, MicOff, Play, Square, BookOpen, Loader2, Trophy, Zap, Clock, Target, ChevronRight, RotateCcw, Star } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, Play, Square, BookOpen, Loader2, Trophy, Zap, Clock, Target, RotateCcw, Flame, Shield, Swords } from 'lucide-react';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useRealtimeAnalysis } from '@/hooks/useRealtimeAnalysis';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
@@ -29,23 +29,99 @@ const ComponentLoader = () => (
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
-// ─── AI Prompt Cards ───────────────────────────────────────────────────────────
-const SPEECH_PROMPTS = [
-    { topic: "Introduce yourself as if you're pitching to investors.", category: "Professional", emoji: "💼" },
-    { topic: "Describe your dream vacation in exactly 60 seconds.", category: "Storytelling", emoji: "🌍" },
-    { topic: "Explain AI to a 10-year-old child.", category: "Simplification", emoji: "🤖" },
-    { topic: "Convince someone to try a food they hate.", category: "Persuasion", emoji: "🍕" },
-    { topic: "Describe your morning routine as a movie trailer.", category: "Creative", emoji: "🎬" },
-    { topic: "Give a motivational speech to someone who just failed an exam.", category: "Empathy", emoji: "💪" },
-    { topic: "Explain why your city is the best place to live.", category: "Debate", emoji: "🏙️" },
-    { topic: "Tell a story about the most interesting person you've met.", category: "Storytelling", emoji: "👤" },
-    { topic: "Pitch a startup idea you just thought of.", category: "Entrepreneurship", emoji: "🚀" },
-    { topic: "Describe your favorite book/movie without naming it.", category: "Creative", emoji: "🎭" },
-    { topic: "Explain what leadership means to you.", category: "Leadership", emoji: "🎯" },
-    { topic: "Talk about a challenge you overcame and what you learned.", category: "Personal Growth", emoji: "🌱" },
-];
-
 const FILLER_WORDS = ['um', 'uh', 'like', 'you know', 'basically', 'literally', 'actually', 'so', 'right', 'okay'];
+
+// ─── Arena Loadout Panel ───────────────────────────────────────────────────────
+function ArenaLoadout({
+    mode, setMode, difficulty, setDifficulty, bestScore, streak, multiplier
+}: {
+    mode: 'practice' | 'challenge' | 'timed';
+    setMode: (m: 'practice' | 'challenge' | 'timed') => void;
+    difficulty: 'beginner' | 'intermediate' | 'expert';
+    setDifficulty: (d: 'beginner' | 'intermediate' | 'expert') => void;
+    bestScore: number;
+    streak: number;
+    multiplier: number;
+}) {
+    const modeConfig = [
+        { id: 'practice' as const, label: 'PRACTICE', icon: <Shield className="h-4 w-4" />, desc: 'Free session, no limits', color: 'border-blue-500/50 text-blue-400 bg-blue-500/10' },
+        { id: 'challenge' as const, label: 'CHALLENGE', icon: <Swords className="h-4 w-4" />, desc: 'Compete for top score', color: 'border-orange-500/50 text-orange-400 bg-orange-500/10' },
+        { id: 'timed' as const, label: '⏱ TIMED', icon: <Clock className="h-4 w-4" />, desc: '2-minute countdown', color: 'border-red-500/50 text-red-400 bg-red-500/10' },
+    ];
+    const diffConfig = [
+        { id: 'beginner' as const, label: 'ROOKIE', mult: '1.0×', color: 'text-green-400 border-green-500/40 bg-green-500/10' },
+        { id: 'intermediate' as const, label: 'VETERAN', mult: '1.5×', color: 'text-yellow-400 border-yellow-500/40 bg-yellow-500/10' },
+        { id: 'expert' as const, label: 'LEGEND', mult: '2.0×', color: 'text-red-400 border-red-500/40 bg-red-500/10' },
+    ];
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+        >
+            {/* Arena stats bar */}
+            <div className="grid grid-cols-3 gap-2">
+                {[
+                    { label: 'BEST SCORE', value: bestScore > 0 ? bestScore.toFixed(0) : '---', icon: <Trophy className="h-3.5 w-3.5 text-yellow-500" />, color: 'text-yellow-400' },
+                    { label: 'STREAK', value: `${streak}🔥`, icon: <Flame className="h-3.5 w-3.5 text-orange-500" />, color: 'text-orange-400' },
+                    { label: 'MULTIPLIER', value: `${multiplier.toFixed(1)}×`, icon: <Zap className="h-3.5 w-3.5 text-primary" />, color: 'text-primary' },
+                ].map(s => (
+                    <div key={s.label} className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 text-center">
+                        <div className="flex justify-center mb-1">{s.icon}</div>
+                        <div className={`font-pixel text-lg ${s.color}`}>{s.value}</div>
+                        <div className="text-[9px] font-mono text-zinc-600 mt-0.5">{s.label}</div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Mode selector */}
+            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 space-y-3">
+                <label className="text-[10px] font-pixel text-zinc-500 uppercase tracking-widest">Select Mode</label>
+                <div className="space-y-2">
+                    {modeConfig.map(m => (
+                        <button
+                            key={m.id}
+                            onClick={() => setMode(m.id)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 text-left ${mode === m.id ? m.color : 'border-zinc-800 text-zinc-500 bg-zinc-900/50 hover:border-zinc-700'
+                                }`}
+                        >
+                            <span className={mode === m.id ? '' : 'opacity-40'}>{m.icon}</span>
+                            <div className="flex-1">
+                                <div className="font-pixel text-[11px]">{m.label}</div>
+                                <div className="text-[9px] font-mono opacity-60 mt-0.5">{m.desc}</div>
+                            </div>
+                            {mode === m.id && (
+                                <motion.div
+                                    layoutId="mode-indicator"
+                                    className="w-2 h-2 rounded-full bg-current"
+                                />
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Difficulty selector */}
+            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 space-y-3">
+                <label className="text-[10px] font-pixel text-zinc-500 uppercase tracking-widest">Difficulty Tier</label>
+                <div className="grid grid-cols-3 gap-2">
+                    {diffConfig.map(d => (
+                        <button
+                            key={d.id}
+                            onClick={() => setDifficulty(d.id)}
+                            className={`py-3 rounded-xl border transition-all duration-200 text-center ${difficulty === d.id ? d.color : 'border-zinc-800 text-zinc-600 bg-zinc-900/50 hover:border-zinc-700'
+                                }`}
+                        >
+                            <div className="font-pixel text-[10px]">{d.label}</div>
+                            <div className="text-[9px] font-mono opacity-70 mt-1">{d.mult} XP</div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </motion.div>
+    );
+}
 
 // ─── Waveform Visualizer ───────────────────────────────────────────────────────
 function WaveformVisualizer({ isActive }: { isActive: boolean }) {
@@ -182,35 +258,7 @@ function SessionSummary({ score, duration, fillerCount, facialScore, voiceScore,
     );
 }
 
-// ─── AI Prompt Card ────────────────────────────────────────────────────────────
-function PromptCard({ prompt, onNext }: { prompt: typeof SPEECH_PROMPTS[0]; onNext: () => void }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-zinc-900/60 border border-zinc-700 rounded-2xl p-4 space-y-3"
-        >
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <span className="text-lg">{prompt.emoji}</span>
-                    <span className="text-[10px] font-pixel text-zinc-500 uppercase tracking-wider">{prompt.category}</span>
-                </div>
-                <button
-                    onClick={onNext}
-                    className="text-[10px] font-pixel text-zinc-600 hover:text-primary transition-colors flex items-center gap-1"
-                >
-                    NEXT <ChevronRight className="h-3 w-3" />
-                </button>
-            </div>
-            <p className="text-sm font-mono text-zinc-200 leading-relaxed">{prompt.topic}</p>
-            <div className="flex items-center gap-1.5">
-                <Star className="h-3 w-3 text-primary/60" />
-                <span className="text-[10px] font-mono text-zinc-600">AI-generated prompt • speak for 60–90 seconds</span>
-            </div>
-        </motion.div>
-    );
-}
+
 
 // ─── Countdown Timer ───────────────────────────────────────────────────────────
 function CountdownTimer({ seconds, total }: { seconds: number; total: number }) {
@@ -247,15 +295,14 @@ export default function PracticePage() {
     const [multiplierBreakdown, setMultiplierBreakdown] = useState<any>({});
     const [user, setUser] = useState<any>(null);
 
-    // New state
-    const [currentPrompt, setCurrentPrompt] = useState(SPEECH_PROMPTS[0]);
-    const [promptIndex, setPromptIndex] = useState(0);
+    // Session state
     const [fillerCount, setFillerCount] = useState(0);
     const [sessionDuration, setSessionDuration] = useState(0);
-    const [timedSeconds, setTimedSeconds] = useState(120); // 2 min timed mode
+    const [timedSeconds, setTimedSeconds] = useState(120);
     const [showSummary, setShowSummary] = useState(false);
     const [summaryData, setSummaryData] = useState<any>(null);
     const [sessionStartTime, setSessionStartTime] = useState<number>(0);
+    const [bestScore, setBestScore] = useState(0);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const frameIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -312,10 +359,8 @@ export default function PracticePage() {
         if (userData) {
             try { setUser(JSON.parse(userData)); } catch { }
         }
-        // Pick a random prompt
-        const idx = Math.floor(Math.random() * SPEECH_PROMPTS.length);
-        setPromptIndex(idx);
-        setCurrentPrompt(SPEECH_PROMPTS[idx]);
+        const saved = localStorage.getItem("best_score");
+        if (saved) setBestScore(parseFloat(saved));
     }, []);
 
     // Handle new achievements
@@ -338,11 +383,6 @@ export default function PracticePage() {
         }
     }, [metrics?.multiplier, metrics?.combo, metrics?.facial_score, metrics?.voice_score, difficulty]);
 
-    const nextPrompt = useCallback(() => {
-        const next = (promptIndex + 1) % SPEECH_PROMPTS.length;
-        setPromptIndex(next);
-        setCurrentPrompt(SPEECH_PROMPTS[next]);
-    }, [promptIndex]);
 
     const handleStartSession = async () => {
         try {
@@ -410,7 +450,12 @@ export default function PracticePage() {
         const finalVoice = metrics?.voice_score || 0;
         const xpEarned = Math.round(finalScore * currentMultiplier * 0.5) + 50;
 
-        // Show summary
+        // Update best score
+        if (finalScore > bestScore) {
+            setBestScore(finalScore);
+            localStorage.setItem("best_score", finalScore.toString());
+        }
+
         setSummaryData({
             score: finalScore,
             duration: elapsed,
@@ -454,7 +499,6 @@ export default function PracticePage() {
     const handleRestart = () => {
         setShowSummary(false);
         setSummaryData(null);
-        nextPrompt();
     };
 
     return (
@@ -674,54 +718,22 @@ export default function PracticePage() {
                                         type: msg.type as 'positive' | 'warning' | 'error',
                                         message: msg.message,
                                         icon: msg.type === 'positive' ? 'smile' : 'alert-triangle'
-                                    })) || [
-                                            { type: 'warning', message: 'Analyze system standing by...', icon: 'mic' }
-                                        ]}
+                                    })) || []}
                                 />
                             </Suspense>
                         </div>
 
-                        {/* AI PROMPT CARD + CONFIGURATION (Idle Only) */}
+                        {/* ARENA LOADOUT (Idle Only) */}
                         {!isRecording && (
-                            <div className="space-y-3">
-                                {/* AI Prompt */}
-                                <AnimatePresence mode="wait">
-                                    <PromptCard key={promptIndex} prompt={currentPrompt} onNext={nextPrompt} />
-                                </AnimatePresence>
-
-                                {/* Config */}
-                                <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 space-y-4">
-                                    <div>
-                                        <label className="text-[10px] font-pixel text-zinc-500 mb-2 block uppercase">Training Mode</label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {(['practice', 'challenge', 'timed'] as const).map((m) => (
-                                                <button
-                                                    key={m}
-                                                    onClick={() => setMode(m)}
-                                                    className={`py-2 font-pixel text-[10px] rounded-lg border transition-all duration-200 ${mode === m
-                                                        ? 'bg-primary/10 text-primary border-primary/50 shadow-[0_0_10px_rgba(var(--primary-rgb),0.1)]'
-                                                        : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800'
-                                                        }`}
-                                                >
-                                                    {m === 'timed' ? '⏱ TIMED' : m.toUpperCase()}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        {mode === 'timed' && (
-                                            <p className="text-[10px] font-mono text-zinc-600 mt-2">⏱ 2-minute countdown — auto-stops when time runs out</p>
-                                        )}
-                                    </div>
-                                    <div className="pt-1">
-                                        <label className="text-[10px] font-pixel text-zinc-500 mb-2 block uppercase">Difficulty</label>
-                                        <DifficultySelector
-                                            onSelect={(diff) => setDifficulty(diff as 'beginner' | 'intermediate' | 'expert')}
-                                            currentLevel={1}
-                                            selectedDifficulty={difficulty}
-                                            variant="compact"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            <ArenaLoadout
+                                mode={mode}
+                                setMode={setMode}
+                                difficulty={difficulty}
+                                setDifficulty={setDifficulty}
+                                bestScore={bestScore}
+                                streak={0}
+                                multiplier={currentMultiplier}
+                            />
                         )}
                     </div>
 
@@ -786,7 +798,7 @@ export default function PracticePage() {
             <Suspense fallback={null}><AchievementPopup achievements={newAchievements} onDismiss={() => setNewAchievements([])} /></Suspense>
             <Suspense fallback={null}><PerformanceMonitor wsLatency={0} messageQueue={0} show={isRecording} /></Suspense>
             <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} mode="practice" />
-            <QuickHelp title="Practice Mode Tips" tips={["Maintain eye contact", "120-160 WPM speed", "Avoid filler words (um, uh, like)", "Use the AI prompt card for topic ideas", "Timed mode = 2 minute challenge"]} />
+            <QuickHelp title="Arena Tips" tips={["Maintain eye contact with camera", "Speak at 120-160 WPM", "Avoid filler words (um, uh, like)", "Challenge mode scores go to leaderboard", "Timed mode = 2-minute countdown"]} />
         </div>
     );
 }

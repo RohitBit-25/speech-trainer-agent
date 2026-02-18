@@ -33,9 +33,10 @@ interface UseRealtimeAnalysisReturn {
 
 const getWebSocketUrl = () => {
     if (typeof window === 'undefined') return '';
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    return `${protocol}//${host}`;
+    // Next.js rewrites don't support WebSocket upgrades, so connect directly to backend
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    // Convert http:// -> ws:// and https:// -> wss://
+    return apiUrl.replace(/^http/, 'ws');
 };
 const RECONNECT_DELAY = 1000; // Start with 1 second
 const MAX_RECONNECT_DELAY = 30000; // Max 30 seconds
