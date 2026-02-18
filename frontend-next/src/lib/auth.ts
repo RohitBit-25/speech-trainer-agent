@@ -5,62 +5,70 @@ const API_URL = "/api";
 // We only store user info in localStorage for UI display purposes.
 
 export function getUser(): any | null {
-    if (typeof window === 'undefined') return null;
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    if (typeof window === "undefined") return null;
+    try {
+        const userStr = localStorage.getItem("user");
+        return userStr ? JSON.parse(userStr) : null;
+    } catch {
+        return null;
+    }
 }
 
 export async function checkSession(): Promise<boolean> {
     try {
         const response = await fetch(`${API_URL}/auth/me`, {
-            credentials: 'include'
+            credentials: "include",
         });
         if (response.ok) {
             const user = await response.json();
-            // Update local user data if needed
-            localStorage.setItem('user', JSON.stringify(user));
+            // Update local user data from server
+            localStorage.setItem("user", JSON.stringify(user));
+            // Notify listeners that user data may have been refreshed
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("auth-change"));
+            }
             return true;
         }
         return false;
     } catch (e) {
+        // Network error — don't clear user state, just return false
         return false;
     }
 }
 
 export function isAuthenticated(): boolean {
-    // This checks if we *think* we are logged in based on local user data.
-    // For critical actions, the backend will enforce the cookie.
     return !!getUser();
 }
 
 export async function logout() {
     try {
-        // Call backend to clear cookie
         await fetch(`${API_URL}/auth/logout`, {
-            method: 'POST',
-            credentials: 'include'
+            method: "POST",
+            credentials: "include",
         });
     } catch (e) {
-        console.error("Logout failed", e);
+        console.error("Logout API call failed", e);
     }
 
     // Clear localStorage
-    localStorage.removeItem('user');
-    localStorage.removeItem('token'); // Cleanup old tokens if any
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    // Notify listeners BEFORE redirect so Navbar updates
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth-change"));
+    }
 
     // Redirect to home
-    window.location.href = '/';
-
-    // Notify listeners
-    window.dispatchEvent(new Event('auth-change'));
+    window.location.href = "/";
 }
 
 export function setAuthData(user: any) {
-    // Only store user info in localStorage
-    localStorage.setItem('user', JSON.stringify(user));
+    // Store user info in localStorage for UI
+    localStorage.setItem("user", JSON.stringify(user));
 
-    // We do NOT store the token anymore; backend sets the cookie.
-
-    // Notify listeners
-    window.dispatchEvent(new Event('auth-change'));
+    // Notify listeners so Navbar updates immediately
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth-change"));
+    }
 }

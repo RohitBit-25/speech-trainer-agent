@@ -65,15 +65,13 @@ export default function SignupPage() {
 
             const data = await response.json();
 
-            // Store user info (no token handling needed, backend sets cookie)
+            // Store user info in localStorage (backend sets the cookie)
             setAuthData(data.user);
 
             toast.success("Account Created", { description: `Welcome to the mission, ${data.user.name}.` });
 
-            // Small delay to show toast
-            setTimeout(() => {
-                router.push("/studio");
-            }, 500);
+            // Navigate immediately — Navbar reads from localStorage so it will update on the new page
+            router.push("/studio");
         } catch (error: any) {
             toast.error("Registration Failed", { description: error.message });
         } finally {
