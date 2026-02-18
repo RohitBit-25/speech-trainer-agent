@@ -74,13 +74,13 @@ export function Navbar() {
             <nav className="sticky top-0 z-50 bg-zinc-950 border-b-4 border-primary shadow-lg">
                 <div className="container mx-auto px-4">
                     <div className="flex items-center justify-between h-16">
-                        <Link href="/" className="flex items-center gap-2">
-                            <div className="h-8 w-8 bg-primary flex items-center justify-center font-pixel text-black text-xs">
-                                ST
+                        <Link href="/" className="flex items-center gap-2 group">
+                            <div className="h-9 w-9 rounded-lg overflow-hidden border-2 border-orange-500/50 group-hover:border-orange-400 transition-colors flex-shrink-0">
+                                <img src="/vaanix-logo.png" alt="VaaniX Logo" className="h-full w-full object-cover" />
                             </div>
                             <div className="hidden sm:block">
-                                <span className="font-pixel text-sm text-white">SpeechTrainer</span>
-                                <span className="font-mono text-xs text-primary ml-2">v2.0</span>
+                                <span className="font-pixel text-sm text-white">Vaani</span><span className="font-pixel text-sm text-orange-400">X</span>
+                                <span className="font-mono text-xs text-orange-500/70 ml-2">v2.0</span>
                             </div>
                         </Link>
                     </div>
@@ -94,13 +94,13 @@ export function Navbar() {
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
-                    <Link href={user ? "/studio" : "/"} className="flex items-center gap-2">
-                        <div className="h-8 w-8 bg-primary flex items-center justify-center font-pixel text-black text-xs">
-                            ST
+                    <Link href={user ? "/studio" : "/"} className="flex items-center gap-2 group">
+                        <div className="h-9 w-9 rounded-lg overflow-hidden border-2 border-orange-500/50 group-hover:border-orange-400 transition-colors flex-shrink-0">
+                            <img src="/vaanix-logo.png" alt="VaaniX Logo" className="h-full w-full object-cover" />
                         </div>
                         <div className="hidden sm:block">
-                            <span className="font-pixel text-sm text-white">SpeechTrainer</span>
-                            <span className="font-mono text-xs text-primary ml-2">v2.0</span>
+                            <span className="font-pixel text-sm text-white">Vaani</span><span className="font-pixel text-sm text-orange-400">X</span>
+                            <span className="font-mono text-xs text-orange-500/70 ml-2">v2.0</span>
                         </div>
                     </Link>
 
@@ -112,8 +112,8 @@ export function Navbar() {
                                     key={link.href}
                                     href={link.href}
                                     className={`font-mono text-sm transition-colors ${pathname === link.href || pathname.startsWith(link.href + "/")
-                                            ? "text-primary"
-                                            : "text-zinc-400 hover:text-white"
+                                        ? "text-primary"
+                                        : "text-zinc-400 hover:text-white"
                                         }`}
                                 >
                                     <span className="mr-1">{link.icon}</span>
@@ -201,8 +201,8 @@ export function Navbar() {
                                 href={link.href}
                                 onClick={() => setMobileMenuOpen(false)}
                                 className={`block px-4 py-2 font-mono text-sm transition-colors ${pathname === link.href
-                                        ? "text-primary bg-zinc-900"
-                                        : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+                                    ? "text-primary bg-zinc-900"
+                                    : "text-zinc-400 hover:text-white hover:bg-zinc-900"
                                     }`}
                             >
                                 <span className="mr-2">{link.icon}</span>

@@ -206,7 +206,7 @@ const TUTORIAL_CONTENT = {
         title: "Getting Started Guide",
         steps: [
             {
-                title: "Welcome to Speech Trainer! 🎤",
+                title: "Welcome to VaaniX! 🎤",
                 description: "Your AI-powered platform for mastering public speaking. Let's explore the features!",
                 tips: [
                     "Two modes: Real-time Practice & Video Analysis",
@@ -248,7 +248,7 @@ const TUTORIAL_CONTENT = {
             },
             {
                 title: "Best Practices",
-                description: "Tips for getting the most out of Speech Trainer:",
+                description: "Tips for getting the most out of VaaniX:",
                 tips: [
                     "Practice daily for 5-10 minutes",
                     "Upload 1-2 videos per week",
@@ -393,10 +393,10 @@ export function TutorialModal({ isOpen, onClose, mode }: TutorialModalProps) {
                                         key={index}
                                         onClick={() => setCurrentStep(index)}
                                         className={`h-2 w-2 transition-all ${index === currentStep
-                                                ? 'bg-primary w-8'
-                                                : index < currentStep
-                                                    ? 'bg-primary/50'
-                                                    : 'bg-zinc-700'
+                                            ? 'bg-primary w-8'
+                                            : index < currentStep
+                                                ? 'bg-primary/50'
+                                                : 'bg-zinc-700'
                                             }`}
                                     />
                                 ))}

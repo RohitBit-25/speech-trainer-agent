@@ -40,6 +40,12 @@ export function Hero() {
                     <span className="text-primary drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]">SPEECH SKILLS</span>
                 </h1>
 
+                <div className="flex items-center justify-center gap-3 mt-2">
+                    <img src="/vaanix-logo.png" alt="VaaniX" className="h-10 w-10 rounded-lg border-2 border-orange-500/50" />
+                    <span className="font-pixel text-2xl text-white">Vaani</span><span className="font-pixel text-2xl text-orange-400">X</span>
+                    <span className="font-mono text-xs text-orange-500/70 self-end mb-1">v2.0</span>
+                </div>
+
                 <p className="mx-auto max-w-[700px] text-zinc-300 md:text-xl font-mono leading-relaxed bg-black/50 p-4 border border-dashed border-zinc-700">
                     Your personal <span className="text-secondary font-bold">AI Companion</span> for mastering communication.
                     Upload a video, get instant XP, and unlock confidence.
