@@ -152,16 +152,6 @@ class RealtimeFacialAgent:
             print(f"MediaPipe enhancement error: {e}")
         
         return analysis
-                analysis = self._analyze_with_opencv(frame, analysis)
-        except Exception as e:
-            print(f"Analysis Error: {e}")
-            pass
-            
-        # Track processing time
-        processing_time = (time.time() - start_time) * 1000
-        analysis["processing_time_ms"] = round(processing_time, 2)
-        
-        return analysis
 
     def _analyze_with_mediapipe(self, frame, analysis):
         # Convert BGR to RGB
