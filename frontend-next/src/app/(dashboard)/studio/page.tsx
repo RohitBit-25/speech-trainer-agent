@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BookOpen } from 'lucide-react';
-import { Hero } from '@/components/home/Hero';
+import { BookOpen, Upload, Activity } from 'lucide-react';
 import { VideoDropzone } from "@/components/upload/VideoDropzone";
 import { SystemConsole } from "@/components/analysis/SystemConsole";
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
@@ -12,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import { startAnalysis, pollAnalysis } from "@/lib/api";
+// Hero removed to differentiate from Landing Page
 
 export default function StudioPage() {
     const [showTutorial, setShowTutorial] = useState(false);
@@ -88,7 +88,12 @@ export default function StudioPage() {
             {/* Background decoration */}
             <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
 
-            <Hero />
+            <div className="w-full max-w-4xl z-10 text-center mb-8">
+                <h1 className="text-4xl font-pixel text-white mb-4">MISSION_CONTROL_STUDIO</h1>
+                <p className="text-zinc-400 font-mono">
+                    Upload your transmission for analysis. Our AI agents are standing by.
+                </p>
+            </div>
 
             <div className="w-full max-w-4xl z-10 space-y-8">
                 <VideoDropzone onUpload={handleUpload} isUploading={isUploading} />

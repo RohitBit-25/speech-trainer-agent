@@ -1,5 +1,5 @@
 // Authentication utilities
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_URL = "/api";
 
 // Note: Token is now stored in an HTTP-only cookie, not accessible to JS.
 // We only store user info in localStorage for UI display purposes.

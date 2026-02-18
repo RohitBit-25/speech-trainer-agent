@@ -25,7 +25,7 @@ export function SystemConsole({ taskId, isAnalyzing, onComplete }: SystemConsole
         setLogs(["Creating secure connection...", "Initializing neural link..."]);
 
         // Connect to SSE stream
-        const url = `http://localhost:8000/stream/${taskId}`;
+        const url = `/api/stream/${taskId}`;
         const eventSource = new EventSource(url);
         eventSourceRef.current = eventSource;
 

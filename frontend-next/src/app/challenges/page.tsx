@@ -43,7 +43,7 @@ export default function ChallengesPage() {
         try {
             // TODO: Get actual user_id from auth
             const userId = localStorage.getItem("user_id") || "";
-            const response = await fetch(`http://localhost:8000/game/challenges/active?user_id=${userId}`);
+            const response = await fetch(`/api/game/challenges/active?user_id=${userId}`);
             const data = await response.json();
             setChallenges(data.challenges || []);
         } catch (error) {
@@ -57,7 +57,7 @@ export default function ChallengesPage() {
     const claimReward = async (challengeId: string) => {
         try {
             const userId = localStorage.getItem("user_id") || "";
-            const response = await fetch(`http://localhost:8000/game/challenges/${challengeId}/claim`, {
+            const response = await fetch(`/api/game/challenges/${challengeId}/claim`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ user_id: userId })

@@ -34,6 +34,14 @@ export function Navbar() {
                     // Clear stale user data if session is invalid
                     localStorage.removeItem("user");
                     setUser(null);
+
+                    // If on a protected route and session is invalid, force logout (clears cookie and redirects)
+                    const protectedRoutes = ['/studio', '/practice', '/history', '/analysis', '/feedback', '/comparison', '/settings', '/leaderboard', '/challenges'];
+                    if (protectedRoutes.some(route => window.location.pathname.startsWith(route))) {
+                        logout().then(() => {
+                            router.push('/login');
+                        });
+                    }
                 }
             });
         };

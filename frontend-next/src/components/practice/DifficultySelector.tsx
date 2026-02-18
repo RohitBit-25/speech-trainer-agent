@@ -45,7 +45,7 @@ export function DifficultySelector({ onSelect, currentLevel = 1, selectedDifficu
 
     useEffect(() => {
         // Fetch difficulty configs from backend
-        fetch("http://localhost:8000/game/difficulty-configs")
+        fetch("/api/game/difficulty-configs")
             .then(res => res.json())
             .then(data => setConfigs(data.configs))
             .catch(err => console.error("Failed to load difficulty configs:", err));

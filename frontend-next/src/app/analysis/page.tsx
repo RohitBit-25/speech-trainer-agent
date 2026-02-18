@@ -20,7 +20,7 @@ export default function AnalysisPage() {
     useEffect(() => {
         // Redirect if no result
         if (!result) {
-            router.push("/");
+            router.push("/studio");
         }
     }, [result, router]);
 

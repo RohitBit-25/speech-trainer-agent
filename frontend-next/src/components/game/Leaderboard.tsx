@@ -37,7 +37,7 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
     const fetchLeaderboard = async () => {
         try {
             const response = await fetch(
-                `http://localhost:8000/game/leaderboard/${category}?difficulty=${difficulty}&limit=100`
+                `/api/game/leaderboard/${category}?difficulty=${difficulty}&limit=100`
             );
             const data = await response.json();
             setEntries(data.leaderboard || []);
@@ -55,7 +55,7 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
             if (!userId) return;
 
             const response = await fetch(
-                `http://localhost:8000/game/leaderboard/user/${userId}/rank?category=${category}&difficulty=${difficulty}`
+                `/api/game/leaderboard/user/${userId}/rank?category=${category}&difficulty=${difficulty}`
             );
             const data = await response.json();
             if (data.ranked) {
@@ -173,8 +173,8 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
                         >
                             <Card
                                 className={`bg-zinc-900 border-2 transition-all ${entry.rank <= 3
-                                        ? "border-primary/50 shadow-[0_0_15px_rgba(255,153,51,0.3)]"
-                                        : "border-zinc-700 hover:border-zinc-600"
+                                    ? "border-primary/50 shadow-[0_0_15px_rgba(255,153,51,0.3)]"
+                                    : "border-zinc-700 hover:border-zinc-600"
                                     }`}
                             >
                                 <CardContent className="p-4">
