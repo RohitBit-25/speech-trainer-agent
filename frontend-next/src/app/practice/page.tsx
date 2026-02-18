@@ -6,10 +6,12 @@ import { Camera, CameraOff, Mic, MicOff, Play, Square, BookOpen, Loader2, Trophy
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useRealtimeAnalysis } from '@/hooks/useRealtimeAnalysis';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useAICoach } from '@/hooks/useAICoach';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { QuickHelp } from '@/components/tutorial/HelpTooltip';
 import { DifficultySelector } from '@/components/practice/DifficultySelector';
 import { MultiplierDisplay } from '@/components/game/MultiplierDisplay';
+import { RealtimeDashboard } from '@/components/realtime/RealtimeDashboard';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -293,8 +295,10 @@ export default function PracticePage() {
     const [showTutorial, setShowTutorial] = useState(false);
     const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
     const [multiplierBreakdown, setMultiplierBreakdown] = useState<any>({});
-    const [user, setUser] = useState<any>(null);
-
+    const [user, setUser] = useState<any>(null);    const [showAICoachDashboard, setShowAICoachDashboard] = useState(false);
+    const [dashboardMinimized, setDashboardMinimized] = useState(false);
+    const [goodFramesCount, setGoodFramesCount] = useState(0);
+    const [totalFramesProcessed, setTotalFramesProcessed] = useState(0);
     // Session state
     const [fillerCount, setFillerCount] = useState(0);
     const [sessionDuration, setSessionDuration] = useState(0);
@@ -324,6 +328,18 @@ export default function PracticePage() {
         sendVideoFrame,
         requestFeedback
     } = useRealtimeAnalysis();
+
+    // AI Coach integration
+    const {
+        isConnected: aiCoachConnected,
+        currentFeedback,
+        currentScore,
+        currentEmotion,
+        currentVoice,
+        sendVideoFrame: aiSendVideoFrame,
+        sendAudioChunk: aiSendAudioChunk,
+        endSession: aiEndSession,
+    } = useAICoach();
 
     const {
         transcript,
@@ -390,6 +406,8 @@ export default function PracticePage() {
             startListening();
             setFillerCount(0);
             setSessionStartTime(Date.now());
+            setGoodFramesCount(0);
+            setTotalFramesProcessed(0);
 
             const response = await fetch(`${API_URL}/realtime/start-session`, {
                 method: 'POST',
@@ -400,12 +418,21 @@ export default function PracticePage() {
             const data = await response.json();
             setSessionId(data.session_id);
             connect(data.session_id);
+            
+            // Connect AI Coach
+            await aiSendVideoFrame({ /* initial frame setup */ } as any);
+            
             setIsRecording(true);
+            setShowAICoachDashboard(true);
 
             // Start frame capture
             frameIntervalRef.current = setInterval(() => {
                 const frame = captureFrame();
-                if (frame) sendVideoFrame(frame);
+                if (frame) {
+                    sendVideoFrame(frame);
+                    // Also send to AI Coach
+                    aiSendVideoFrame(frame as any);
+                }
                 requestFeedback();
             }, 100);
 
@@ -440,8 +467,15 @@ export default function PracticePage() {
         if (durationRef.current) clearInterval(durationRef.current);
 
         setIsRecording(false);
+        setShowAICoachDashboard(false);
         stopListening();
         disconnect();
+        
+        // End AI coach session
+        if (sessionId) {
+            await aiEndSession();
+        }
+        
         stopStream();
 
         const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
@@ -782,7 +816,7 @@ export default function PracticePage() {
                 </div>
             </main>
 
-            {/* ERROR TOAST AREA */}
+            {/* Error Toast */}
             {(webrtcError || wsError) && (
                 <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-50">
                     <div className="bg-red-950/90 border border-red-500/50 p-4 rounded-xl shadow-2xl flex items-start gap-3 backdrop-blur-md">
@@ -795,7 +829,24 @@ export default function PracticePage() {
                 </div>
             )}
 
-            <Suspense fallback={null}><AchievementPopup achievements={newAchievements} onDismiss={() => setNewAchievements([])} /></Suspense>
+            {/* AI Coach Real-Time Dashboard */}
+            <AnimatePresence>
+                {showAICoachDashboard && isRecording && (
+                    <RealtimeDashboard
+                        emotion={currentEmotion}
+                        voice={currentVoice}
+                        score={currentScore}
+                        feedback={currentFeedback}
+                        isLoading={!aiCoachConnected}
+                        goodFramesPercentage={totalFramesProcessed > 0 ? (goodFramesCount / totalFramesProcessed) * 100 : 0}
+                        onClose={() => setShowAICoachDashboard(false)}
+                        isMinimized={dashboardMinimized}
+                        onToggleMinimize={() => setDashboardMinimized(!dashboardMinimized)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Achievement Popup & Performance Monitor */}
             <Suspense fallback={null}><PerformanceMonitor wsLatency={0} messageQueue={0} show={isRecording} /></Suspense>
             <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} mode="practice" />
             <QuickHelp title="Arena Tips" tips={["Maintain eye contact with camera", "Speak at 120-160 WPM", "Avoid filler words (um, uh, like)", "Challenge mode scores go to leaderboard", "Timed mode = 2-minute countdown"]} />

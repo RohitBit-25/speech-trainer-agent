@@ -216,6 +216,27 @@ export function RealtimeScoreDisplay({
           </ul>
         </motion.div>
       )}
+
+      {/* Fallback to weaknesses if areas_for_improvement not available */}
+      {(!score.areas_for_improvement || score.areas_for_improvement.length === 0) &&
+        score.weaknesses &&
+        score.weaknesses.length > 0 && (
+          <motion.div
+            className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <h4 className="text-xs font-semibold text-amber-300 mb-2">🎯 AREAS TO IMPROVE</h4>
+            <ul className="space-y-1">
+              {score.weaknesses.map((weakness, idx) => (
+                <li key={idx} className="text-xs text-amber-200">
+                  • {weakness}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
     </div>
   );
 }
