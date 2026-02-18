@@ -46,8 +46,7 @@ class RealtimeFeedbackAgent:
                 "Be encouraging but direct.",
                 "Examples: 'Slow down slightly to improve clarity.', 'Great energy! Keep maintaining eye contact.', 'Vary your pitch to sound more engaging.'"
             ],
-            markdown=False,
-            show_tool_calls=False
+            markdown=False
         )
         
     def _define_achievements(self) -> Dict:
