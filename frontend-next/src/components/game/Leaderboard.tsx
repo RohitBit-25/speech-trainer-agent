@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Trophy, Medal, Crown, TrendingUp, Search, Filter, Lock, TrendingDown, Minus } from "lucide-react";
-import { toast } from "sonner";
+import { Crown, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface LeaderboardEntry {
     user_id: string;
@@ -17,6 +15,12 @@ interface LeaderboardEntry {
     difficulty: string;
     timestamp: string;
     rank_change?: number; // positive = moved up, negative = moved down
+}
+
+interface UserRank {
+    rank: number;
+    score: number;
+    percentile: number;
 }
 
 interface LeaderboardProps {
@@ -105,7 +109,7 @@ function Podium({ entries }: { entries: LeaderboardEntry[] }) {
 }
 
 // ─── Sticky User Rank Card ─────────────────────────────────────────────────────
-function StickyUserRank({ userRank }: { userRank: any }) {
+function StickyUserRank({ userRank }: { userRank: UserRank | null }) {
     if (!userRank) return null;
     const xpToNext = Math.max(0, 500 - (userRank.score % 500));
 
@@ -150,7 +154,7 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
     const [loading, setLoading] = useState(true);
     const [category, setCategory] = useState(defaultCategory);
     const [difficulty, setDifficulty] = useState(defaultDifficulty);
-    const [userRank, setUserRank] = useState<any>(null);
+    const [userRank, setUserRank] = useState<UserRank | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -160,12 +164,7 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
         }
     }, []);
 
-    useEffect(() => {
-        fetchLeaderboard();
-        fetchUserRank();
-    }, [category, difficulty]);
-
-    const fetchLeaderboard = async () => {
+    const fetchLeaderboard = useCallback(async () => {
         setLoading(true);
         try {
             const url = new URL(`/api/game/leaderboard/${category}`, window.location.origin);
@@ -183,9 +182,9 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
         } finally {
             setLoading(false);
         }
-    };
+    }, [category, difficulty]);
 
-    const fetchUserRank = async () => {
+    const fetchUserRank = useCallback(async () => {
         try {
             const userStr = localStorage.getItem("user");
             if (!userStr) return;
@@ -202,7 +201,12 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
             console.error('Error fetching user rank:', error);
             // No rank yet
         }
-    };
+    }, [category, difficulty]);
+
+    useEffect(() => {
+        fetchLeaderboard();
+        fetchUserRank();
+    }, [fetchLeaderboard, fetchUserRank]);
 
     const getDifficultyColor = (diff: string) => {
         switch (diff) {
@@ -230,7 +234,7 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
         <div className="space-y-6 pb-4">
             {/* Filters */}
             <div className="flex flex-col md:flex-row gap-3">
-                <Tabs value={category} onValueChange={(v: any) => setCategory(v)} className="flex-1">
+                <Tabs value={category} onValueChange={(v: string) => setCategory(v as "daily" | "weekly" | "all_time")} className="flex-1">
                     <TabsList className="grid w-full grid-cols-3 bg-zinc-900/80 border border-zinc-800 rounded-xl p-1 h-auto">
                         {[
                             { value: "daily", label: "DAILY" },
