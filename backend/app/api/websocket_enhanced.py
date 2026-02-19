@@ -96,11 +96,10 @@ class EnhancedConnectionManager:
             if not audio_data:
                 return {"error": "No audio data"}
             
-            # Decode base64 audio
-            audio_bytes = base64.b64decode(audio_data)
-            
+            # Pass raw audio data to session (it handles decoding)
             session = self.active_sessions[session_id]
-            result = await session.process_audio_chunk(audio_bytes, transcript)
+            result = await session.process_audio_chunk(audio_data, transcript)
+
             
             return result
         except Exception as e:

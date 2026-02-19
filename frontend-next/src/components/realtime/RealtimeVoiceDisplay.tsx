@@ -56,18 +56,18 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
   return (
     <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 backdrop-blur-sm space-y-4">
       {/* Overall Voice Score */}
-      <div className={`bg-gradient-to-br ${getScoreColor(voice.overall_voice_score)} rounded-lg p-3`}>
+      <div className={`bg-gradient-to-br ${getScoreColor(voice.overall_voice_score || 0)} rounded-lg p-3`}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-white font-semibold">Voice Score</span>
           <span className="text-white font-mono text-lg">
-            {voice.overall_voice_score.toFixed(0)}/100
+            {(voice.overall_voice_score || 0).toFixed(0)}/100
           </span>
         </div>
         <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-white/40"
             initial={{ width: 0 }}
-            animate={{ width: `${voice.overall_voice_score}%` }}
+            animate={{ width: `${voice.overall_voice_score || 0}%` }}
             transition={{ duration: 0.5 }}
           />
         </div>
@@ -82,10 +82,10 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <span className="text-xs text-zinc-400">Speech Rate</span>
           </div>
           <div className="text-lg font-semibold text-white mb-1">
-            {voice.speech_rate_wpm.toFixed(0)} WPM
+            {(voice.speech_rate_wpm || 0).toFixed(0)} WPM
           </div>
-          <div className={`text-xs font-semibold ${getQualityColor(voice.speech_rate_quality)}`}>
-            {voice.speech_rate_quality.replace('_', ' ').toUpperCase()}
+          <div className={`text-xs font-semibold ${getQualityColor(voice.speech_rate_quality || 'normal')}`}>
+            {(voice.speech_rate_quality || 'normal').replace('_', ' ').toUpperCase()}
           </div>
         </div>
 
@@ -96,7 +96,7 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <span className="text-xs text-zinc-400">Clarity</span>
           </div>
           <div className="text-lg font-semibold text-white mb-1">
-            {(voice.clarity_score * 100).toFixed(0)}%
+            {((voice.clarity_score || 0) * 100).toFixed(0)}%
           </div>
           <motion.div
             className="h-1.5 bg-white/10 rounded-full overflow-hidden"
@@ -106,7 +106,7 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <motion.div
               className="h-full bg-purple-400"
               initial={{ width: 0 }}
-              animate={{ width: `${voice.clarity_score * 100}%` }}
+              animate={{ width: `${(voice.clarity_score || 0) * 100}%` }}
               transition={{ duration: 0.5 }}
             />
           </motion.div>
@@ -119,10 +119,10 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <span className="text-xs text-zinc-400">Pitch</span>
           </div>
           <div className="text-sm font-semibold text-white mb-1">
-            {voice.pitch_hz.toFixed(0)} Hz
+            {(voice.pitch_hz || 0).toFixed(0)} Hz
           </div>
-          <span className={`text-xs font-semibold px-2 py-1 rounded ${getPitchQualityColor(voice.pitch_quality)}`}>
-            {voice.pitch_quality.toUpperCase()}
+          <span className={`text-xs font-semibold px-2 py-1 rounded ${getPitchQualityColor(voice.pitch_quality || 'adequate')}`}>
+            {(voice.pitch_quality || 'adequate').toUpperCase()}
           </span>
         </div>
 
@@ -133,7 +133,7 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <span className="text-xs text-zinc-400">Volume</span>
           </div>
           <div className="text-lg font-semibold text-white mb-1">
-            {(voice.volume_consistency * 100).toFixed(0)}%
+            {((voice.volume_consistency || 0) * 100).toFixed(0)}%
           </div>
           <motion.div
             className="h-1.5 bg-white/10 rounded-full overflow-hidden"
@@ -143,7 +143,7 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <motion.div
               className="h-full bg-green-400"
               initial={{ width: 0 }}
-              animate={{ width: `${voice.volume_consistency * 100}%` }}
+              animate={{ width: `${(voice.volume_consistency || 0) * 100}%` }}
               transition={{ duration: 0.5 }}
             />
           </motion.div>
@@ -155,9 +155,9 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
         <div className="bg-white/5 rounded-lg p-2 text-center border border-white/10">
           <div className="text-xs text-zinc-400 mb-1">Filler Words</div>
           <div className="text-sm font-semibold text-orange-400">
-            {voice.filler_word_density.toFixed(1)}%
+            {(voice.filler_word_density || 0).toFixed(1)}%
           </div>
-          {voice.filler_words.length > 0 && (
+          {voice.filler_words && voice.filler_words.length > 0 && (
             <div className="text-xs text-zinc-500 mt-1">
               {voice.filler_words.join(', ')}
             </div>
@@ -167,7 +167,7 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
         <div className="bg-white/5 rounded-lg p-2 text-center border border-white/10">
           <div className="text-xs text-zinc-400 mb-1">Pitch Variation</div>
           <div className="text-sm font-semibold text-blue-400">
-            {voice.pitch_variation_semitones.toFixed(1)} ST
+            {(voice.pitch_variation_semitones || 0).toFixed(1)} ST
           </div>
         </div>
       </div>

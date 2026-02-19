@@ -57,6 +57,8 @@ class AICoachSession:
         """
         try:
             # Decode frame
+            if "," in frame_data:
+                frame_data = frame_data.split(",")[1]
             nparr = np.frombuffer(base64.b64decode(frame_data), np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
@@ -64,7 +66,9 @@ class AICoachSession:
                 return {"error": "Invalid frame data"}
             
             # Analyze facial metrics
+            print(f"Processing frame {self.frame_count}...") 
             facial_analysis = self.facial_agent.analyze_frame(frame)
+            print(f"Facial analysis result: {facial_analysis}")
             self.last_facial_analysis = facial_analysis
             
             self.frame_count += 1
@@ -91,7 +95,15 @@ class AICoachSession:
         """
         try:
             # Convert audio bytes to numpy array
-            audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+            if "," in audio_data:
+                audio_data = audio_data.split(",")[1]
+            # Decode if it's base64 string
+            if isinstance(audio_data, str):
+                audio_bytes = base64.b64decode(audio_data)
+                audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+            else:
+                # Assuming simple bytes
+                audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
             
             # Analyze voice quality
             voice_analysis = self.voice_analyzer.analyze_audio_chunk(audio_np, transcript)

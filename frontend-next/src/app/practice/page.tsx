@@ -343,7 +343,16 @@ export default function PracticePage() {
         difficulty
     });
 
+    // Keep track of connection status for interval closures
+    const aiCoachConnectedRef = useRef(aiCoachConnected);
+
+    useEffect(() => {
+        aiCoachConnectedRef.current = aiCoachConnected;
+    }, [aiCoachConnected]);
+
     // Auto-connect AI Coach when session starts
+
+
     useEffect(() => {
         if (sessionId && !aiCoachConnected) {
             aiConnect();
@@ -378,12 +387,7 @@ export default function PracticePage() {
         }
     }, [stream]);
 
-    // Set video stream to video element
-    useEffect(() => {
-        if (videoRef.current && stream) {
-            videoRef.current.srcObject = stream;
-        }
-    }, [stream]);
+
 
     // Load user data
     useEffect(() => {
@@ -443,53 +447,9 @@ export default function PracticePage() {
         }
     }, [isRecording, stream, aiCoachConnected, transcript, interimTranscript, startCapture, stopCapture, aiSendAudioChunk]);
 
-    // Handle gamification and feedback messages
-    useEffect(() => {
-        if (currentScore) {
-            // Update feedback messages if new feedback arrives
-            if (currentFeedback) {
-                setFeedbackMessages(prev => [...prev.slice(-4), {
-                    type: 'ai_insight',
-                    message: currentFeedback.feedback,
-                    icon: 'sparkles'
-                }]);
-            }
 
-            // Update combo and multiplier based on score
-            if (currentScore.total_score >= 70) {
-                setCombo(prev => prev + 1);
-                setComboStatus('HOT STREAK!');
-            } else {
-                setCombo(0);
-                setComboStatus('');
-            }
 
-            // Simple multiplier logic based on difficulty and combo
-            const baseMult = difficulty === 'beginner' ? 1.0 : difficulty === 'intermediate' ? 1.5 : 2.0;
-            const comboBonus = combo > 5 ? 0.1 * Math.floor(combo / 5) : 0;
-            const newMult = baseMult + comboBonus;
 
-            setCurrentMultiplier(newMult);
-            setMultiplierBreakdown({
-                base: baseMult,
-                combo: comboBonus,
-                streak: 0,
-                perfect: (currentScore.facial_score > 90 && currentScore.voice_score > 90) ? 0.5 : 0
-            });
-        }
-    }, [currentScore, currentFeedback, difficulty, combo]);
-
-    // Effect to handle audio capture
-    useEffect(() => {
-        if (isRecording && stream && aiCoachConnected) {
-            startCapture(stream, (audioData) => {
-                // Send audio chunk with current transcript status if needed
-                aiSendAudioChunk(audioData, transcript || interimTranscript);
-            });
-        } else if (!isRecording) {
-            stopCapture();
-        }
-    }, [isRecording, stream, aiCoachConnected, transcript, interimTranscript, startCapture, stopCapture, aiSendAudioChunk]);
 
 
     const handleStartSession = async () => {
@@ -519,7 +479,7 @@ export default function PracticePage() {
             // Start frame capture and send to AI Coach
             frameIntervalRef.current = setInterval(() => {
                 const frame = captureFrame();
-                if (frame && aiCoachConnected) {
+                if (frame && aiCoachConnectedRef.current) {
                     aiSendVideoFrame(frame as any);
                 }
             }, 100);
