@@ -744,6 +744,7 @@ export default function PracticePage() {
                                     interimTranscript={interimTranscript}
                                     segments={segments}
                                     isListening={isTranscribing}
+                                    serverTranscript={serverTranscript}
                                 />
                             </Suspense>
                         </div>
