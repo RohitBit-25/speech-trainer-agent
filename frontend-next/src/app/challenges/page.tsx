@@ -427,12 +427,13 @@ export default function ChallengesPage() {
 
     const fetchChallenges = useCallback(async () => {
         try {
-            const userId = localStorage.getItem("user_id") || "";
+            const userStr = localStorage.getItem("user");
+            const userId = userStr ? JSON.parse(userStr).id : "";
             const url = new URL('/api/game/challenges/active', window.location.origin);
             if (userId) {
                 url.searchParams.set('user_id', userId);
             }
-            
+
             const response = await fetch(url.toString());
             if (!response.ok) throw new Error("API error");
             const data = await response.json();
@@ -458,7 +459,8 @@ export default function ChallengesPage() {
 
     const claimReward = async (challengeId: string) => {
         try {
-            const userId = localStorage.getItem("user_id") || "";
+            const userStr = localStorage.getItem("user");
+            const userId = userStr ? JSON.parse(userStr).id : "";
             const response = await fetch(`/api/game/challenges/${challengeId}/claim`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

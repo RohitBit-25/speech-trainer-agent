@@ -187,7 +187,10 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     useEffect(() => {
-        setCurrentUserId(localStorage.getItem("user_id"));
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+            setCurrentUserId(JSON.parse(userStr).id);
+        }
     }, []);
 
     useEffect(() => {
@@ -201,7 +204,7 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
             const url = new URL(`/api/game/leaderboard/${category}`, window.location.origin);
             url.searchParams.set('difficulty', difficulty);
             url.searchParams.set('limit', '100');
-            
+
             const response = await fetch(url.toString());
             if (!response.ok) throw new Error("API error");
             const data = await response.json();
@@ -217,13 +220,14 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
 
     const fetchUserRank = async () => {
         try {
-            const userId = localStorage.getItem("user_id");
-            if (!userId) return;
-            
+            const userStr = localStorage.getItem("user");
+            if (!userStr) return;
+            const userId = JSON.parse(userStr).id;
+
             const url = new URL(`/api/game/leaderboard/user/${userId}/rank`, window.location.origin);
             url.searchParams.set('category', category);
             url.searchParams.set('difficulty', difficulty);
-            
+
             const response = await fetch(url.toString());
             const data = await response.json();
             if (data.ranked) setUserRank(data);

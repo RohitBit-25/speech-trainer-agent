@@ -228,17 +228,39 @@ async def submit_leaderboard_entry(
     categories = ["daily", "weekly", "all_time"]
     
     for category in categories:
-        entry = LeaderboardEntryInDB(
-            user_id=user_id,
-            username=username,
-            score=score,
-            difficulty=difficulty,
-            session_id=session_id,
-            category=category,
-            timestamp=datetime.utcnow()
-        )
-        
-        await leaderboard_collection.insert_one(entry.dict(by_alias=True))
+        # Check for existing entry
+        existing = await leaderboard_collection.find_one({
+            "user_id": user_id,
+            "category": category,
+            "difficulty": difficulty
+        })
+
+        if existing:
+            # Only update if new score is higher
+            if score > existing["score"]:
+                await leaderboard_collection.update_one(
+                    {"_id": existing["_id"]},
+                    {
+                        "$set": {
+                            "score": score,
+                            "session_id": session_id,
+                            "timestamp": datetime.utcnow(),
+                            "username": username # Update username in case it changed
+                        }
+                    }
+                )
+        else:
+            # Insert new entry
+            entry = LeaderboardEntryInDB(
+                user_id=user_id,
+                username=username,
+                score=score,
+                difficulty=difficulty,
+                session_id=session_id,
+                category=category,
+                timestamp=datetime.utcnow()
+            )
+            await leaderboard_collection.insert_one(entry.dict(by_alias=True))
     
     return {
         "success": True,
