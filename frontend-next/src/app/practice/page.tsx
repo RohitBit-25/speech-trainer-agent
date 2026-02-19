@@ -331,6 +331,8 @@ export default function PracticePage() {
 
     // AI Coach integration
     const {
+        connect: aiConnect,
+        disconnect: aiDisconnect,
         isConnected: aiCoachConnected,
         currentFeedback,
         currentScore,
@@ -344,6 +346,13 @@ export default function PracticePage() {
         userId: user?.id || '',
         difficulty
     });
+
+    // Auto-connect AI Coach when session starts
+    useEffect(() => {
+        if (sessionId && !aiCoachConnected) {
+            aiConnect();
+        }
+    }, [sessionId]);
 
     const {
         transcript,
