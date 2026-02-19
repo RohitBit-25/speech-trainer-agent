@@ -210,6 +210,7 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
   // Send video frame for real-time analysis
   const sendVideoFrame = useCallback((frameData: string) => {
     if (wsRef.current && isConnected) {
+      console.log("📤 Sending video frame to backend");
       wsRef.current.send(JSON.stringify({
         type: 'video_frame',
         session_id: sessionId,

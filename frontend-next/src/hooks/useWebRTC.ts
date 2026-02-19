@@ -24,6 +24,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
 
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [isStreaming, setIsStreaming] = useState(false);
+    const isStreamingRef = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -55,6 +56,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
 
             setStream(mediaStream);
             setIsStreaming(true);
+            isStreamingRef.current = true;
             console.log("✅ Stream started, isStreaming set to TRUE");
 
             // Create video element for frame capture
@@ -83,6 +85,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
             stream.getTracks().forEach(track => track.stop());
             setStream(null);
             setIsStreaming(false);
+            isStreamingRef.current = false;
         }
 
         if (videoRef.current) {
@@ -92,8 +95,9 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
     }, [stream]);
 
     const captureFrame = useCallback((): string | null => {
-        if (!videoRef.current || !isStreaming) {
-            console.warn(`⚠️ captureFrame failed: videoRef=${!!videoRef.current}, isStreaming=${isStreaming}`);
+        // Use ref to check streaming status to avoid stale closures
+        if (!videoRef.current || !isStreamingRef.current) {
+            // console.warn(`⚠️ captureFrame failed: videoRef=${!!videoRef.current}, isStreamingRef=${isStreamingRef.current}`);
             return null;
         }
 
@@ -111,7 +115,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
             console.error('Frame capture error:', err);
             return null;
         }
-    }, [isStreaming]);
+    }, []); // Empty dependency array because we use refs
 
     return {
         stream,
