@@ -57,6 +57,7 @@ export function RealtimeDashboard({
   return (
     <AnimatePresence>
       <motion.div
+        key="backdrop"
         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -64,6 +65,7 @@ export function RealtimeDashboard({
       />
 
       <motion.div
+        key="dashboard"
         className="fixed right-4 top-4 bottom-4 w-96 bg-zinc-950/95 border border-zinc-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden backdrop-blur-sm"
         initial={{ x: 400, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}

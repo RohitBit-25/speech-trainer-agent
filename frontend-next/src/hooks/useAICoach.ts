@@ -181,14 +181,21 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
       ws.onopen = () => {
         setIsConnected(true);
         setIsLoading(false);
-        console.log('✅ WebSocket connected');
+        console.log('✅ WebSocket connected', ws.url);
       };
 
       ws.onmessage = handleMessage;
-      ws.onclose = handleClose;
-      ws.onerror = handleError;
+      ws.onclose = (event) => {
+        console.log('❌ WebSocket closed', event.code, event.reason);
+        handleClose();
+      };
+      ws.onerror = (error) => {
+        console.error('❌ WebSocket error', error);
+        handleError(error);
+      };
 
       wsRef.current = ws;
+      console.log('🔌 WebSocket connecting to:', wsUrl);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to connect';
       setError(errorMsg);
@@ -209,7 +216,7 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
 
   // Send video frame for real-time analysis
   const sendVideoFrame = useCallback((frameData: string) => {
-    if (wsRef.current && isConnected) {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       console.log("📤 Sending video frame to backend");
       wsRef.current.send(JSON.stringify({
         type: 'video_frame',
@@ -218,7 +225,11 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
         timestamp: new Date().toISOString()
       }));
     } else {
-      console.warn('⚠️ Cannot send frame: Not connected or WS missing', { connected: isConnected, ws: !!wsRef.current });
+      console.warn('⚠️ Cannot send frame: Not connected or WS missing', {
+        connected: isConnected,
+        ws: !!wsRef.current,
+        readyState: wsRef.current?.readyState
+      });
     }
   }, [sessionId, isConnected]);
 
