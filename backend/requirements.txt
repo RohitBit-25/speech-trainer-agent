@@ -27,3 +27,4 @@ scipy
 numpy
 scikit-learn
 h5py
+openai>=1.0.0

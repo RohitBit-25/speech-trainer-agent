@@ -404,14 +404,22 @@ export default function PracticePage() {
         if (currentScore) {
             // Update feedback messages if new feedback arrives
             if (currentFeedback) {
-                setFeedbackMessages(prev => [...prev.slice(-4), {
-                    type: 'ai_insight',
-                    message: currentFeedback.feedback,
-                    icon: 'sparkles'
-                }]);
+                setFeedbackMessages(prev => {
+                    // Avoid duplicates based on content/timestamp if possible, 
+                    // or just rudimentary check on the last message
+                    const lastMsg = prev[prev.length - 1];
+                    if (lastMsg?.message === currentFeedback.feedback) return prev;
+
+                    return [...prev.slice(-4), {
+                        type: 'ai_insight',
+                        message: currentFeedback.feedback,
+                        icon: 'sparkles'
+                    }];
+                });
             }
 
             // Update combo and multiplier based on score
+            // We use functional state updates so we don't need 'combo' in dependencies
             if (currentScore.total_score >= 70) {
                 setCombo(prev => prev + 1);
                 setComboStatus('HOT STREAK!');
@@ -421,6 +429,7 @@ export default function PracticePage() {
             }
 
             // Simple multiplier logic based on difficulty and combo
+            // Recalculate based on current combo (accepting 1 frame lag which is fine)
             const baseMult = difficulty === 'beginner' ? 1.0 : difficulty === 'intermediate' ? 1.5 : 2.0;
             const comboBonus = combo > 5 ? 0.1 * Math.floor(combo / 5) : 0;
             const newMult = baseMult + comboBonus;
@@ -429,11 +438,11 @@ export default function PracticePage() {
             setMultiplierBreakdown({
                 base: baseMult,
                 combo: comboBonus,
-                streak: 0,
+                streak: 0, // Could be calculated if we tracked streak separately
                 perfect: (currentScore.facial_score > 90 && currentScore.voice_score > 90) ? 0.5 : 0
             });
         }
-    }, [currentScore, currentFeedback, difficulty, combo]);
+    }, [currentScore, currentFeedback, difficulty]); // REMOVED 'combo' dependency
 
     // Effect to handle audio capture and send to AI Coach
     useEffect(() => {
@@ -754,7 +763,7 @@ export default function PracticePage() {
                                     <label className="text-[10px] font-pixel text-zinc-500 mb-1 block uppercase tracking-wider">Session Score</label>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-4xl md:text-5xl font-pixel text-primary tracking-tighter leading-none drop-shadow-[0_2px_10px_rgba(var(--primary-rgb),0.3)]">
-                                            {currentScore ? currentScore.total_score.toLocaleString() : "0000"}
+                                            {currentScore?.total_score?.toLocaleString() ?? "0000"}
                                         </span>
                                         <span className="text-xs font-pixel text-zinc-600">PTS</span>
                                     </div>

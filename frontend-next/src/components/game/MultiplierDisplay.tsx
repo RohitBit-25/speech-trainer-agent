@@ -73,8 +73,8 @@ export function MultiplierDisplay({ multiplier, breakdown, showBreakdown = false
                                     <motion.div
                                         key={i}
                                         className={`h-1 w-8 rounded ${i < Math.floor(multiplier)
-                                                ? "bg-primary"
-                                                : "bg-zinc-700"
+                                            ? "bg-primary"
+                                            : "bg-zinc-700"
                                             }`}
                                         initial={{ scaleX: 0 }}
                                         animate={{ scaleX: 1 }}
@@ -99,7 +99,7 @@ export function MultiplierDisplay({ multiplier, breakdown, showBreakdown = false
                                                 <Star className="h-3 w-3" />
                                                 <span>Base (Difficulty)</span>
                                             </div>
-                                            <span className="text-primary">+{breakdown.base.toFixed(1)}x</span>
+                                            <span className="text-primary">+{breakdown.base?.toFixed(1) ?? "1.0"}x</span>
                                         </div>
                                     )}
                                     {breakdown.combo && breakdown.combo > 0 && (
@@ -108,7 +108,7 @@ export function MultiplierDisplay({ multiplier, breakdown, showBreakdown = false
                                                 <Flame className="h-3 w-3" />
                                                 <span>Combo Bonus</span>
                                             </div>
-                                            <span className="text-orange-500">+{breakdown.combo.toFixed(1)}x</span>
+                                            <span className="text-orange-500">+{breakdown.combo?.toFixed(1) ?? "0.0"}x</span>
                                         </div>
                                     )}
                                     {breakdown.streak && breakdown.streak > 0 && (
@@ -117,7 +117,7 @@ export function MultiplierDisplay({ multiplier, breakdown, showBreakdown = false
                                                 <TrendingUp className="h-3 w-3" />
                                                 <span>Streak Bonus</span>
                                             </div>
-                                            <span className="text-green-500">+{breakdown.streak.toFixed(1)}x</span>
+                                            <span className="text-green-500">+{breakdown.streak?.toFixed(1) ?? "0.0"}x</span>
                                         </div>
                                     )}
                                     {breakdown.perfect && breakdown.perfect > 0 && (
@@ -126,7 +126,7 @@ export function MultiplierDisplay({ multiplier, breakdown, showBreakdown = false
                                                 <Star className="h-3 w-3" />
                                                 <span>Perfect Bonus</span>
                                             </div>
-                                            <span className="text-purple-500">+{breakdown.perfect.toFixed(1)}x</span>
+                                            <span className="text-purple-500">+{breakdown.perfect?.toFixed(1) ?? "0.0"}x</span>
                                         </div>
                                     )}
                                 </motion.div>

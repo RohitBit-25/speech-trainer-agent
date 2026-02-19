@@ -90,7 +90,7 @@ export function RealtimeScoreDisplay({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            {score.total_score.toFixed(0)}
+            {score.total_score?.toFixed(0) ?? "0"}
           </motion.div>
         </div>
 
@@ -133,20 +133,19 @@ export function RealtimeScoreDisplay({
               <div className="flex items-center justify-between">
                 <span className="text-sm text-white">{comp.icon} {comp.label}</span>
                 <span className="text-sm font-mono font-semibold text-white">
-                  {comp.value.toFixed(0)}/100
+                  {comp.value?.toFixed(0) ?? "0"}/100
                 </span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <motion.div
-                  className={`h-full ${
-                    comp.value >= 80
-                      ? 'bg-green-400'
-                      : comp.value >= 60
+                  className={`h-full ${comp.value >= 80
+                    ? 'bg-green-400'
+                    : comp.value >= 60
                       ? 'bg-yellow-400'
                       : comp.value >= 40
-                      ? 'bg-orange-400'
-                      : 'bg-red-400'
-                  }`}
+                        ? 'bg-orange-400'
+                        : 'bg-red-400'
+                    }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${comp.value}%` }}
                   transition={{ duration: 0.5 }}
@@ -166,7 +165,7 @@ export function RealtimeScoreDisplay({
               <span className="text-sm font-semibold text-white">Quality Frames</span>
             </div>
             <span className="text-sm font-mono font-semibold text-cyan-300">
-              {goodFramesPercentage.toFixed(0)}%
+              {goodFramesPercentage?.toFixed(0) ?? "0"}%
             </span>
           </div>
           <div className="h-3 bg-white/10 rounded-full overflow-hidden">

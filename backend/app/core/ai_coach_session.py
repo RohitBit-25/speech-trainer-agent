@@ -13,7 +13,9 @@ from typing import Dict, Optional
 
 from app.core.emotion_detector import EmotionDetector
 from app.core.voice_quality_analyzer import VoiceQualityAnalyzer
-from app.core.gemini_coach_engine import GeminiCoachEngine
+from app.core.voice_quality_analyzer import VoiceQualityAnalyzer
+# from app.core.gemini_coach_engine import GeminiCoachEngine
+from app.core.openrouter_coach_engine import OpenRouterCoachEngine
 from app.core.scoring_system import IntelligentScoringSystem
 from app.agents.realtime.realtime_voice_agent import RealtimeVoiceAgent
 from app.agents.realtime.realtime_facial_agent import RealtimeFacialAgent
@@ -33,7 +35,12 @@ class AICoachSession:
         # Initialize all AI/ML components
         self.emotion_detector = EmotionDetector()
         self.voice_analyzer = VoiceQualityAnalyzer()
-        self.gemini_coach = GeminiCoachEngine()
+        # self.gemini_coach = GeminiCoachEngine()
+        self.gemini_coach = OpenRouterCoachEngine() # Keeping same variable name for compatibility or refactor? Let's keep it but maybe rename internal usage if needed.
+        # Actually better to rename it to 'coach' or keep 'gemini_coach' to minimize diffs if logic is same.
+        # Let's keep 'gemini_coach' as the attribute name to avoid breaking other methods in this file, 
+        # but usage will be OpenRouterCoachEngine.
+        
         self.scoring_system = IntelligentScoringSystem(difficulty)
         self.facial_agent = RealtimeFacialAgent()
         self.voice_agent = RealtimeVoiceAgent()
@@ -240,7 +247,40 @@ class AICoachSession:
             
         except Exception as e:
             print(f"❌ Error generating feedback: {e}")
-            return {"error": str(e), "feedback": "Keep practicing!"}
+            # Fallback to heuristic feedback if AI fails (e.g. quota exceeded)
+            fallback_feedback = self._generate_fallback_feedback(voice_metrics, facial_metrics)
+            return {"error": str(e), "feedback": fallback_feedback}
+
+    def _generate_fallback_feedback(self, voice_metrics: Dict, facial_metrics: Dict) -> str:
+        """Generate heuristic feedback when AI model is unavailable"""
+        feedback_items = []
+        
+        # Voice feedback
+        if voice_metrics.get("speech_rate_quality") == "too_fast":
+            feedback_items.append("Try to speak a bit slower for better clarity.")
+        elif voice_metrics.get("speech_rate_quality") == "too_slow":
+            feedback_items.append("You can pick up the pace slightly.")
+            
+        if voice_metrics.get("volume_consistency", 1) < 0.6:
+            feedback_items.append("Try to maintain a consistent speaking volume.")
+            
+        if voice_metrics.get("pitch_quality") == "monotone":
+            feedback_items.append("Add more variation to your tone to stay engaging.")
+            
+        # Facial feedback
+        if facial_metrics.get("eye_contact_score", 1) < 0.4:
+            feedback_items.append("Maintain better eye contact with the camera.")
+            
+        if facial_metrics.get("smile_score", 1) < 0.3:
+            feedback_items.append("Don't forget to smile occasionally!")
+            
+        if facial_metrics.get("engagement_level") == "low":
+            feedback_items.append("Keep your energy up to engage the audience.")
+            
+        if not feedback_items:
+            return "You're doing great! Keep maintaining this energy."
+            
+        return " ".join(feedback_items[:2])
     
     async def calculate_frame_score(self) -> Dict:
         """
