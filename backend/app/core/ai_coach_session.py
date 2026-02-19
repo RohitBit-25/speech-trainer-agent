@@ -56,38 +56,60 @@ class AICoachSession:
         Process incoming video frame with emotion detection and facial analysis
         """
         try:
-            # Decode frame
-            if "," in frame_data:
+            # Decode frame - handle both data:image;base64 and plain base64 formats
+            if isinstance(frame_data, str) and "," in frame_data:
+                # Strip MIME type prefix if present: "data:image/jpeg;base64,xxxxx"
                 frame_data = frame_data.split(",")[1]
-            nparr = np.frombuffer(base64.b64decode(frame_data), np.uint8)
-            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            try:
+                decoded_bytes = base64.b64decode(frame_data)
+                nparr = np.frombuffer(decoded_bytes, np.uint8)
+                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            except Exception as decode_error:
+                print(f"❌ Base64 decode failed: {decode_error}")
+                return {"error": f"Frame decode failed: {decode_error}"}
             
             if frame is None or frame.size == 0:
-                return {"error": "Invalid frame data"}
+                return {"error": f"Invalid frame data - decoded but frame is None or empty. Bytes decoded: {len(decoded_bytes) if 'decoded_bytes' in locals() else 0}"}
             
             # Analyze facial metrics
-            print(f"Processing frame {self.frame_count}...") 
+            print(f"🎥 Processing frame {self.frame_count} (shape: {frame.shape})...") 
             facial_analysis = self.facial_agent.analyze_frame(frame)
-            print(f"Facial analysis result: {facial_analysis}")
-            self.last_facial_analysis = facial_analysis
+            print(f"📊 Facial analysis result keys: {facial_analysis.keys() if facial_analysis else 'None'}")
             
+            if not facial_analysis:
+                print("⚠️ WARNING: Facial analysis returned None")
+                facial_analysis = {
+                    "emotion": "unknown",
+                    "emotion_confidence": 0,
+                    "engagement_score": 0,
+                    "engagement_level": "unknown",
+                    "eye_contact_score": 0,
+                    "smile_score": 0,
+                    "face_detected": False
+                }
+            
+            self.last_facial_analysis = facial_analysis
             self.frame_count += 1
             
             return {
                 "frame_processed": self.frame_count,
                 "facial_analysis": {
-                    "emotion": facial_analysis.get("emotion", "neutral"),
+                    "emotion": facial_analysis.get("emotion", "unknown"),
                     "emotion_confidence": round(facial_analysis.get("emotion_confidence", 0), 2),
                     "engagement_score": round(facial_analysis.get("engagement_score", 0), 2),
-                    "engagement_level": facial_analysis.get("engagement_level", "low"),
+                    "engagement_level": facial_analysis.get("engagement_level", "unknown"),
                     "eye_contact_score": round(facial_analysis.get("eye_contact_score", 0), 2),
-                    "smile_score": round(facial_analysis.get("smile_score", 0), 2)
+                    "smile_score": round(facial_analysis.get("smile_score", 0), 2),
+                    "face_detected": facial_analysis.get("face_detected", False)
                 }
             }
             
         except Exception as e:
             print(f"❌ Error processing video frame: {e}")
-            return {"error": str(e)}
+            import traceback
+            traceback.print_exc()
+            return {"error": f"Exception in frame processing: {str(e)}"}
     
     async def process_audio_chunk(self, audio_data: bytes, transcript: str = "") -> Dict:
         """
@@ -95,33 +117,60 @@ class AICoachSession:
         """
         try:
             # Convert audio bytes to numpy array
-            if "," in audio_data:
-                audio_data = audio_data.split(",")[1]
-            # Decode if it's base64 string
-            if isinstance(audio_data, str):
-                audio_bytes = base64.b64decode(audio_data)
+            try:
+                if isinstance(audio_data, str) and "," in audio_data:
+                    # Strip MIME type prefix if present
+                    audio_data = audio_data.split(",")[1]
+                
+                if isinstance(audio_data, str):
+                    # Decode base64 string
+                    audio_bytes = base64.b64decode(audio_data)
+                else:
+                    # Already bytes
+                    audio_bytes = audio_data
+                
+                # Convert to float audio array
                 audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
-            else:
-                # Assuming simple bytes
-                audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+                
+                print(f"🎙️ Processing audio chunk ({len(audio_bytes)} bytes → {audio_np.shape})")
+                
+            except Exception as audio_decode_error:
+                print(f"❌ Audio decode failed: {audio_decode_error}")
+                return {"error": f"Audio decode failed: {audio_decode_error}", "voice_analysis": None}
             
             # Analyze voice quality
             voice_analysis = self.voice_analyzer.analyze_audio_chunk(audio_np, transcript)
+            
+            if not voice_analysis:
+                print("⚠️ WARNING: Voice analysis returned None")
+                voice_analysis = {
+                    "speech_rate_wpm": 0,
+                    "speech_rate_quality": "unknown",
+                    "pitch_hz": 0,
+                    "pitch_quality": "unknown",
+                    "clarity_score": 0,
+                    "volume_consistency": 0,
+                    "overall_voice_score": 0
+                }
+            
+            print(f"📊 Voice analysis result: speech_rate={voice_analysis.get('speech_rate_wpm')}, pitch={voice_analysis.get('pitch_hz')}")
+            
             self.last_voice_analysis = voice_analysis
             
             # Update transcript
             if transcript:
                 self.transcript_buffer += " " + transcript
+                print(f"📝 Updated transcript buffer: {len(self.transcript_buffer)} chars")
             
             return {
                 "audio_processed": True,
                 "voice_analysis": {
                     "speech_rate_wpm": round(voice_analysis.get("speech_rate_wpm", 0), 1),
-                    "speech_rate_quality": voice_analysis.get("speech_rate_quality", "normal"),
+                    "speech_rate_quality": voice_analysis.get("speech_rate_quality", "unknown"),
                     "pitch_hz": round(voice_analysis.get("pitch_hz", 0), 1),
-                    "pitch_quality": voice_analysis.get("pitch_quality", "monotone"),
-                    "clarity_score": round(voice_analysis.get("clarity_score", 0) * 100, 1),
-                    "volume_consistency": round(voice_analysis.get("volume_consistency", 0) * 100, 1),
+                    "pitch_quality": voice_analysis.get("pitch_quality", "unknown"),
+                    "clarity_score": round(voice_analysis.get("clarity_score", 0) * 100, 1) if voice_analysis.get("clarity_score") else 0,
+                    "volume_consistency": round(voice_analysis.get("volume_consistency", 0) * 100, 1) if voice_analysis.get("volume_consistency") else 0,
                     "filler_words": voice_analysis.get("filler_words", []),
                     "voice_score": round(voice_analysis.get("overall_voice_score", 0), 1),
                     "recommendations": voice_analysis.get("recommendations", [])
@@ -129,8 +178,10 @@ class AICoachSession:
             }
             
         except Exception as e:
-            print(f"❌ Error processing audio: {e}")
-            return {"error": str(e)}
+            print(f"❌ Error processing audio chunk: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": f"Exception in audio processing: {str(e)}", "voice_analysis": None}
     
     async def generate_real_time_feedback(self) -> Dict:
         """
@@ -193,48 +244,91 @@ class AICoachSession:
     
     async def calculate_frame_score(self) -> Dict:
         """
-        Calculate comprehensive score for current frame
+        Calculate comprehensive score for current frame based on ACTUAL data
         """
         try:
             if self.last_facial_analysis is None or self.last_voice_analysis is None:
-                return {}
+                return {"error": "No analysis data available", "score": None}
             
-            # Prepare comprehensive metrics
+            # Prepare comprehensive metrics using ACTUAL data
             voice_metrics = {
                 "speech_rate_wpm": self.last_voice_analysis.get("speech_rate_wpm", 0),
-                "speech_rate_quality": self.last_voice_analysis.get("speech_rate_quality", "normal"),
-                "clarity_score": self.last_voice_analysis.get("clarity_score", 0.5),
-                "volume_consistency": self.last_voice_analysis.get("volume_consistency", 0.5),
-                "pitch_quality": self.last_voice_analysis.get("pitch_quality", "monotone"),
+                "speech_rate_quality": self.last_voice_analysis.get("speech_rate_quality", "unknown"),
+                "clarity_score": self.last_voice_analysis.get("clarity_score", 0),
+                "volume_consistency": self.last_voice_analysis.get("volume_consistency", 0),
+                "pitch_quality": self.last_voice_analysis.get("pitch_quality", "unknown"),
                 "pitch_variation_semitones": self.last_voice_analysis.get("pitch_variation_semitones", 0),
                 "filler_word_density": self.last_voice_analysis.get("filler_word_density", 0),
-                "overall_voice_score": self.last_voice_analysis.get("overall_voice_score", 50)
+                "overall_voice_score": self.last_voice_analysis.get("overall_voice_score", 0)
             }
             
             facial_metrics = {
                 "engagement_score": self.last_facial_analysis.get("engagement_score", 0),
                 "eye_contact_score": self.last_facial_analysis.get("eye_contact_score", 0),
                 "smile_score": self.last_facial_analysis.get("smile_score", 0),
-                "emotion": self.last_facial_analysis.get("emotion", "neutral"),
+                "emotion": self.last_facial_analysis.get("emotion", "unknown"),
                 "emotion_confidence": self.last_facial_analysis.get("emotion_confidence", 0)
             }
             
-            # Content metrics (from transcript)
-            content_metrics = {
-                "word_count": len(self.transcript_buffer.split()),
-                "clarity": 75,
-                "structure_quality": 75,
-                "vocabulary_quality": 75
-            }
+            # Content metrics - calculate from ACTUAL transcript
+            # NO hardcoded values like 75!
+            content_metrics = {}
             
-            # Pacing metrics
-            pacing_metrics = {
-                "pause_frequency": 0.3,
-                "avg_pause_length": 0.8,
-                "rhythm_consistency": 0.7
-            }
+            if self.transcript_buffer:
+                words = self.transcript_buffer.split()
+                word_count = len(words)
+                unique_words = len(set(w.lower() for w in words))
+                
+                # Calculate vocabulary diversity (lower is more repetitive)
+                vocabulary_diversity = (unique_words / max(word_count, 1)) * 100
+                
+                # Word count is a proxy for completeness/structure
+                # More words generally means more detail (cap at 100)
+                structure_quality = min(100, (word_count / 50) * 100) if word_count > 0 else 0
+                
+                # Estimate clarity based on long-word ratio (complex vocab)
+                long_words = sum(1 for w in words if len(w) > 6)
+                clarity = (long_words / max(word_count, 1)) * 100 if word_count > 0 else 0
+                
+                content_metrics = {
+                    "word_count": word_count,
+                    "unique_words": unique_words,
+                    "clarity": round(clarity, 1),  # Based on vocabulary complexity
+                    "structure_quality": round(structure_quality, 1),  # Based on length
+                    "vocabulary_quality": round(vocabulary_diversity, 1)  # Unique/total ratio
+                }
+                print(f"📝 Content metrics: {word_count} words, {unique_words} unique, vocab={vocabulary_diversity:.1f}%")
+            else:
+                # No transcript yet - return null metrics
+                content_metrics = {
+                    "word_count": 0,
+                    "clarity": None,
+                    "structure_quality": None,
+                    "vocabulary_quality": None,
+                    "error": "No transcript data yet"
+                }
             
-            # Calculate final score
+            # Pacing metrics - use ACTUAL voice data if available
+            pacing_metrics = {}
+            
+            if self.last_voice_analysis.get("pause_frequency") is not None:
+                pacing_metrics = {
+                    "pause_frequency": self.last_voice_analysis.get("pause_frequency", 0),
+                    "avg_pause_length": self.last_voice_analysis.get("avg_pause_length", 0),
+                    "rhythm_consistency": self.last_voice_analysis.get("rhythm_score", 0)
+                }
+            else:
+                # No pacing data yet
+                pacing_metrics = {
+                    "pause_frequency": None,
+                    "avg_pause_length": None,
+                    "rhythm_consistency": None,
+                    "error": "No pacing data available yet"
+                }
+            
+            print(f"📊 Calculating score with voice={voice_metrics.get('overall_voice_score')}, facial={facial_metrics.get('engagement_score')}")
+            
+            # Calculate final score using ACTUAL data
             score_result = self.scoring_system.calculate_score(
                 voice_metrics,
                 facial_metrics,
@@ -247,24 +341,26 @@ class AICoachSession:
             
             return {
                 "score": {
-                    "total": score_result['total_score'],
-                    "grade": score_result['grade'],
+                    "total": score_result.get('total_score', 0),
+                    "grade": score_result.get('grade', 'N/A'),
                     "components": {
-                        "voice": score_result['voice_score'],
-                        "facial": score_result['facial_score'],
-                        "content": score_result['content_score'],
-                        "pacing": score_result['pacing_score']
+                        "voice": score_result.get('voice_score', 0),
+                        "facial": score_result.get('facial_score', 0),
+                        "content": score_result.get('content_score', 0),
+                        "pacing": score_result.get('pacing_score', 0)
                     },
-                    "is_good_frame": score_result['is_good_frame'],
-                    "feedback_priority": score_result['feedback_priority'],
-                    "strengths": score_result['strengths'],
-                    "weaknesses": score_result['weaknesses']
+                    "is_good_frame": score_result.get('is_good_frame', False),
+                    "feedback_priority": score_result.get('feedback_priority', 'none'),
+                    "strengths": score_result.get('strengths', []),
+                    "weaknesses": score_result.get('weaknesses', [])
                 }
             }
             
         except Exception as e:
             print(f"❌ Error calculating score: {e}")
-            return {"error": str(e)}
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e), "score": None}
     
     def get_session_summary(self) -> Dict:
         """

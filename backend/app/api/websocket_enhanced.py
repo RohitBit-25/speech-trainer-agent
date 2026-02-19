@@ -60,28 +60,48 @@ class EnhancedConnectionManager:
     
     async def broadcast_to_session(self, session_id: str, message: dict):
         """Send message to specific session"""
-        if session_id in self.active_connections:
-            try:
-                await self.active_connections[session_id].send_json(message)
-            except Exception as e:
-                print(f"Error sending message: {e}")
+        if session_id not in self.active_connections:
+            print(f"⚠️ Session {session_id} not in active connections. Active: {list(self.active_connections.keys())}")
+            return
+        
+        try:
+            websocket = self.active_connections[session_id]
+            await websocket.send_json(message)
+            print(f"✅ Message sent to {session_id}, type: {message.get('type')}")
+        except Exception as e:
+            print(f"❌ Error sending message to {session_id}: {e}")
+            # Remove dead connection
+            if session_id in self.active_connections:
+                try:
+                    del self.active_connections[session_id]
+                except:
+                    pass
     
     async def process_video_frame(self, session_id: str, message: dict) -> Dict:
         """Process incoming video frame"""
         if session_id not in self.active_sessions:
+            print(f"❌ Session {session_id} not found in active sessions")
             return {"error": "Session not found"}
         
         try:
             frame_data = message.get("frame_data")
             if not frame_data:
+                print(f"⚠️ No frame data in message for {session_id}")
                 return {"error": "No frame data"}
             
             session = self.active_sessions[session_id]
             result = await session.process_video_frame(frame_data)
             
+            if result and "error" not in result:
+                print(f"✅ Frame processed successfully for {session_id}")
+            else:
+                print(f"⚠️ Frame processing returned error or empty result: {result}")
+            
             return result
         except Exception as e:
-            print(f"Error processing video: {e}")
+            print(f"❌ Error processing video in {session_id}: {e}")
+            import traceback
+            traceback.print_exc()
             return {"error": str(e)}
     
     async def process_audio_chunk(self, session_id: str, message: dict) -> Dict:

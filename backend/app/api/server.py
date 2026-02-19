@@ -62,6 +62,13 @@ class RealtimeSessionRequest(BaseModel):
 async def root():
     return {"message": "Welcome to the video analysis API!"}
 
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Check if service is running and components are healthy"""
+    from app.core.component_health import get_health_status
+    return get_health_status()
+
 # Define the analysis endpoint
 @app.post("/analyze")
 async def analyze(video: UploadFile = File(...)):
@@ -357,58 +364,71 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
         user_id = websocket.query_params.get("user_id", "anonymous")
         difficulty = websocket.query_params.get("difficulty", "intermediate")
         
-        logging.info(f"AI Coach WS Connecting: {session_id} (User: {user_id})")
+        logging.info(f"🔌 WebSocket connection request: {session_id} (User: {user_id}, Difficulty: {difficulty})")
         
         # Connect client
         await enhanced_manager.connect(session_id, websocket, user_id, difficulty)
+        logging.info(f"✅ WebSocket connected: {session_id}")
         
         try:
             while True:
                 data = await websocket.receive_json()
                 message_type = data.get("type")
                 
+                logging.debug(f"📨 WebSocket message received: type={message_type}, session={session_id}")
+                
                 # Route different message types
                 if message_type == "video_frame":
                     # Process video frame
-                    print(f"🎥 Processing video frame for session {session_id}")
+                    logging.debug(f"🎥 Processing video frame for session {session_id}")
                     result = await enhanced_manager.process_video_frame(session_id, data)
-                    print(f"✅ Video result: {result.keys() if result else 'None'}")
+                    logging.debug(f"✅ Video processing result: {list(result.keys()) if result else 'None'}")
                     
                     if result and "error" in result:
-                        print(f"❌ Error in video processing: {result['error']}")
+                        logging.error(f"❌ Error in video processing: {result['error']}")
 
                     # Calculate score
                     score_result = await enhanced_manager.calculate_score(session_id)
-                    print(f"📊 Score result: {score_result}")
+                    logging.debug(f"📊 Score result, keys: {list(score_result.keys()) if score_result else 'None'}")
                     
                     # Periodically get feedback
                     feedback_result = await enhanced_manager.generate_feedback(session_id)
-                    # print(f"💬 Feedback result: {feedback_result.keys() if feedback_result else 'None'}")
+                    logging.debug(f"💬 Feedback result: {feedback_result.get('feedback', '')[:50] if feedback_result else 'None'}...")
                     
                     # Send comprehensive response
                     response_data = {
                         "type": "analysis_result",
-                        "facial_analysis": result.get("facial_analysis"),
-                        "voice_analysis": result.get("voice_analysis"),
-                        "score": score_result,
-                        "feedback": feedback_result.get("feedback"),
+                        "facial_analysis": result.get("facial_analysis") if result else None,
+                        "voice_analysis": result.get("voice_analysis") if result else None,
+                        "score": score_result.get("score") if score_result else None,
+                        "feedback": feedback_result.get("feedback") if feedback_result else None,
                         "timestamp": datetime.now().isoformat()
                     }
-                    print(f"🚀 Broadcasting response to {session_id}")
+                    
+                    # Log response data structure (NOT the content, just structure)
+                    response_keys = {k: v is not None for k, v in response_data.items()}
+                    logging.debug(f"🚀 Broadcasting response: {response_keys}")
+                    
                     await enhanced_manager.broadcast_to_session(session_id, response_data)
+                    logging.debug(f"✅ Response broadcasted to {session_id}")
                 
                 elif message_type == "audio_chunk":
                     # Process audio
+                    logging.debug(f"🎙️ Processing audio chunk for session {session_id}")
                     result = await enhanced_manager.process_audio_chunk(session_id, data)
                     
                     if "error" not in result:
+                        logging.debug(f"✅ Audio processing successful")
                         await enhanced_manager.broadcast_to_session(session_id, {
                             "type": "voice_analysis",
                             "voice": result.get("voice_analysis"),
                             "timestamp": datetime.now().isoformat()
                         })
+                    else:
+                        logging.error(f"❌ Audio processing error: {result.get('error')}")
                 
                 elif message_type == "get_summary":
+                    logging.debug(f"📈 Getting session summary for {session_id}")
                     summary = enhanced_manager.get_session_summary(session_id)
                     await enhanced_manager.broadcast_to_session(session_id, {
                         "type": "session_summary",
@@ -417,6 +437,7 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
                     })
                 
                 elif message_type == "end_session":
+                    logging.info(f"🏁 Ending session: {session_id}")
                     summary = enhanced_manager.get_session_summary(session_id)
                     await enhanced_manager.broadcast_to_session(session_id, {
                         "type": "session_ended",
@@ -425,17 +446,27 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
                         "timestamp": datetime.now().isoformat()
                     })
                     break
+                
+                else:
+                    logging.warning(f"⚠️ Unknown message type: {message_type}")
                     
         except WebSocketDisconnect:
-            logging.info(f"AI Coach WS Disconnect: {session_id}")
+            logging.info(f"👋 Client disconnected: {session_id}")
             enhanced_manager.disconnect(session_id)
         except Exception as e:
-            logging.error(f"AI Coach WS Error {session_id}: {e}")
-            await enhanced_manager.broadcast_to_session(session_id, {"error": str(e)})
+            logging.error(f"❌ WebSocket error in {session_id}: {e}", exc_info=True)
+            try:
+                await enhanced_manager.broadcast_to_session(session_id, {
+                    "type": "error",
+                    "error": str(e),
+                    "timestamp": datetime.now().isoformat()
+                })
+            except:
+                pass
             enhanced_manager.disconnect(session_id)
             
     except Exception as e:
-        logging.error(f"AI Coach WS Setup Error {session_id}: {e}")
+        logging.error(f"❌ WebSocket setup error for {session_id}: {e}", exc_info=True)
         try:
             await websocket.close()
         except:
