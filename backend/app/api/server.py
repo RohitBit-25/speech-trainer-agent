@@ -344,3 +344,90 @@ async def realtime_analysis_websocket(websocket: WebSocket, session_id: str):
             await websocket.close()
         except:
             pass
+
+# ============= ENHANCED AI COACH WEBSOCKET =============
+
+from app.api.websocket_enhanced import connection_manager as enhanced_manager
+
+@app.websocket("/ws/practice/{session_id}")
+async def practice_websocket(websocket: WebSocket, session_id: str):
+    """Enhanced WebSocket endpoint for AI Coach practice session"""
+    try:
+        # Extract query parameters
+        user_id = websocket.query_params.get("user_id", "anonymous")
+        difficulty = websocket.query_params.get("difficulty", "intermediate")
+        
+        logging.info(f"AI Coach WS Connecting: {session_id} (User: {user_id})")
+        
+        # Connect client
+        await enhanced_manager.connect(session_id, websocket, user_id, difficulty)
+        
+        try:
+            while True:
+                data = await websocket.receive_json()
+                message_type = data.get("type")
+                
+                # Route different message types
+                if message_type == "video_frame":
+                    # Process video frame
+                    result = await enhanced_manager.process_video_frame(session_id, data)
+                    
+                    # Calculate score
+                    score_result = await enhanced_manager.calculate_score(session_id)
+                    
+                    # Periodically get feedback
+                    feedback_result = await enhanced_manager.generate_feedback(session_id)
+                    
+                    # Send comprehensive response
+                    await enhanced_manager.broadcast_to_session(session_id, {
+                        "type": "analysis_result",
+                        "facial_analysis": result.get("facial_analysis"),
+                        "voice_analysis": result.get("voice_analysis"),
+                        "score": score_result,
+                        "feedback": feedback_result.get("feedback"),
+                        "timestamp": datetime.now().isoformat()
+                    })
+                
+                elif message_type == "audio_chunk":
+                    # Process audio
+                    result = await enhanced_manager.process_audio_chunk(session_id, data)
+                    
+                    if "error" not in result:
+                        await enhanced_manager.broadcast_to_session(session_id, {
+                            "type": "voice_analysis",
+                            "voice": result.get("voice_analysis"),
+                            "timestamp": datetime.now().isoformat()
+                        })
+                
+                elif message_type == "get_summary":
+                    summary = enhanced_manager.get_session_summary(session_id)
+                    await enhanced_manager.broadcast_to_session(session_id, {
+                        "type": "session_summary",
+                        "summary": summary,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                
+                elif message_type == "end_session":
+                    summary = enhanced_manager.get_session_summary(session_id)
+                    await enhanced_manager.broadcast_to_session(session_id, {
+                        "type": "session_ended",
+                        "summary": summary,
+                        "message": "Practice session ended. Great work!",
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    break
+                    
+        except WebSocketDisconnect:
+            logging.info(f"AI Coach WS Disconnect: {session_id}")
+            enhanced_manager.disconnect(session_id)
+        except Exception as e:
+            logging.error(f"AI Coach WS Error {session_id}: {e}")
+            await enhanced_manager.broadcast_to_session(session_id, {"error": str(e)})
+            enhanced_manager.disconnect(session_id)
+            
+    except Exception as e:
+        logging.error(f"AI Coach WS Setup Error {session_id}: {e}")
+        try:
+            await websocket.close()
+        except:
+            pass

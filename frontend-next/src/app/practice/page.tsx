@@ -295,7 +295,7 @@ export default function PracticePage() {
     const [showTutorial, setShowTutorial] = useState(false);
     const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
     const [multiplierBreakdown, setMultiplierBreakdown] = useState<any>({});
-    const [user, setUser] = useState<any>(null);    const [showAICoachDashboard, setShowAICoachDashboard] = useState(false);
+    const [user, setUser] = useState<any>(null); const [showAICoachDashboard, setShowAICoachDashboard] = useState(false);
     const [dashboardMinimized, setDashboardMinimized] = useState(false);
     const [goodFramesCount, setGoodFramesCount] = useState(0);
     const [totalFramesProcessed, setTotalFramesProcessed] = useState(0);
@@ -339,7 +339,11 @@ export default function PracticePage() {
         sendVideoFrame: aiSendVideoFrame,
         sendAudioChunk: aiSendAudioChunk,
         endSession: aiEndSession,
-    } = useAICoach();
+    } = useAICoach({
+        sessionId: sessionId || '',
+        userId: user?.id || '',
+        difficulty
+    });
 
     const {
         transcript,
@@ -418,10 +422,10 @@ export default function PracticePage() {
             const data = await response.json();
             setSessionId(data.session_id);
             connect(data.session_id);
-            
+
             // Connect AI Coach
             await aiSendVideoFrame({ /* initial frame setup */ } as any);
-            
+
             setIsRecording(true);
             setShowAICoachDashboard(true);
 
@@ -470,12 +474,12 @@ export default function PracticePage() {
         setShowAICoachDashboard(false);
         stopListening();
         disconnect();
-        
+
         // End AI coach session
         if (sessionId) {
             await aiEndSession();
         }
-        
+
         stopStream();
 
         const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);

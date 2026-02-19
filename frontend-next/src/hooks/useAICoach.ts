@@ -1,11 +1,11 @@
 "use client"
 import { useRef, useCallback, useState, useEffect } from 'react';
-import type { 
-  RealtimeFeedback, 
-  EmotionAnalysis, 
-  VoiceQualityMetrics, 
+import type {
+  RealtimeFeedback,
+  EmotionAnalysis,
+  VoiceQualityMetrics,
   PerformanceScore,
-  SessionSummary 
+  SessionSummary
 } from '@/lib/types';
 
 interface UseAICoachOptions {
@@ -25,14 +25,14 @@ interface UseAICoachReturn {
   isConnected: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
   // Data
-  currentFeedback: string;
+  currentFeedback: RealtimeFeedback | null;
   currentScore: PerformanceScore | null;
   currentEmotion: EmotionAnalysis | null;
   currentVoice: VoiceQualityMetrics | null;
   sessionSummary: SessionSummary | null;
-  
+
   // Actions
   connect: () => Promise<void>;
   disconnect: () => void;
@@ -42,7 +42,12 @@ interface UseAICoachReturn {
   reset: () => void;
 }
 
-export function useAICoach(options: UseAICoachOptions): UseAICoachReturn {
+export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): UseAICoachReturn {
+  // Support both object and legacy string sessionId (if needed, but better to enforce object)
+  const options = typeof optionsOrSessionId === 'string'
+    ? { sessionId: optionsOrSessionId, userId: '' }
+    : (optionsOrSessionId || { sessionId: '', userId: '' });
+
   const {
     sessionId,
     userId,
@@ -59,8 +64,8 @@ export function useAICoach(options: UseAICoachOptions): UseAICoachReturn {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  const [currentFeedback, setCurrentFeedback] = useState('');
+
+  const [currentFeedback, setCurrentFeedback] = useState<RealtimeFeedback | null>(null);
   const [currentScore, setCurrentScore] = useState<PerformanceScore | null>(null);
   const [currentEmotion, setCurrentEmotion] = useState<EmotionAnalysis | null>(null);
   const [currentVoice, setCurrentVoice] = useState<VoiceQualityMetrics | null>(null);
@@ -76,26 +81,9 @@ export function useAICoach(options: UseAICoachOptions): UseAICoachReturn {
         console.log('✅ Connected to AI Coach:', message.message);
         setIsLoading(false);
       }
-      
+
       else if (type === 'analysis_result') {
         // Real-time analysis with feedback
-        setCurrentFeedback(message.feedback || '');
-        
-        if (message.facial_analysis) {
-          setCurrentEmotion(message.facial_analysis);
-          onEmotionUpdate?.(message.facial_analysis);
-        }
-        
-        if (message.voice_analysis) {
-          setCurrentVoice(message.voice_analysis);
-          onVoiceUpdate?.(message.voice_analysis);
-        }
-        
-        if (message.score) {
-          setCurrentScore(message.score);
-          onScoreUpdate?.(message.score);
-        }
-
         if (message.feedback) {
           const feedback: RealtimeFeedback = {
             type: 'feedback',
@@ -106,28 +94,46 @@ export function useAICoach(options: UseAICoachOptions): UseAICoachReturn {
             score: message.score,
             timestamp: message.timestamp || new Date().toISOString()
           };
+          setCurrentFeedback(feedback);
           onFeedback?.(feedback);
+        } else {
+          setCurrentFeedback(null);
+        }
+
+        if (message.facial_analysis) {
+          setCurrentEmotion(message.facial_analysis);
+          onEmotionUpdate?.(message.facial_analysis);
+        }
+
+        if (message.voice_analysis) {
+          setCurrentVoice(message.voice_analysis);
+          onVoiceUpdate?.(message.voice_analysis);
+        }
+
+        if (message.score) {
+          setCurrentScore(message.score);
+          onScoreUpdate?.(message.score);
         }
       }
-      
+
       else if (type === 'voice_analysis') {
         if (message.voice) {
           setCurrentVoice(message.voice);
           onVoiceUpdate?.(message.voice);
         }
       }
-      
+
       else if (type === 'session_summary') {
         setSessionSummary(message.summary);
         onSessionSummary?.(message.summary);
       }
-      
+
       else if (type === 'session_ended') {
         console.log('✅ Session ended:', message.message);
         setSessionSummary(message.summary);
         onSessionSummary?.(message.summary);
       }
-      
+
       else if (type === 'error') {
         const errorMsg = message.error || 'Unknown error occurred';
         setError(errorMsg);
@@ -164,10 +170,12 @@ export function useAICoach(options: UseAICoachOptions): UseAICoachReturn {
     setError(null);
 
     try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/api/ws/practice/${sessionId}?user_id=${userId}&difficulty=${difficulty}`;
-      
+      // Next.js rewrites don't support WebSocket upgrades well, so connect directly to backend
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
+      const wsHost = apiUrl.replace(/^https?:\/\//, '');
+      const wsUrl = `${wsProtocol}://${wsHost}/ws/practice/${sessionId}?user_id=${userId}&difficulty=${difficulty}`;
+
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
@@ -235,7 +243,7 @@ export function useAICoach(options: UseAICoachOptions): UseAICoachReturn {
 
   // Reset state
   const reset = useCallback(() => {
-    setCurrentFeedback('');
+    setCurrentFeedback(null);
     setCurrentScore(null);
     setCurrentEmotion(null);
     setCurrentVoice(null);
