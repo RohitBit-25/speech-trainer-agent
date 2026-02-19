@@ -27,15 +27,21 @@ class EnhancedConnectionManager:
     
     async def connect(self, session_id: str, websocket, user_id: str, difficulty: str = "intermediate"):
         """Accept connection and initialize AI coach session"""
+        print(f"🔌 Manager {id(self)} connecting session {session_id}")
         await websocket.accept()
         self.active_connections[session_id] = websocket
         
         # Initialize AI coach session
-        self.active_sessions[session_id] = AICoachSession(
-            session_id=session_id,
-            user_id=user_id,
-            difficulty=difficulty
-        )
+        try:
+            self.active_sessions[session_id] = AICoachSession(
+                session_id=session_id,
+                user_id=user_id,
+                difficulty=difficulty
+            )
+            print(f"✅ Session {session_id} registered. Active sessions: {list(self.active_sessions.keys())}")
+        except Exception as e:
+            print(f"❌ Failed to init AICoachSession for {session_id}: {e}")
+            raise e
         
         print(f"✅ Client connected: {session_id}")
         
@@ -80,7 +86,8 @@ class EnhancedConnectionManager:
     async def process_video_frame(self, session_id: str, message: dict) -> Dict:
         """Process incoming video frame"""
         if session_id not in self.active_sessions:
-            print(f"❌ Session {session_id} not found in active sessions")
+            print(f"❌ Session {session_id} not found in active sessions of Manager {id(self)}")
+            print(f"ℹ️ Active sessions keys: {list(self.active_sessions.keys())}")
             return {"error": "Session not found"}
         
         try:

@@ -131,15 +131,22 @@ class IntelligentScoringSystem:
         if not metrics:
             return 50.0
         
-        clarity = metrics.get('clarity_score', 0.5) * 100
-        volume_consistency = metrics.get('volume_consistency', 0.5) * 100
+        clarity = metrics.get('clarity_score')
+        if clarity is None: clarity = 0.5
+        clarity *= 100
+        
+        volume_consistency = metrics.get('volume_consistency')
+        if volume_consistency is None: volume_consistency = 0.5
+        volume_consistency *= 100
+        
         pitch_quality = {
             'monotone': 40,
             'adequate': 70,
             'expressive': 95
         }.get(metrics.get('pitch_quality', 'adequate'), 70)
         
-        filler_word_density = metrics.get('filler_word_density', 0)
+        filler_word_density = metrics.get('filler_word_density')
+        if filler_word_density is None: filler_word_density = 0.0
         filler_score = max(0, 100 - (filler_word_density * 10))
         
         speech_quality = {
@@ -167,13 +174,22 @@ class IntelligentScoringSystem:
         if not metrics:
             return 50.0
         
-        engagement_score = metrics.get('engagement_score', 0.5) * 100
-        eye_contact = metrics.get('eye_contact_score', 0.5) * 100
-        smile = metrics.get('smile_score', 0.3) * 100
+        engagement_score = metrics.get('engagement_score')
+        if engagement_score is None: engagement_score = 0.5
+        engagement_score *= 100
+        
+        eye_contact = metrics.get('eye_contact_score')
+        if eye_contact is None: eye_contact = 0.5
+        eye_contact *= 100
+        
+        smile = metrics.get('smile_score')
+        if smile is None: smile = 0.3
+        smile *= 100
         
         # Emotion scoring (positive emotions get higher scores)
         emotion = metrics.get('emotion', 'neutral')
-        emotion_confidence = metrics.get('emotion_confidence', 0.5)
+        emotion_confidence = metrics.get('emotion_confidence')
+        if emotion_confidence is None: emotion_confidence = 0.5
         
         emotion_scores = {
             'happiness': 95,
@@ -217,9 +233,14 @@ class IntelligentScoringSystem:
                 ideal_density_score = 50
         
         # Grammar and clarity assessment
-        clarity_score = metrics.get('clarity', 75)
-        structure_score = metrics.get('structure_quality', 75)
-        vocabulary_score = metrics.get('vocabulary_quality', 75)
+        clarity_score = metrics.get('clarity')
+        if clarity_score is None: clarity_score = 75.0
+        
+        structure_score = metrics.get('structure_quality')
+        if structure_score is None: structure_score = 75.0
+        
+        vocabulary_score = metrics.get('vocabulary_quality')
+        if vocabulary_score is None: vocabulary_score = 75.0
         
         content_score = (
             ideal_density_score * 0.30 +
@@ -238,8 +259,11 @@ class IntelligentScoringSystem:
         if not metrics:
             return 50.0
         
-        pause_frequency = metrics.get('pause_frequency', 0.3)  # pauses per second
-        avg_pause_length = metrics.get('avg_pause_length', 0.8)  # seconds
+        pause_frequency = metrics.get('pause_frequency')
+        if pause_frequency is None: pause_frequency = 0.3
+        
+        avg_pause_length = metrics.get('avg_pause_length')
+        if avg_pause_length is None: avg_pause_length = 0.8
         
         # Ideal: 0.3-0.5 pauses per second, 0.5-1.5 seconds average pause
         frequency_score = 100
@@ -254,7 +278,9 @@ class IntelligentScoringSystem:
         elif avg_pause_length < 0.5 or avg_pause_length > 1.5:
             pause_score = 80
         
-        rhythm_consistency = metrics.get('rhythm_consistency', 0.7) * 100
+        rhythm_consistency = metrics.get('rhythm_consistency')
+        if rhythm_consistency is None: rhythm_consistency = 0.7
+        rhythm_consistency *= 100
         
         pacing_score = (
             frequency_score * 0.35 +
