@@ -53,7 +53,7 @@ export default function StudioPage() {
             addXP(500);
             unlockAchievement('first_upload');
 
-            if (result.voice.pitch > 80 && result.voice.pitch < 120) {
+            if (result.voice?.pitch && result.voice.pitch > 80 && result.voice.pitch < 120) {
                 unlockAchievement('perfect_pitch');
             }
 

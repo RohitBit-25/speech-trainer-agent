@@ -4,7 +4,7 @@ python-dotenv
 pydantic
 agno
 together
-opencv-python
+opencv-python-headless
 mediapipe
 deepface
 librosa

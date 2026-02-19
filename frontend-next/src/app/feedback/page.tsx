@@ -21,6 +21,25 @@ export default function FeedbackPage() {
 
     if (!result) return null;
 
+    if (!result.feedback) {
+        return (
+            <div className="container py-8 text-center flex flex-col items-center justify-center min-h-[60vh]">
+                <h1 className="text-2xl font-pixel text-red-500 mb-4">SYSTEM_ERROR: DATA_CORRUPTED</h1>
+                <p className="font-mono text-zinc-400 mb-8 max-w-md">
+                    The analysis module failed to generate a complete diagnostic report. Partial data may be missing.
+                </p>
+                <Button
+                    variant="outline"
+                    onClick={() => router.push('/studio')}
+                    className="font-pixel border-zinc-700 hover:bg-zinc-800"
+                >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    RETURN_TO_BASE
+                </Button>
+            </div>
+        );
+    }
+
     // Transform scores for Radar Chart
     const scores = result.feedback.scores;
     const radarData = Object.keys(scores).map((key) => ({

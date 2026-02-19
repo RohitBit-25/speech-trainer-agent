@@ -67,7 +67,7 @@ export default function AnalysisPage() {
                     {/* Comm Logs */}
                     <div className="lg:col-span-1 h-full">
                         <Transcript
-                            text={result.voice.transcription}
+                            text={result.voice?.transcription || "No transcription available."}
                             onSave={updateTranscription}
                         />
                     </div>
@@ -78,19 +78,19 @@ export default function AnalysisPage() {
                     <AgentCard
                         title="FACIAL_RECOGNITION"
                         icon={Smile}
-                        content={result.facial.summary}
+                        content={result.facial?.summary || "Facial analysis unavailable."}
                         className="border-blue-500/50 text-blue-400"
                     />
                     <AgentCard
                         title="AUDIO_WAVEFORM"
                         icon={Mic2}
-                        content={`Pitch: ${result.voice.pitch}Hz | Pace: ${result.voice.pace}wpm | Vol: ${result.voice.volume}`}
+                        content={`Pitch: ${result.voice?.pitch ?? 'N/A'}Hz | Pace: ${result.voice?.pace ?? 'N/A'}wpm | Vol: ${result.voice?.volume ?? 'N/A'}`}
                         className="border-purple-500/50 text-purple-400"
                     />
                     <AgentCard
                         title="CONTENT_SYNTAX"
                         icon={FileText}
-                        content={`Structure: ${result.content.structure} | Clarity Index: ${result.content.clarity}/10`}
+                        content={`Structure: ${result.content?.structure ?? 'N/A'} | Clarity Index: ${result.content?.clarity ?? 'N/A'}/10`}
                         className="border-green-500/50 text-green-400"
                     />
                 </div>

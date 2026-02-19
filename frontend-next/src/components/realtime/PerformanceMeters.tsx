@@ -38,17 +38,20 @@ interface CircularMeterProps {
 }
 
 function CircularMeter({ label, score, icon }: CircularMeterProps) {
-    const circumference = 2 * Math.PI * 45; // radius = 45
-    const offset = circumference - (score / 100) * circumference;
+    // Safety check: Convert NaN to 0, and clamp between 0-100
+    const safeScore = (isNaN(score) || score === undefined || score === null) ? 0 : Math.min(Math.max(score, 0), 100);
 
-    // Color based on score
-    const getColor = (score: number) => {
-        if (score >= 70) return '#10b981'; // green
-        if (score >= 40) return '#f59e0b'; // yellow
+    const circumference = 2 * Math.PI * 45; // radius = 45
+    const offset = circumference - (safeScore / 100) * circumference;
+
+    // Color based on safeScore
+    const getColor = (val: number) => {
+        if (val >= 70) return '#10b981'; // green
+        if (val >= 40) return '#f59e0b'; // yellow
         return '#ef4444'; // red
     };
 
-    const color = getColor(score);
+    const color = getColor(safeScore);
 
     return (
         <div className="flex flex-col items-center gap-2">
@@ -85,13 +88,13 @@ function CircularMeter({ label, score, icon }: CircularMeterProps) {
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-2xl">{icon}</span>
                     <motion.span
-                        key={score}
+                        key={safeScore}
                         initial={{ scale: 1.2, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className="text-lg font-bold font-pixel"
                         style={{ color }}
                     >
-                        {Math.round(score)}
+                        {Math.round(safeScore)}
                     </motion.span>
                 </div>
             </div>
