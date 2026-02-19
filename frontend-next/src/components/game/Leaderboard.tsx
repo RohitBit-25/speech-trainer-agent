@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Award, TrendingUp, TrendingDown, Minus, Crown, Zap, Star } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Trophy, Medal, Crown, TrendingUp, Search, Filter, Lock, TrendingDown, Minus } from "lucide-react";
 import { toast } from "sonner";
 
 interface LeaderboardEntry {

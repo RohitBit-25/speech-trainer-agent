@@ -104,6 +104,8 @@ export interface FacialAnalysis {
     summary: string;
     emotions: Record<string, number>;
     eye_contact: number;
+    confidence?: number;
+    engagement?: number;
 }
 
 export interface VoiceAnalysis {
@@ -111,6 +113,7 @@ export interface VoiceAnalysis {
     pitch: number;
     pace: number;
     volume: string;
+    summary?: string;
 }
 
 export interface FeedbackAnalysis {
@@ -134,6 +137,7 @@ export interface ParsedAnalysisResult {
     strengths: string[];
     weaknesses: string[];
     suggestions: string[];
+    created_at?: string; // Add optional timestamp
 }
 
 export interface Achievement {

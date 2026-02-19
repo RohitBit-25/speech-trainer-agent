@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Trophy, Zap, Clock, Target, CheckCircle2, Gift, Flame,
-    Lock, Star, RefreshCw, Sparkles, Calendar, Award
+    Lock, Star, RefreshCw, Sparkles, Calendar, Award, ArrowRight
 } from "lucide-react";
 import { toast } from "sonner";
 
