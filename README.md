@@ -411,45 +411,44 @@ speech-trainer-agent/
 ├── backend/
 │   ├── app/
 │   │   ├── agents/              # AI agent implementations
-│   │   │   ├── coordinator_agent.py
-│   │   │   ├── facial_expression_agent.py
-│   │   │   ├── voice_analysis_agent.py
-│   │   │   ├── content_analysis_agent.py
-│   │   │   ├── feedback_agent.py
-│   │   │   └── tools/           # Agent tools
-│   │   ├── api/                 # API routes
-│   │   │   ├── server.py        # Main FastAPI app
-│   │   │   └── auth.py          # Authentication routes
+│   │   ├── api/                 # API routes (FastAPI)
 │   │   ├── core/                # Core configurations
-│   │   ├── db/                  # Database models & setup
-│   │   │   ├── models.py
-│   │   │   └── database.py
-│   │   └── worker.py            # Celery worker tasks
+│   │   ├── db/                  # Database models
+│   │   └── worker.py            # Celery worker configuration
 │   ├── main.py                  # Application entry point
+│   ├── seed_challenges.py       # Script to seed daily challenges
+│   ├── seed_leaderboard.py      # Script to seed leaderboard data
+│   ├── test_whisper.py          # Whisper transcription test script
 │   └── requirements.txt
 │
 ├── frontend-next/
 │   ├── src/
 │   │   ├── app/                 # Next.js app directory
-│   │   │   ├── (auth)/          # Auth pages (login/signup)
-│   │   │   ├── (dashboard)/     # Dashboard layout
-│   │   │   ├── analysis/        # Analysis results page
+│   │   │   ├── (auth)/          # Auth pages
+│   │   │   ├── (dashboard)/     # Studio layout
+│   │   │   ├── analysis/        # Analysis results
+│   │   │   ├── challenges/      # Daily challenges page
 │   │   │   ├── comparison/      # Performance comparison
 │   │   │   ├── feedback/        # Feedback display
-│   │   │   ├── history/         # Analysis history
+│   │   │   ├── history/         # User history
+│   │   │   ├── leaderboard/     # Global leaderboard
+│   │   │   ├── practice/        # Real-time practice mode
+│   │   │   ├── settings/        # User settings
 │   │   │   └── page.tsx         # Landing page
 │   │   ├── components/          # React components
-│   │   │   ├── ui/              # shadcn/ui components
-│   │   │   ├── upload/          # Video upload components
-│   │   │   ├── analysis/        # Analysis display
-│   │   │   ├── feedback/        # Feedback components
-│   │   │   └── gamification/    # XP, levels, achievements
-│   │   └── lib/                 # Utilities
+│   │   │   ├── analysis/        # Analysis visualizations
+│   │   │   ├── gamification/    # XP & Achievements
+│   │   │   ├── practice/        # Practice mode components
+│   │   │   ├── ui/              # Shadcn UI components
+│   │   │   └── upload/          # Studio upload components
+│   │   └── lib/                 # Utilities & API clients
 │   ├── package.json
 │   └── tailwind.config.ts
 │
-├── visuals/                     # Project diagrams & images
-└── README.md
+├── visuals/                     # Project diagrams & assets
+├── IMPLEMENTATION_STATUS.md     # Setup & Status tracking
+├── TUTORIAL.md                  # Comprehensive user guide
+└── README.md                    # Project documentation
 ```
 
 ---
