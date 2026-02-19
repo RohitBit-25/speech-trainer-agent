@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState, Suspense, lazy, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, CameraOff, Mic, MicOff, Play, Square, BookOpen, Loader2, Trophy, Zap, Clock, Target, RotateCcw, Flame, Shield, Swords } from 'lucide-react';
+import { useAudioCapture } from '@/hooks/useAudioCapture';
 import { useWebRTC } from '@/hooks/useWebRTC';
-import { useRealtimeAnalysis } from '@/hooks/useRealtimeAnalysis';
-import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useAICoach } from '@/hooks/useAICoach';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { QuickHelp } from '@/components/tutorial/HelpTooltip';
 import { DifficultySelector } from '@/components/practice/DifficultySelector';
@@ -295,7 +295,8 @@ export default function PracticePage() {
     const [showTutorial, setShowTutorial] = useState(false);
     const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
     const [multiplierBreakdown, setMultiplierBreakdown] = useState<any>({});
-    const [user, setUser] = useState<any>(null); const [showAICoachDashboard, setShowAICoachDashboard] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [showAICoachDashboard, setShowAICoachDashboard] = useState(false);
     const [dashboardMinimized, setDashboardMinimized] = useState(false);
     const [goodFramesCount, setGoodFramesCount] = useState(0);
     const [totalFramesProcessed, setTotalFramesProcessed] = useState(0);
@@ -307,6 +308,9 @@ export default function PracticePage() {
     const [summaryData, setSummaryData] = useState<any>(null);
     const [sessionStartTime, setSessionStartTime] = useState<number>(0);
     const [bestScore, setBestScore] = useState(0);
+    const [combo, setCombo] = useState(0);
+    const [comboStatus, setComboStatus] = useState<string>('');
+    const [feedbackMessages, setFeedbackMessages] = useState<any[]>([]);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const frameIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -319,15 +323,7 @@ export default function PracticePage() {
         frameRate: 30
     });
 
-    const {
-        isConnected,
-        metrics,
-        error: wsError,
-        connect,
-        disconnect,
-        sendVideoFrame,
-        requestFeedback
-    } = useRealtimeAnalysis();
+    const { startCapture, stopCapture } = useAudioCapture();
 
     // AI Coach integration
     const {
@@ -352,7 +348,7 @@ export default function PracticePage() {
         if (sessionId && !aiCoachConnected) {
             aiConnect();
         }
-    }, [sessionId]);
+    }, [sessionId, aiConnect, aiCoachConnected]);
 
     const {
         transcript,
@@ -382,71 +378,150 @@ export default function PracticePage() {
         }
     }, [stream]);
 
+    // Set video stream to video element
+    useEffect(() => {
+        if (videoRef.current && stream) {
+            videoRef.current.srcObject = stream;
+        }
+    }, [stream]);
+
     // Load user data
     useEffect(() => {
         const userData = localStorage.getItem("user");
         if (userData) {
-            try { setUser(JSON.parse(userData)); } catch { }
+            try { setUser(JSON.parse(userData)); } catch (e) { console.error(e); }
         }
         const saved = localStorage.getItem("best_score");
         if (saved) setBestScore(parseFloat(saved));
     }, []);
 
-    // Handle new achievements
+    // Handle gamification and feedback messages from AI Coach
     useEffect(() => {
-        if (metrics?.new_achievements && metrics.new_achievements.length > 0) {
-            setNewAchievements(metrics.new_achievements);
-        }
-    }, [metrics?.new_achievements]);
+        if (currentScore) {
+            // Update feedback messages if new feedback arrives
+            if (currentFeedback) {
+                setFeedbackMessages(prev => [...prev.slice(-4), {
+                    type: 'ai_insight',
+                    message: currentFeedback.feedback,
+                    icon: 'sparkles'
+                }]);
+            }
 
-    // Update multiplier from metrics
-    useEffect(() => {
-        if (metrics?.multiplier) {
-            setCurrentMultiplier(metrics.multiplier);
+            // Update combo and multiplier based on score
+            if (currentScore.total_score >= 70) {
+                setCombo(prev => prev + 1);
+                setComboStatus('HOT STREAK!');
+            } else {
+                setCombo(0);
+                setComboStatus('');
+            }
+
+            // Simple multiplier logic based on difficulty and combo
+            const baseMult = difficulty === 'beginner' ? 1.0 : difficulty === 'intermediate' ? 1.5 : 2.0;
+            const comboBonus = combo > 5 ? 0.1 * Math.floor(combo / 5) : 0;
+            const newMult = baseMult + comboBonus;
+
+            setCurrentMultiplier(newMult);
             setMultiplierBreakdown({
-                base: difficulty === 'beginner' ? 1.0 : difficulty === 'intermediate' ? 1.5 : 2.0,
-                combo: metrics.combo > 5 ? 0.1 * Math.floor(metrics.combo / 5) : 0,
+                base: baseMult,
+                combo: comboBonus,
                 streak: 0,
-                perfect: (metrics.facial_score > 90 && metrics.voice_score > 90) ? 0.5 : 0
+                perfect: (currentScore.facial_score > 90 && currentScore.voice_score > 90) ? 0.5 : 0
             });
         }
-    }, [metrics?.multiplier, metrics?.combo, metrics?.facial_score, metrics?.voice_score, difficulty]);
+    }, [currentScore, currentFeedback, difficulty, combo]);
+
+    // Effect to handle audio capture and send to AI Coach
+    useEffect(() => {
+        if (isRecording && stream && aiCoachConnected) {
+            startCapture(stream, (audioData) => {
+                // Send audio chunk with current transcript status if needed
+                aiSendAudioChunk(audioData, transcript || interimTranscript);
+            });
+        } else if (!isRecording) {
+            stopCapture();
+        }
+    }, [isRecording, stream, aiCoachConnected, transcript, interimTranscript, startCapture, stopCapture, aiSendAudioChunk]);
+
+    // Handle gamification and feedback messages
+    useEffect(() => {
+        if (currentScore) {
+            // Update feedback messages if new feedback arrives
+            if (currentFeedback) {
+                setFeedbackMessages(prev => [...prev.slice(-4), {
+                    type: 'ai_insight',
+                    message: currentFeedback.feedback,
+                    icon: 'sparkles'
+                }]);
+            }
+
+            // Update combo and multiplier based on score
+            if (currentScore.total_score >= 70) {
+                setCombo(prev => prev + 1);
+                setComboStatus('HOT STREAK!');
+            } else {
+                setCombo(0);
+                setComboStatus('');
+            }
+
+            // Simple multiplier logic based on difficulty and combo
+            const baseMult = difficulty === 'beginner' ? 1.0 : difficulty === 'intermediate' ? 1.5 : 2.0;
+            const comboBonus = combo > 5 ? 0.1 * Math.floor(combo / 5) : 0;
+            const newMult = baseMult + comboBonus;
+
+            setCurrentMultiplier(newMult);
+            setMultiplierBreakdown({
+                base: baseMult,
+                combo: comboBonus,
+                streak: 0,
+                perfect: (currentScore.facial_score > 90 && currentScore.voice_score > 90) ? 0.5 : 0
+            });
+        }
+    }, [currentScore, currentFeedback, difficulty, combo]);
+
+    // Effect to handle audio capture
+    useEffect(() => {
+        if (isRecording && stream && aiCoachConnected) {
+            startCapture(stream, (audioData) => {
+                // Send audio chunk with current transcript status if needed
+                aiSendAudioChunk(audioData, transcript || interimTranscript);
+            });
+        } else if (!isRecording) {
+            stopCapture();
+        }
+    }, [isRecording, stream, aiCoachConnected, transcript, interimTranscript, startCapture, stopCapture, aiSendAudioChunk]);
 
 
     const handleStartSession = async () => {
         try {
             await startStream();
-            startListening();
-            setFillerCount(0);
-            setSessionStartTime(Date.now());
-            setGoodFramesCount(0);
-            setTotalFramesProcessed(0);
 
             const response = await fetch(`${API_URL}/realtime/start-session`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mode, difficulty })
+                body: JSON.stringify({
+                    mode,
+                    difficulty
+                })
             });
 
             const data = await response.json();
             setSessionId(data.session_id);
-            connect(data.session_id);
-
-            // Connect AI Coach
-            await aiSendVideoFrame({ /* initial frame setup */ } as any);
+            setSessionStartTime(Date.now());
+            setFillerCount(0);
+            setCombo(0);
+            setFeedbackMessages([]);
+            startListening();
 
             setIsRecording(true);
             setShowAICoachDashboard(true);
 
-            // Start frame capture
+            // Start frame capture and send to AI Coach
             frameIntervalRef.current = setInterval(() => {
                 const frame = captureFrame();
-                if (frame) {
-                    sendVideoFrame(frame);
-                    // Also send to AI Coach
+                if (frame && aiCoachConnected) {
                     aiSendVideoFrame(frame as any);
                 }
-                requestFeedback();
             }, 100);
 
             // Duration tracker
@@ -482,19 +557,19 @@ export default function PracticePage() {
         setIsRecording(false);
         setShowAICoachDashboard(false);
         stopListening();
-        disconnect();
+        stopCapture();
 
         // End AI coach session
-        if (sessionId) {
+        if (sessionId && aiCoachConnected) {
             await aiEndSession();
         }
 
         stopStream();
 
         const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
-        const finalScore = metrics?.total_score || 0;
-        const finalFacial = metrics?.facial_score || 0;
-        const finalVoice = metrics?.voice_score || 0;
+        const finalScore = currentScore?.total_score || 0;
+        const finalFacial = currentScore?.facial_score || 0;
+        const finalVoice = currentScore?.voice_score || 0;
         const xpEarned = Math.round(finalScore * currentMultiplier * 0.5) + 50;
 
         // Update best score
@@ -649,22 +724,22 @@ export default function PracticePage() {
                                 )}
 
                                 {isRecording && mode !== 'timed' && (
-                                    <div className={`px-3 py-1.5 bg-black/40 backdrop-blur-md border rounded-full font-pixel text-[10px] flex items-center gap-2 ${isConnected ? 'border-green-500/30 text-green-400' : 'border-yellow-500/30 text-yellow-400'}`}>
-                                        <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                                        {isConnected ? 'ONLINE' : 'CONNECTING'}
+                                    <div className={`px-3 py-1.5 bg-black/40 backdrop-blur-md border rounded-full font-pixel text-[10px] flex items-center gap-2 ${aiCoachConnected ? 'border-green-500/30 text-green-400' : 'border-yellow-500/30 text-yellow-400'}`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${aiCoachConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                                        {aiCoachConnected ? 'ONLINE' : 'CONNECTING'}
                                     </div>
                                 )}
                             </div>
 
                             {/* Combo Counter */}
-                            {isRecording && metrics && (
+                            {isRecording && combo > 0 && (
                                 <div className="flex justify-end">
                                     <Suspense fallback={null}>
                                         <div className="transform scale-75 md:scale-100 origin-bottom-right">
                                             <ComboCounter
-                                                combo={metrics.combo}
-                                                multiplier={metrics.multiplier}
-                                                status={metrics.combo_status}
+                                                combo={combo}
+                                                multiplier={currentMultiplier}
+                                                status={comboStatus}
                                             />
                                         </div>
                                     </Suspense>
@@ -718,7 +793,7 @@ export default function PracticePage() {
                                     <label className="text-[10px] font-pixel text-zinc-500 mb-1 block uppercase tracking-wider">Session Score</label>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-4xl md:text-5xl font-pixel text-primary tracking-tighter leading-none drop-shadow-[0_2px_10px_rgba(var(--primary-rgb),0.3)]">
-                                            {metrics ? metrics.total_score.toLocaleString() : "0000"}
+                                            {currentScore ? currentScore.total_score.toLocaleString() : "0000"}
                                         </span>
                                         <span className="text-xs font-pixel text-zinc-600">PTS</span>
                                     </div>
@@ -728,7 +803,7 @@ export default function PracticePage() {
                                 </div>
                             </div>
 
-                            {isRecording && metrics && (
+                            {isRecording && currentScore && (
                                 <div className="mt-4 pt-4 border-t border-zinc-800/50">
                                     <MultiplierDisplay
                                         multiplier={currentMultiplier}
@@ -746,9 +821,9 @@ export default function PracticePage() {
                             </h3>
                             <Suspense fallback={<ComponentLoader />}>
                                 <PerformanceMeters
-                                    facialScore={metrics?.facial_score || 0}
-                                    voiceScore={metrics?.voice_score || 0}
-                                    engagementScore={metrics ? (metrics.facial_score + metrics.voice_score) / 2 : 0}
+                                    facialScore={currentScore?.facial_score || 0}
+                                    voiceScore={currentScore?.voice_score || 0}
+                                    engagementScore={currentScore ? (currentScore.facial_score + currentScore.voice_score) / 2 : 0}
                                 />
                             </Suspense>
                         </div>
@@ -757,15 +832,11 @@ export default function PracticePage() {
                         <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-0 flex-1 min-h-[150px] backdrop-blur-sm overflow-hidden">
                             <Suspense fallback={<ComponentLoader />}>
                                 <AICoach
-                                    isConnected={isConnected}
+                                    isConnected={aiCoachConnected}
                                     isListening={isRecording}
-                                    messages={metrics?.feedback_messages?.map(msg => ({
-                                        type: msg.type as 'positive' | 'warning' | 'error' | 'ai_insight',
-                                        message: msg.message,
-                                        icon: msg.type === 'ai_insight' ? 'sparkles' : (msg.type === 'positive' ? 'smile' : 'alert-triangle')
-                                    })) || []}
-                                    facialScore={metrics?.facial_score || 0}
-                                    voiceScore={metrics?.voice_score || 0}
+                                    messages={feedbackMessages}
+                                    facialScore={currentScore?.facial_score || 0}
+                                    voiceScore={currentScore?.voice_score || 0}
                                 />
                             </Suspense>
                         </div>
@@ -830,13 +901,13 @@ export default function PracticePage() {
             </main>
 
             {/* Error Toast */}
-            {(webrtcError || wsError) && (
+            {(webrtcError) && (
                 <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-50">
                     <div className="bg-red-950/90 border border-red-500/50 p-4 rounded-xl shadow-2xl flex items-start gap-3 backdrop-blur-md">
                         <div className="mt-1 h-2 w-2 bg-red-500 rounded-full animate-ping flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                             <h4 className="text-red-400 font-pixel text-xs mb-1">SYSTEM_ERROR</h4>
-                            <p className="text-red-200 font-mono text-xs break-words">{webrtcError || wsError}</p>
+                            <p className="text-red-200 font-mono text-xs break-words">{webrtcError}</p>
                         </div>
                     </div>
                 </div>
@@ -851,7 +922,7 @@ export default function PracticePage() {
                         score={currentScore}
                         feedback={currentFeedback}
                         isLoading={!aiCoachConnected}
-                        goodFramesPercentage={totalFramesProcessed > 0 ? (goodFramesCount / totalFramesProcessed) * 100 : 0}
+                        goodFramesPercentage={goodFramesCount / (totalFramesProcessed || 1) * 100}
                         onClose={() => setShowAICoachDashboard(false)}
                         isMinimized={dashboardMinimized}
                         onToggleMinimize={() => setDashboardMinimized(!dashboardMinimized)}

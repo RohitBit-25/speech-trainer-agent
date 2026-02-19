@@ -428,7 +428,12 @@ export default function ChallengesPage() {
     const fetchChallenges = useCallback(async () => {
         try {
             const userId = localStorage.getItem("user_id") || "";
-            const response = await fetch(`/api/game/challenges/active?user_id=${userId}`);
+            const url = new URL('/api/game/challenges/active', window.location.origin);
+            if (userId) {
+                url.searchParams.set('user_id', userId);
+            }
+            
+            const response = await fetch(url.toString());
             if (!response.ok) throw new Error("API error");
             const data = await response.json();
             const fetched: Challenge[] = data.challenges || [];
@@ -441,7 +446,8 @@ export default function ChallengesPage() {
                 const missing = MOCK_CHALLENGES.filter(c => !types.has(c.type));
                 setChallenges([...fetched, ...missing]);
             }
-        } catch {
+        } catch (error) {
+            console.error('Error fetching challenges:', error);
             setChallenges(MOCK_CHALLENGES);
         } finally {
             setLoading(false);

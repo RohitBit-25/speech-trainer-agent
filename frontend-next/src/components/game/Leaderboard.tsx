@@ -198,12 +198,17 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
     const fetchLeaderboard = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/game/leaderboard/${category}?difficulty=${difficulty}&limit=100`);
+            const url = new URL(`/api/game/leaderboard/${category}`, window.location.origin);
+            url.searchParams.set('difficulty', difficulty);
+            url.searchParams.set('limit', '100');
+            
+            const response = await fetch(url.toString());
             if (!response.ok) throw new Error("API error");
             const data = await response.json();
             const fetched = data.leaderboard || [];
             setEntries(fetched.length > 0 ? fetched : MOCK_ENTRIES);
-        } catch {
+        } catch (error) {
+            console.error('Error fetching leaderboard:', error);
             setEntries(MOCK_ENTRIES);
         } finally {
             setLoading(false);
@@ -214,10 +219,16 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
         try {
             const userId = localStorage.getItem("user_id");
             if (!userId) return;
-            const response = await fetch(`/api/game/leaderboard/user/${userId}/rank?category=${category}&difficulty=${difficulty}`);
+            
+            const url = new URL(`/api/game/leaderboard/user/${userId}/rank`, window.location.origin);
+            url.searchParams.set('category', category);
+            url.searchParams.set('difficulty', difficulty);
+            
+            const response = await fetch(url.toString());
             const data = await response.json();
             if (data.ranked) setUserRank(data);
-        } catch {
+        } catch (error) {
+            console.error('Error fetching user rank:', error);
             // No rank yet
         }
     };
