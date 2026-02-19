@@ -87,65 +87,107 @@ export default function StudioPage() {
     };
 
     return (
-        <main className="flex min-h-screen flex-col items-center p-6 md:p-12 relative overflow-hidden bg-black selection:bg-primary/30">
-            {/* Background decoration */}
-            <div className="absolute inset-0 -z-10 h-full w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-900/40 via-black to-black"></div>
-            <div className="absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)]"></div>
+        <main className="h-[calc(100vh-4rem)] w-full bg-black relative overflow-hidden flex flex-col font-mono text-zinc-400">
+            {/* ─── SCIFI GRID BACKGROUND ────────────────────────────────────── */}
+            <div className="absolute inset-0 pointer-events-none opacity-20">
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#222_1px,transparent_1px),linear-gradient(to_bottom,#222_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]"></div>
+            </div>
 
-            {/* System Status Header */}
-            <div className="w-full max-w-6xl flex justify-between items-center mb-12 border-b border-zinc-800 pb-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
-                    <span className="font-pixel text-xs text-green-500 tracking-widest">SYSTEM ONLINE</span>
+            {/* ─── HEADER: STATUS BAR ───────────────────────────────────────── */}
+            <header className="h-12 border-b border-zinc-900 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-between px-6 z-10 shrink-0">
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2 text-primary/80">
+                        <Activity className="h-4 w-4" />
+                        <span className="text-xs font-bold tracking-widest">STUDIO_TERMINAL_01</span>
+                    </div>
+                    <div className="h-4 w-[1px] bg-zinc-800"></div>
+                    <div className="text-[10px] text-zinc-600 tracking-widest">
+                        NET_STATUS: <span className="text-green-500">CONNECTED</span>
+                    </div>
                 </div>
-                <div className="font-mono text-xs text-zinc-600 flex items-center gap-4">
-                    <span>SECURE_CONNECTION_ESTABLISHED</span>
-                    <span className="text-zinc-500 px-2 border-l border-zinc-800">{currentTime}</span>
+                <div className="font-pixel text-[10px] text-zinc-500">
+                    {currentTime}
+                </div>
+            </header>
+
+            {/* ─── MAIN COCKPIT AREA ────────────────────────────────────────── */}
+            <div className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden relative z-10">
+
+                {/* LEFT COLUMN: Data Readouts (Decorational) */}
+                <div className="hidden lg:flex lg:col-span-3 flex-col gap-4 border-r border-zinc-900/50 pr-6 opacity-60 pointer-events-none select-none">
+                    <div className="space-y-1">
+                        <div className="text-[9px] uppercase text-zinc-700 tracking-widest mb-2">System Metrics</div>
+                        {['CPU_LOAD', 'MEM_ALLOC', 'NET_UPLINK', 'DISK_I/O'].map(label => (
+                            <div key={label} className="flex justify-between items-center text-[10px]">
+                                <span>{label}</span>
+                                <span className="font-pixel text-primary/60">{Math.floor(Math.random() * 90) + 10}%</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="h-32 w-full border border-zinc-900 bg-zinc-950 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-full bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,#333_3px)] opacity-20"></div>
+                    </div>
+                </div>
+
+                {/* CENTER COLUMN: Main Inteface */}
+                <div className="col-span-1 lg:col-span-6 flex flex-col items-center justify-center relative">
+                    {/* Corner Brackets */}
+                    <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-zinc-800"></div>
+                    <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-zinc-800"></div>
+                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-zinc-800"></div>
+                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-zinc-800"></div>
+
+                    <div className="w-full max-w-2xl space-y-8 relative z-20">
+                        <div className="text-center space-y-2 mb-12">
+                            <h1 className="text-4xl md:text-5xl font-bold font-pixel text-white tracking-tighter">
+                                UPLINK_MODULE
+                            </h1>
+                            <p className="text-xs text-primary/60 tracking-[0.2em] uppercase">
+                                Awaiting Neural Link Connection
+                            </p>
+                        </div>
+
+                        <VideoDropzone onUpload={handleUpload} isUploading={isUploading} />
+
+                        {isUploading && taskId && (
+                            <div className="mt-8 border-t border-zinc-800 pt-8">
+                                <SystemConsole taskId={taskId} isAnalyzing={isUploading} />
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* RIGHT COLUMN: Recent Logs / History */}
+                <div className="hidden lg:flex lg:col-span-3 flex-col gap-4 border-l border-zinc-900/50 pl-6 text-[10px]">
+                    <div className="text-[9px] uppercase text-zinc-700 tracking-widest mb-2">Recent Batches</div>
+                    <div className="space-y-3 opacity-50">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="border border-zinc-900 p-2 bg-zinc-950/30">
+                                <div className="flex justify-between text-zinc-500 mb-1">
+                                    <span>BATCH_00{780 + i}</span>
+                                    <span>DONE</span>
+                                </div>
+                                <div className="h-1 w-full bg-zinc-900 overflow-hidden">
+                                    <div className="h-full bg-zinc-700 w-full"></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            <div className="w-full max-w-4xl z-10 text-center mb-12">
-                <div className="inline-flex items-center justify-center p-3 mb-6 rounded-full bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm">
-                    <Activity className="h-5 w-5 text-primary mr-2" />
-                    <span className="text-xs font-pixel text-zinc-400">AI ANALYSIS MODULE V2.0</span>
-                </div>
-                <h1 className="text-5xl md:text-6xl font-pixel text-white mb-6 tracking-tight drop-shadow-2xl">
-                    MISSION_CONTROL
-                </h1>
-                <p className="text-zinc-400 font-mono max-w-lg mx-auto leading-relaxed">
-                    Upload your transmission for deep neural analysis. Our AI agents are standing by to deconstruct your performance.
-                </p>
+            {/* ─── FOOTER: KEYLINE ──────────────────────────────────────────── */}
+            <div className="h-6 border-t border-zinc-900 bg-zinc-950 flex items-center justify-between px-6 text-[9px] text-zinc-700 uppercase tracking-widest shrink-0">
+                <span>VER 2.4.9</span>
+                <span>SECURE_ENV</span>
             </div>
-
-            <div className="w-full max-w-4xl z-10 space-y-8">
-                <VideoDropzone onUpload={handleUpload} isUploading={isUploading} />
-
-                {/* System Console appears during analysis */}
-                {isUploading && taskId && (
-                    <SystemConsole taskId={taskId} isAnalyzing={isUploading} />
-                )}
-            </div>
-
             {/* Tutorial Modal */}
             <TutorialModal
                 isOpen={showTutorial}
                 onClose={() => setShowTutorial(false)}
                 mode="studio"
             />
-
-            {/* Quick Help */}
-            <QuickHelp
-                title="Video Analysis Tips"
-                tips={[
-                    "Record in landscape mode with good lighting",
-                    "Keep videos under 50MB (2-5 minutes ideal)",
-                    "Ensure clear audio and visible face",
-                    "Use 720p or 1080p resolution",
-                    "Minimize background noise",
-                    "Practice your speech before recording"
-                ]}
-            />
-
         </main>
     );
 }

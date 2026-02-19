@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, Suspense, lazy, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, CameraOff, Mic, MicOff, Play, Square, BookOpen, Loader2, Trophy, Zap, Clock, Target, RotateCcw, Flame, Shield, Swords } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, Play, Square, BookOpen, Loader2, Trophy, Zap, Clock, Target, RotateCcw, Flame, Shield, Swords, Plus, Minus } from 'lucide-react';
 import { useAudioCapture } from '@/hooks/useAudioCapture';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useAICoach } from '@/hooks/useAICoach';
@@ -34,6 +34,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 const FILLER_WORDS = ['um', 'uh', 'like', 'you know', 'basically', 'literally', 'actually', 'so', 'right', 'okay'];
 
 // ─── Arena Loadout Panel ───────────────────────────────────────────────────────
+// ─── Arena Loadout Panel ───────────────────────────────────────────────────────
 function ArenaLoadout({
     mode, setMode, difficulty, setDifficulty, bestScore, streak, multiplier
 }: {
@@ -45,10 +46,12 @@ function ArenaLoadout({
     streak: number;
     multiplier: number;
 }) {
+    const [isExpanded, setIsExpanded] = useState(true);
+
     const modeConfig = [
-        { id: 'practice' as const, label: 'PRACTICE', icon: <Shield className="h-4 w-4" />, desc: 'Free session, no limits', color: 'border-blue-500/50 text-blue-400 bg-blue-500/10' },
-        { id: 'challenge' as const, label: 'CHALLENGE', icon: <Swords className="h-4 w-4" />, desc: 'Compete for top score', color: 'border-orange-500/50 text-orange-400 bg-orange-500/10' },
-        { id: 'timed' as const, label: '⏱ TIMED', icon: <Clock className="h-4 w-4" />, desc: '2-minute countdown', color: 'border-red-500/50 text-red-400 bg-red-500/10' },
+        { id: 'practice' as const, label: 'PRACTICE', icon: <Shield className="h-4 w-4" />, desc: 'Free session', color: 'border-blue-500/50 text-blue-400 bg-blue-500/10' },
+        { id: 'challenge' as const, label: 'CHALLENGE', icon: <Swords className="h-4 w-4" />, desc: 'Top score', color: 'border-orange-500/50 text-orange-400 bg-orange-500/10' },
+        { id: 'timed' as const, label: 'TIMED', icon: <Clock className="h-4 w-4" />, desc: '2-min limit', color: 'border-red-500/50 text-red-400 bg-red-500/10' },
     ];
     const diffConfig = [
         { id: 'beginner' as const, label: 'ROOKIE', mult: '1.0×', color: 'text-green-400 border-green-500/40 bg-green-500/10' },
@@ -62,65 +65,97 @@ function ArenaLoadout({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
         >
-            {/* Arena stats bar */}
-            <div className="grid grid-cols-3 gap-2">
-                {[
-                    { label: 'BEST SCORE', value: bestScore > 0 ? bestScore.toFixed(0) : '---', icon: <Trophy className="h-3.5 w-3.5 text-yellow-500" />, color: 'text-yellow-400' },
-                    { label: 'STREAK', value: `${streak}🔥`, icon: <Flame className="h-3.5 w-3.5 text-orange-500" />, color: 'text-orange-400' },
-                    { label: 'MULTIPLIER', value: `${multiplier.toFixed(1)}×`, icon: <Zap className="h-3.5 w-3.5 text-primary" />, color: 'text-primary' },
-                ].map(s => (
-                    <div key={s.label} className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-3 text-center">
-                        <div className="flex justify-center mb-1">{s.icon}</div>
-                        <div className={`font-pixel text-lg ${s.color}`}>{s.value}</div>
-                        <div className="text-[9px] font-mono text-zinc-600 mt-0.5">{s.label}</div>
-                    </div>
-                ))}
+            {/* Header / Toggle */}
+            <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-pixel text-zinc-500 uppercase tracking-widest">Session Config</h3>
+                <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)} className="h-6 w-6 p-0 text-zinc-500 hover:text-primary">
+                    {isExpanded ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                </Button>
             </div>
 
-            {/* Mode selector */}
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 space-y-3">
-                <label className="text-[10px] font-pixel text-zinc-500 uppercase tracking-widest">Select Mode</label>
-                <div className="space-y-2">
-                    {modeConfig.map(m => (
-                        <button
-                            key={m.id}
-                            onClick={() => setMode(m.id)}
-                            className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 text-left ${mode === m.id ? m.color : 'border-zinc-800 text-zinc-500 bg-zinc-900/50 hover:border-zinc-700'
-                                }`}
-                        >
-                            <span className={mode === m.id ? '' : 'opacity-40'}>{m.icon}</span>
-                            <div className="flex-1">
-                                <div className="font-pixel text-[11px]">{m.label}</div>
-                                <div className="text-[9px] font-mono opacity-60 mt-0.5">{m.desc}</div>
+            <AnimatePresence>
+                {isExpanded && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="space-y-4 overflow-hidden"
+                    >
+                        {/* Arena stats bar */}
+                        <div className="grid grid-cols-3 gap-2">
+                            {[
+                                { label: 'BEST', value: bestScore > 0 ? bestScore.toFixed(0) : '---', icon: <Trophy className="h-3.5 w-3.5 text-yellow-500" />, color: 'text-yellow-400' },
+                                { label: 'STREAK', value: `${streak}🔥`, icon: <Flame className="h-3.5 w-3.5 text-orange-500" />, color: 'text-orange-400' },
+                                { label: 'MULT', value: `${multiplier.toFixed(1)}×`, icon: <Zap className="h-3.5 w-3.5 text-primary" />, color: 'text-primary' },
+                            ].map(s => (
+                                <div key={s.label} className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-2 text-center">
+                                    <div className="flex justify-center mb-1">{s.icon}</div>
+                                    <div className={`font-pixel text-sm ${s.color}`}>{s.value}</div>
+                                    <div className="text-[9px] font-mono text-zinc-600 mt-0.5">{s.label}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Mode selector */}
+                        <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-3 space-y-2">
+                            <label className="text-[9px] font-pixel text-zinc-500 uppercase tracking-widest">Mode</label>
+                            <div className="space-y-1.5">
+                                {modeConfig.map(m => (
+                                    <button
+                                        key={m.id}
+                                        onClick={() => setMode(m.id)}
+                                        className={`w-full flex items-center gap-2 p-2 rounded-lg border transition-all duration-200 text-left ${mode === m.id ? m.color : 'border-zinc-800 text-zinc-500 bg-zinc-900/50 hover:border-zinc-700'
+                                            }`}
+                                    >
+                                        <span className={mode === m.id ? '' : 'opacity-40'}>{m.icon}</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-pixel text-[10px] truncate">{m.label}</div>
+                                        </div>
+                                        {mode === m.id && (
+                                            <motion.div
+                                                layoutId="mode-indicator"
+                                                className="w-1.5 h-1.5 rounded-full bg-current"
+                                            />
+                                        )}
+                                    </button>
+                                ))}
                             </div>
-                            {mode === m.id && (
-                                <motion.div
-                                    layoutId="mode-indicator"
-                                    className="w-2 h-2 rounded-full bg-current"
-                                />
-                            )}
-                        </button>
-                    ))}
-                </div>
-            </div>
+                        </div>
 
-            {/* Difficulty selector */}
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 space-y-3">
-                <label className="text-[10px] font-pixel text-zinc-500 uppercase tracking-widest">Difficulty Tier</label>
-                <div className="grid grid-cols-3 gap-2">
-                    {diffConfig.map(d => (
-                        <button
-                            key={d.id}
-                            onClick={() => setDifficulty(d.id)}
-                            className={`py-3 rounded-xl border transition-all duration-200 text-center ${difficulty === d.id ? d.color : 'border-zinc-800 text-zinc-600 bg-zinc-900/50 hover:border-zinc-700'
-                                }`}
-                        >
-                            <div className="font-pixel text-[10px]">{d.label}</div>
-                            <div className="text-[9px] font-mono opacity-70 mt-1">{d.mult} XP</div>
-                        </button>
-                    ))}
+                        {/* Difficulty selector */}
+                        <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-3 space-y-2">
+                            <label className="text-[9px] font-pixel text-zinc-500 uppercase tracking-widest">Difficulty</label>
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {diffConfig.map(d => (
+                                    <button
+                                        key={d.id}
+                                        onClick={() => setDifficulty(d.id)}
+                                        className={`py-2 rounded-lg border transition-all duration-200 text-center ${difficulty === d.id ? d.color : 'border-zinc-800 text-zinc-600 bg-zinc-900/50 hover:border-zinc-700'
+                                            }`}
+                                    >
+                                        <div className="font-pixel text-[9px]">{d.label}</div>
+                                        <div className="text-[8px] font-mono opacity-70 mt-0.5">{d.mult}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {!isExpanded && (
+                <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-3 flex justify-between items-center text-[10px] font-mono text-zinc-500">
+                    <div className="flex items-center gap-2">
+                        {mode === 'practice' && <Shield className="h-3 w-3 text-blue-400" />}
+                        {mode === 'challenge' && <Swords className="h-3 w-3 text-orange-400" />}
+                        {mode === 'timed' && <Clock className="h-3 w-3 text-red-400" />}
+                        <span className="uppercase">{mode}</span>
+                    </div>
+                    <div className={difficulty === 'expert' ? 'text-red-400' : difficulty === 'intermediate' ? 'text-yellow-400' : 'text-green-400'}>
+                        {difficulty.toUpperCase()}
+                    </div>
                 </div>
-            </div>
+            )}
         </motion.div>
     );
 }
