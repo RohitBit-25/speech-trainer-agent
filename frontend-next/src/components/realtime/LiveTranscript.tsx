@@ -16,13 +16,15 @@ interface LiveTranscriptProps {
     interimTranscript: string;
     segments: TranscriptSegment[];
     isListening: boolean;
+    serverTranscript?: string;
 }
 
 export function LiveTranscript({
     transcript,
     interimTranscript,
     segments,
-    isListening
+    isListening,
+    serverTranscript
 }: LiveTranscriptProps) {
     const parentRef = useRef<HTMLDivElement>(null);
     const [autoScroll, setAutoScroll] = useState(true);
@@ -140,8 +142,8 @@ export function LiveTranscript({
                                     transform: `translateY(${virtualItem.start}px)`,
                                 }}
                                 className={`p-3 ${segment.hasFillerWord
-                                        ? 'bg-red-500/10 border-l-2 border-red-500'
-                                        : 'bg-zinc-900/50'
+                                    ? 'bg-red-500/10 border-l-2 border-red-500'
+                                    : 'bg-zinc-900/50'
                                     }`}
                             >
                                 <div className="flex items-start gap-2">
@@ -173,6 +175,18 @@ export function LiveTranscript({
                             {interimTranscript}
                         </p>
                     </motion.div>
+                )}
+
+                {/* Server-side Verified Transcript (More Accurate) */}
+                {serverTranscript && (
+                    <div className="p-3 bg-emerald-900/10 border-t border-emerald-500/20 mt-2">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-pixel text-emerald-500 uppercase">Verified Transcript</span>
+                        </div>
+                        <p className="font-mono text-xs text-emerald-400/80">
+                            {serverTranscript.slice(-300)} {/* Show last 300 chars */}
+                        </p>
+                    </div>
                 )}
             </div>
 

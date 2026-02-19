@@ -337,6 +337,7 @@ export default function PracticePage() {
         sendVideoFrame: aiSendVideoFrame,
         sendAudioChunk: aiSendAudioChunk,
         endSession: aiEndSession,
+        serverTranscript
     } = useAICoach({
         sessionId: sessionId || '',
         userId: user?.id || '',
