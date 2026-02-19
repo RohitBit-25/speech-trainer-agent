@@ -27,6 +27,15 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
     const [error, setError] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
+    // Sync isStreaming with stream state
+    // useEffect(() => {
+    //     if (stream && stream.active) {
+    //         setIsStreaming(true);
+    //     } else {
+    //         setIsStreaming(false);
+    //     }
+    // }, [stream]);
+
     const startStream = useCallback(async () => {
         try {
             setError(null);
@@ -46,6 +55,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
 
             setStream(mediaStream);
             setIsStreaming(true);
+            console.log("✅ Stream started, isStreaming set to TRUE");
 
             // Create video element for frame capture
             if (video && !videoRef.current) {
@@ -56,6 +66,10 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
                 videoRef.current.play().catch(e => console.error("❌ Failed to play internal video:", e));
             } else {
                 console.log("ℹ️ Internal video element already exists or video disabled", { video, ref: !!videoRef.current });
+                if (videoRef.current && video) {
+                    videoRef.current.srcObject = mediaStream;
+                    videoRef.current.play().catch(e => console.error("❌ Failed to replay internal video:", e));
+                }
             }
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to access camera/microphone';
