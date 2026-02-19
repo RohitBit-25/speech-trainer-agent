@@ -1,12 +1,16 @@
 from agno.agent import Agent, RunOutput
-from agno.models.google import Gemini
+from agno.models.openai import OpenAIChat
 from agno.utils.pprint import pprint_run_response
 from app.core.config import settings
 
 # Initialize the content analysis agent
 content_analysis_agent = Agent(
     name="content-analysis-agent",
-    model=Gemini(id="gemini-1.5-flash", api_key=settings.GEMINI_API_KEY),
+    model=OpenAIChat(
+        id=settings.OPENROUTER_MODEL,
+        api_key=settings.OPENROUTER_API_KEY,
+        base_url=settings.OPENROUTER_BASE_URL
+    ),
     instructions=[
         "You are an expert in analyzing speech content, rhetorical structure, and persuasion techniques. You will evaluate transcribed speech for rhetorical structure, persuasion, tone, and clarity. You will return grammar corrections, filler word analysis, and deep insights into content effectiveness.",
         "You will be provided with a transcript of spoken content.",

@@ -28,12 +28,23 @@ def extract_audio_from_video(video_path: str, output_audio_path: str) -> str:
     video_clip.close()
     return output_audio_path
 
+# Global cache for the model
+_whisper_model_cache = None
+
 def load_whisper_model():
+    global _whisper_model_cache
+    if _whisper_model_cache is not None:
+        return _whisper_model_cache
+        
     try:
-        model = WhisperModel("small", device="cpu", compute_type="int8")
+        print("⏳ Loading Whisper model for batch analysis...")
+        # Use 'tiny.en' or 'base.en' for speed unless 'small' is strictly required
+        model = WhisperModel("tiny.en", device="cpu", compute_type="int8")
+        _whisper_model_cache = model
+        print("✅ Whisper model loaded and cached.")
         return model
     except Exception as e:
-        print(f"Error loading Whisper model: {e}")
+        print(f"❌ Error loading Whisper model: {e}")
         return None
     
 def transcribe_audio(audio_file):
@@ -51,8 +62,8 @@ def transcribe_audio(audio_file):
         return "Model failed to load. Please check system resources or model path."
 
     try:
-        print("Model loaded successfully. Transcribing audio...")
-        segments, _ = model.transcribe(audio_file)
+        print(f"Transcribing audio: {audio_file}...")
+        segments, _ = model.transcribe(audio_file, beam_size=1)
         full_text = " ".join(segment.text for segment in segments)
         return full_text.strip() if full_text else "I couldn't understand the audio. Please try again."
 

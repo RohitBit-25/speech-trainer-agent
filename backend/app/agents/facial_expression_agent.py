@@ -1,5 +1,5 @@
 from agno.agent import Agent, RunOutput
-from agno.models.google import Gemini
+from agno.models.openai import OpenAIChat
 from app.agents.tools.facial_expression_tool import analyze_facial_expressions as facial_expression_tool
 from agno.utils.pprint import pprint_run_response
 from app.core.config import settings
@@ -7,7 +7,11 @@ from app.core.config import settings
 # Initialize the facial expression agent
 facial_expression_agent = Agent(
     name="facial-expression-agent",
-    model=Gemini(id="gemini-1.5-flash", api_key=settings.GEMINI_API_KEY),
+    model=OpenAIChat(
+        id=settings.OPENROUTER_MODEL,
+        api_key=settings.OPENROUTER_API_KEY,
+        base_url=settings.OPENROUTER_BASE_URL
+    ),
     tools=[facial_expression_tool],
     description=
     '''
