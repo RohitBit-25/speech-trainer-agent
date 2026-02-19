@@ -188,7 +188,7 @@ Respond ONLY with feedback - no explanations, meta-commentary, or preamble."""
                     temperature=0.7,
                     max_tokens=200,
                     top_p=0.95,
-                    headers={
+                    extra_headers={
                         "HTTP-Referer": "https://speech-trainer-agent.com",
                         "X-Title": "Speech Trainer Agent"
                     }
@@ -218,7 +218,7 @@ Respond ONLY with feedback - no explanations, meta-commentary, or preamble."""
                 temperature=0.7,
                 max_tokens=200,
                 top_p=0.95,
-                headers={
+                extra_headers={
                     "HTTP-Referer": "https://speech-trainer-agent.com", # Required by OpenRouter
                     "X-Title": "Speech Trainer Agent"
                 }
