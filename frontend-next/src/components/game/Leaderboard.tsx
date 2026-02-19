@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,43 +22,6 @@ interface LeaderboardEntry {
 interface LeaderboardProps {
     defaultCategory?: "daily" | "weekly" | "all_time";
     defaultDifficulty?: string;
-}
-
-// ─── Mock fallback data ────────────────────────────────────────────────────────
-const MOCK_ENTRIES: LeaderboardEntry[] = [
-    { user_id: "u1", username: "SpeechMaster", score: 9840, rank: 1, difficulty: "expert", timestamp: new Date().toISOString(), rank_change: 2 },
-    { user_id: "u2", username: "VoiceNinja", score: 8720, rank: 2, difficulty: "expert", timestamp: new Date().toISOString(), rank_change: -1 },
-    { user_id: "u3", username: "TalkingPro", score: 7650, rank: 3, difficulty: "intermediate", timestamp: new Date().toISOString(), rank_change: 0 },
-    { user_id: "u4", username: "FluentFox", score: 6430, rank: 4, difficulty: "intermediate", timestamp: new Date().toISOString(), rank_change: 3 },
-    { user_id: "u5", username: "WordSmith", score: 5980, rank: 5, difficulty: "expert", timestamp: new Date().toISOString(), rank_change: -2 },
-    { user_id: "u6", username: "ClearVoice", score: 5210, rank: 6, difficulty: "beginner", timestamp: new Date().toISOString(), rank_change: 1 },
-    { user_id: "u7", username: "SpeakEasy", score: 4870, rank: 7, difficulty: "intermediate", timestamp: new Date().toISOString(), rank_change: 0 },
-    { user_id: "u8", username: "OratoryKing", score: 4320, rank: 8, difficulty: "expert", timestamp: new Date().toISOString(), rank_change: -1 },
-    { user_id: "u9", username: "ToneMaster", score: 3990, rank: 9, difficulty: "beginner", timestamp: new Date().toISOString(), rank_change: 4 },
-    { user_id: "u10", username: "RhetorAce", score: 3540, rank: 10, difficulty: "intermediate", timestamp: new Date().toISOString(), rank_change: -3 },
-];
-
-// ─── Avatar ────────────────────────────────────────────────────────────────────
-const AVATAR_COLORS = [
-    "from-orange-500 to-red-600",
-    "from-blue-500 to-indigo-600",
-    "from-green-500 to-emerald-600",
-    "from-purple-500 to-pink-600",
-    "from-yellow-500 to-orange-600",
-    "from-cyan-500 to-blue-600",
-    "from-rose-500 to-pink-600",
-    "from-teal-500 to-cyan-600",
-];
-
-function Avatar({ username, size = "md" }: { username: string; size?: "sm" | "md" | "lg" }) {
-    const initials = username.slice(0, 2).toUpperCase();
-    const colorIdx = username.charCodeAt(0) % AVATAR_COLORS.length;
-    const sizeClasses = { sm: "w-8 h-8 text-xs", md: "w-10 h-10 text-sm", lg: "w-14 h-14 text-lg" };
-    return (
-        <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${AVATAR_COLORS[colorIdx]} flex items-center justify-center font-pixel text-white flex-shrink-0 shadow-lg`}>
-            {initials}
-        </div>
-    );
 }
 
 // ─── Rank Change Indicator ─────────────────────────────────────────────────────
@@ -120,7 +82,10 @@ function Podium({ entries }: { entries: LeaderboardEntry[] }) {
                     >
                         {/* Avatar + name above podium */}
                         <div className="flex flex-col items-center gap-1.5">
-                            <Avatar username={entry.username} size={rank === 1 ? "lg" : "md"} />
+                            <Avatar className={rank === 1 ? "w-14 h-14" : "w-10 h-10"}>
+                                <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${entry.username}`} />
+                                <AvatarFallback className="bg-zinc-800 text-zinc-400">{entry.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
                             <div className="text-center">
                                 <div className="font-pixel text-white text-[10px] leading-tight truncate max-w-[80px]">{entry.username}</div>
                                 <div className={`font-pixel text-xs ${textColor}`}>{entry.score.toLocaleString()}</div>
@@ -211,10 +176,10 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
             if (!response.ok) throw new Error("API error");
             const data = await response.json();
             const fetched = data.leaderboard || [];
-            setEntries(fetched.length > 0 ? fetched : MOCK_ENTRIES);
+            setEntries(fetched);
         } catch (error) {
             console.error('Error fetching leaderboard:', error);
-            setEntries(MOCK_ENTRIES);
+            setEntries([]);
         } finally {
             setLoading(false);
         }
@@ -331,7 +296,10 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
                                         </div>
 
                                         {/* Avatar */}
-                                        <Avatar username={entry.username} size="sm" />
+                                        <Avatar className="w-8 h-8">
+                                            <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${entry.username}`} />
+                                            <AvatarFallback className="bg-zinc-800 text-zinc-400 text-xs">{entry.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                        </Avatar>
 
                                         {/* Username + date */}
                                         <div className="flex-1 min-w-0">
