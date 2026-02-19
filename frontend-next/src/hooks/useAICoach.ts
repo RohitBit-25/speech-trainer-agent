@@ -40,6 +40,7 @@ interface UseAICoachReturn {
   sendAudioChunk: (audioData: string, transcript?: string) => void;
   endSession: () => void;
   reset: () => void;
+  serverTranscript: string;
 }
 
 export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): UseAICoachReturn {
@@ -70,6 +71,7 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
   const [currentEmotion, setCurrentEmotion] = useState<EmotionAnalysis | null>(null);
   const [currentVoice, setCurrentVoice] = useState<VoiceQualityMetrics | null>(null);
   const [sessionSummary, setSessionSummary] = useState<SessionSummary | null>(null);
+  const [serverTranscript, setServerTranscript] = useState<string>('');
 
   // Handle incoming WebSocket messages
   const handleMessage = useCallback((event: MessageEvent) => {
@@ -108,6 +110,10 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
         if (message.voice_analysis) {
           setCurrentVoice(message.voice_analysis);
           onVoiceUpdate?.(message.voice_analysis);
+
+          if (message.voice_analysis.transcript) {
+            setServerTranscript(prev => (prev ? prev + ' ' : '') + message.voice_analysis.transcript);
+          }
         }
 
         if (message.score) {
@@ -120,6 +126,10 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
         if (message.voice) {
           setCurrentVoice(message.voice);
           onVoiceUpdate?.(message.voice);
+
+          if (message.voice.transcript) {
+            setServerTranscript(prev => (prev ? prev + ' ' : '') + message.voice.transcript);
+          }
         }
       }
 
@@ -289,6 +299,7 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
     sendVideoFrame,
     sendAudioChunk,
     endSession,
-    reset
+    reset,
+    serverTranscript
   };
 }

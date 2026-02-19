@@ -164,10 +164,13 @@ class AICoachSession:
             
             self.last_voice_analysis = voice_analysis
             
-            # Update transcript
+            # Update transcript from client OR server verification
             if transcript:
                 self.transcript_buffer += " " + transcript
-                print(f"📝 Updated transcript buffer: {len(self.transcript_buffer)} chars")
+            elif voice_analysis.get("generated_transcript"):
+                self.transcript_buffer += " " + voice_analysis["generated_transcript"]
+                
+            print(f"📝 Updated transcript buffer: {len(self.transcript_buffer)} chars")
             
             return {
                 "audio_processed": True,
@@ -180,7 +183,8 @@ class AICoachSession:
                     "volume_consistency": round(voice_analysis.get("volume_consistency", 0) * 100, 1) if voice_analysis.get("volume_consistency") else 0,
                     "filler_words": voice_analysis.get("filler_words", []),
                     "voice_score": round(voice_analysis.get("overall_voice_score", 0), 1),
-                    "recommendations": voice_analysis.get("recommendations", [])
+                    "recommendations": voice_analysis.get("recommendations", []),
+                    "transcript": voice_analysis.get("generated_transcript")  # Send back to frontend
                 }
             }
             

@@ -28,6 +28,7 @@ export interface VoiceQualityMetrics {
     filler_word_density: number;
     overall_voice_score: number;
     recommendations: string[];
+    transcript?: string;
 }
 
 export interface PerformanceScore {
