@@ -139,10 +139,11 @@ function WaveformVisualizer({ isActive }: { isActive: boolean }) {
                         opacity: [0.4, 1, 0.4],
                     } : { height: 4, opacity: 0.2 }}
                     transition={{
-                        duration: 0.5 + Math.random() * 0.5,
+                        duration: 0.4,
                         repeat: Infinity,
+                        repeatType: "reverse",
                         delay: i * 0.05,
-                        ease: "easeInOut"
+                        ease: "linear"
                     }}
                 />
             ))}
@@ -701,6 +702,37 @@ export default function PracticePage() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* HUD: AI Insights Overlay */}
+                            <AnimatePresence>
+                                {isRecording && feedbackMessages.length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0 }}
+                                        className="absolute bottom-6 left-6 max-w-sm pointer-events-none"
+                                    >
+                                        <div className="flex flex-col gap-2">
+                                            {feedbackMessages.slice(-1).map((msg, i) => (
+                                                <motion.div
+                                                    key={i}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    className="bg-black/60 backdrop-blur-md border-l-2 border-primary pl-3 py-2 pr-4 rounded-r-lg"
+                                                >
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Zap className="h-3 w-3 text-primary" />
+                                                        <span className="text-[10px] font-pixel text-primary uppercase">AI_COACH_INSIGHT</span>
+                                                    </div>
+                                                    <p className="text-xs font-mono text-zinc-100 leading-relaxed shadow-sm">
+                                                        {msg.message}
+                                                    </p>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             {/* Combo Counter */}
                             {isRecording && combo > 0 && (
