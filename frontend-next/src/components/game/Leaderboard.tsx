@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Crown, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface LeaderboardEntry {
@@ -32,19 +33,29 @@ function RankChange({ change }: { change?: number }) {
     if (change === undefined || change === 0) {
         return <Minus className="h-3 w-3 text-zinc-600" />;
     }
-    if (change > 0) {
-        return (
-            <div className="flex items-center gap-0.5 text-green-400">
-                <TrendingUp className="h-3 w-3" />
-                <span className="text-[10px] font-mono">{change}</span>
-            </div>
-        );
-    }
-    return (
+
+    const isPositive = change > 0;
+    const content = isPositive ? (
+        <div className="flex items-center gap-0.5 text-green-400">
+            <TrendingUp className="h-3 w-3" />
+            <span className="text-[10px] font-mono">{change}</span>
+        </div>
+    ) : (
         <div className="flex items-center gap-0.5 text-red-400">
             <TrendingDown className="h-3 w-3" />
             <span className="text-[10px] font-mono">{Math.abs(change)}</span>
         </div>
+    );
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild className="cursor-help">
+                {content}
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>{isPositive ? `Moved up ${change} spots` : `Dropped ${Math.abs(change)} spots`}</p>
+            </TooltipContent>
+        </Tooltip>
     );
 }
 
@@ -126,7 +137,6 @@ function StickyUserRank({ userRank }: { userRank: UserRank | null }) {
                             <span className="font-pixel text-xs text-white">YOUR RANK</span>
                             <span className="text-[10px] font-mono text-zinc-400">Top {userRank.percentile}%</span>
                         </div>
-                        {/* XP to next rank */}
                         <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
@@ -135,7 +145,16 @@ function StickyUserRank({ userRank }: { userRank: UserRank | null }) {
                                 className="h-full bg-primary rounded-full"
                             />
                         </div>
-                        <div className="text-[10px] font-mono text-zinc-600 mt-1">{xpToNext} pts to Rank #{userRank.rank - 1}</div>
+                        <div className="text-[10px] font-mono text-zinc-600 mt-1">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="cursor-help underline decoration-dotted">{xpToNext} pts to Rank #{userRank.rank - 1}</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Earn {xpToNext} more points to advance!</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </div>
                     </div>
                     <div className="text-right">
                         <div className="font-pixel text-xl text-primary">{userRank.score?.toFixed(0)}</div>
@@ -230,123 +249,132 @@ export function Leaderboard({ defaultCategory = "all_time", defaultDifficulty = 
     }
 
     return (
-        <div className="space-y-6 pb-4">
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-3">
-                <Tabs value={category} onValueChange={(v: string) => setCategory(v as "daily" | "weekly" | "all_time")} className="flex-1">
-                    <TabsList className="grid w-full grid-cols-3 bg-zinc-900/80 border border-zinc-800 rounded-xl p-1 h-auto">
-                        {[
-                            { value: "daily", label: "DAILY" },
-                            { value: "weekly", label: "WEEKLY" },
-                            { value: "all_time", label: "ALL TIME" },
-                        ].map(t => (
-                            <TabsTrigger key={t.value} value={t.value} className="font-pixel text-[10px] rounded-lg data-[state=active]:bg-zinc-800 data-[state=active]:text-primary py-2">
-                                {t.label}
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
-                </Tabs>
+        <TooltipProvider>
+            <div className="space-y-6 pb-4">
+                {/* Filters */}
+                <div className="flex flex-col md:flex-row gap-3">
+                    <Tabs value={category} onValueChange={(v: string) => setCategory(v as "daily" | "weekly" | "all_time")} className="flex-1">
+                        <TabsList className="grid w-full grid-cols-3 bg-zinc-900/80 border border-zinc-800 rounded-xl p-1 h-auto">
+                            {[
+                                { value: "daily", label: "DAILY" },
+                                { value: "weekly", label: "WEEKLY" },
+                                { value: "all_time", label: "ALL TIME" },
+                            ].map(t => (
+                                <TabsTrigger key={t.value} value={t.value} className="font-pixel text-[10px] rounded-lg data-[state=active]:bg-zinc-800 data-[state=active]:text-primary py-2">
+                                    {t.label}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
 
-                <Tabs value={difficulty} onValueChange={setDifficulty} className="flex-1">
-                    <TabsList className="grid w-full grid-cols-4 bg-zinc-900/80 border border-zinc-800 rounded-xl p-1 h-auto">
-                        {["all", "beginner", "intermediate", "expert"].map(d => (
-                            <TabsTrigger key={d} value={d} className="font-pixel text-[9px] rounded-lg data-[state=active]:bg-zinc-800 data-[state=active]:text-primary py-2">
-                                {d === "intermediate" ? "INTER" : d.toUpperCase()}
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
-                </Tabs>
-            </div>
-
-            {/* Top 3 Podium */}
-            {entries.length >= 3 && (
-                <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6">
-                    <Podium entries={top3} />
+                    <Tabs value={difficulty} onValueChange={setDifficulty} className="flex-1">
+                        <TabsList className="grid w-full grid-cols-4 bg-zinc-900/80 border border-zinc-800 rounded-xl p-1 h-auto">
+                            {["all", "beginner", "intermediate", "expert"].map(d => (
+                                <TabsTrigger key={d} value={d} className="font-pixel text-[9px] rounded-lg data-[state=active]:bg-zinc-800 data-[state=active]:text-primary py-2">
+                                    {d === "intermediate" ? "INTER" : d.toUpperCase()}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
                 </div>
-            )}
 
-            {/* Rest of leaderboard */}
-            {entries.length > 0 ? (
-                <div className="space-y-2">
-                    <div className="text-[10px] font-pixel text-zinc-600 uppercase tracking-widest px-1 mb-3">
-                        {entries.length > 3 ? `Ranks #4 – #${entries.length}` : "Rankings"}
+                {/* Top 3 Podium */}
+                {entries.length >= 3 && (
+                    <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6">
+                        <Podium entries={top3} />
                     </div>
-                    <AnimatePresence>
-                        {(entries.length > 3 ? rest : entries).map((entry, index) => {
-                            const isCurrentUser = entry.user_id === currentUserId;
-                            const displayRank = entries.length > 3 ? index + 4 : entry.rank;
+                )}
 
-                            return (
-                                <motion.div
-                                    key={`${entry.user_id}-${index}`}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.04, type: "spring", stiffness: 300, damping: 30 }}
-                                >
-                                    <div className={`relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${isCurrentUser
-                                        ? 'border-primary/50 bg-primary/5 shadow-[0_0_12px_rgba(var(--primary-rgb),0.15)]'
-                                        : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900/80'
-                                        }`}>
+                {/* Rest of leaderboard */}
+                {entries.length > 0 ? (
+                    <div className="space-y-2">
+                        <div className="text-[10px] font-pixel text-zinc-600 uppercase tracking-widest px-1 mb-3">
+                            {entries.length > 3 ? `Ranks #4 – #${entries.length}` : "Rankings"}
+                        </div>
+                        <AnimatePresence>
+                            {(entries.length > 3 ? rest : entries).map((entry, index) => {
+                                const isCurrentUser = entry.user_id === currentUserId;
+                                const displayRank = entries.length > 3 ? index + 4 : entry.rank;
 
-                                        {/* Rank number */}
-                                        <div className="w-8 text-center flex-shrink-0">
-                                            <span className="text-zinc-500 font-pixel text-xs">#{displayRank}</span>
-                                        </div>
+                                return (
+                                    <motion.div
+                                        key={`${entry.user_id}-${index}`}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: index * 0.04, type: "spring", stiffness: 300, damping: 30 }}
+                                    >
+                                        <div className={`relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${isCurrentUser
+                                            ? 'border-primary/50 bg-primary/5 shadow-[0_0_12px_rgba(var(--primary-rgb),0.15)]'
+                                            : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900/80'
+                                            }`}>
 
-                                        {/* Rank change */}
-                                        <div className="w-8 flex justify-center flex-shrink-0">
-                                            <RankChange change={entry.rank_change} />
-                                        </div>
-
-                                        {/* Avatar */}
-                                        <Avatar className="w-8 h-8">
-                                            <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${entry.username}`} />
-                                            <AvatarFallback className="bg-zinc-800 text-zinc-400 text-xs">{entry.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                        </Avatar>
-
-                                        {/* Username + date */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`font-pixel text-sm truncate ${isCurrentUser ? 'text-primary' : 'text-white'}`}>
-                                                    {entry.username}
-                                                </span>
-                                                {isCurrentUser && (
-                                                    <Badge className="bg-primary/20 text-primary border border-primary/30 font-pixel text-[8px] px-1.5 py-0">YOU</Badge>
-                                                )}
+                                            {/* Rank number */}
+                                            <div className="w-8 text-center flex-shrink-0">
+                                                <span className="text-zinc-500 font-pixel text-xs">#{displayRank}</span>
                                             </div>
-                                            <div className="text-[10px] font-mono text-zinc-600">
-                                                {new Date(entry.timestamp).toLocaleDateString()}
+
+                                            {/* Rank change */}
+                                            <div className="w-8 flex justify-center flex-shrink-0">
+                                                <RankChange change={entry.rank_change} />
+                                            </div>
+
+                                            {/* Avatar */}
+                                            <Avatar className="w-8 h-8">
+                                                <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${entry.username}`} />
+                                                <AvatarFallback className="bg-zinc-800 text-zinc-400 text-xs">{entry.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+
+                                            {/* Username + date */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`font-pixel text-sm truncate ${isCurrentUser ? 'text-primary' : 'text-white'}`}>
+                                                        {entry.username}
+                                                    </span>
+                                                    {isCurrentUser && (
+                                                        <Badge className="bg-primary/20 text-primary border border-primary/30 font-pixel text-[8px] px-1.5 py-0">YOU</Badge>
+                                                    )}
+                                                </div>
+                                                <div className="text-[10px] font-mono text-zinc-600">
+                                                    {new Date(entry.timestamp).toLocaleDateString()}
+                                                </div>
+                                            </div>
+
+                                            {/* Difficulty */}
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Badge className={`${getDifficultyColor(entry.difficulty)} font-pixel text-[9px] px-1.5 hidden sm:flex cursor-help`}>
+                                                        {entry.difficulty === "intermediate" ? "INTER" : entry.difficulty.toUpperCase()}
+                                                    </Badge>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Difficulty: {entry.difficulty.charAt(0).toUpperCase() + entry.difficulty.slice(1)}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+
+                                            {/* Score */}
+                                            <div className="text-right flex-shrink-0 min-w-[70px]">
+                                                <div className={`font-pixel text-lg ${isCurrentUser ? 'text-primary' : 'text-white'}`}>
+                                                    {entry.score.toFixed(0)}
+                                                </div>
+                                                <div className="text-[10px] font-mono text-zinc-600">pts</div>
                                             </div>
                                         </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </div>
+                ) : (
+                    <div className="text-center py-16 space-y-3">
+                        <TrendingUp className="h-12 w-12 text-zinc-700 mx-auto" />
+                        <div className="font-pixel text-zinc-500">NO_ENTRIES_YET</div>
+                        <div className="text-sm font-mono text-zinc-600">Be the first to set a score!</div>
+                    </div>
+                )}
 
-                                        {/* Difficulty */}
-                                        <Badge className={`${getDifficultyColor(entry.difficulty)} font-pixel text-[9px] px-1.5 hidden sm:flex`}>
-                                            {entry.difficulty === "intermediate" ? "INTER" : entry.difficulty.toUpperCase()}
-                                        </Badge>
-
-                                        {/* Score */}
-                                        <div className="text-right flex-shrink-0 min-w-[70px]">
-                                            <div className={`font-pixel text-lg ${isCurrentUser ? 'text-primary' : 'text-white'}`}>
-                                                {entry.score.toFixed(0)}
-                                            </div>
-                                            <div className="text-[10px] font-mono text-zinc-600">pts</div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
-                    </AnimatePresence>
-                </div>
-            ) : (
-                <div className="text-center py-16 space-y-3">
-                    <TrendingUp className="h-12 w-12 text-zinc-700 mx-auto" />
-                    <div className="font-pixel text-zinc-500">NO_ENTRIES_YET</div>
-                    <div className="text-sm font-mono text-zinc-600">Be the first to set a score!</div>
-                </div>
-            )}
-
-            {/* Sticky user rank */}
-            <StickyUserRank userRank={userRank} />
-        </div>
+                {/* Sticky user rank */}
+                <StickyUserRank userRank={userRank} />
+            </div>
+        </TooltipProvider>
     );
 }
