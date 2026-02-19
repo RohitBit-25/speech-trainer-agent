@@ -49,9 +49,13 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
 
             // Create video element for frame capture
             if (video && !videoRef.current) {
+                console.log("🎥 Creating internal video element for capture");
                 videoRef.current = document.createElement('video');
                 videoRef.current.srcObject = mediaStream;
-                videoRef.current.play();
+                videoRef.current.muted = true; // Ensure muted to allow autoplay
+                videoRef.current.play().catch(e => console.error("❌ Failed to play internal video:", e));
+            } else {
+                console.log("ℹ️ Internal video element already exists or video disabled", { video, ref: !!videoRef.current });
             }
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to access camera/microphone';
@@ -75,6 +79,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
 
     const captureFrame = useCallback((): string | null => {
         if (!videoRef.current || !isStreaming) {
+            console.warn(`⚠️ captureFrame failed: videoRef=${!!videoRef.current}, isStreaming=${isStreaming}`);
             return null;
         }
 

@@ -479,6 +479,7 @@ export default function PracticePage() {
             // Start frame capture and send to AI Coach
             frameIntervalRef.current = setInterval(() => {
                 const frame = captureFrame();
+                console.log(`📸 Loop: Frame=${!!frame}, Connected=${aiCoachConnectedRef.current}`);
                 if (frame && aiCoachConnectedRef.current) {
                     aiSendVideoFrame(frame as any);
                 }

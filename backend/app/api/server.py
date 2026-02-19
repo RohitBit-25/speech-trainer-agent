@@ -370,23 +370,32 @@ async def practice_websocket(websocket: WebSocket, session_id: str):
                 # Route different message types
                 if message_type == "video_frame":
                     # Process video frame
+                    print(f"🎥 Processing video frame for session {session_id}")
                     result = await enhanced_manager.process_video_frame(session_id, data)
+                    print(f"✅ Video result: {result.keys() if result else 'None'}")
                     
+                    if result and "error" in result:
+                        print(f"❌ Error in video processing: {result['error']}")
+
                     # Calculate score
                     score_result = await enhanced_manager.calculate_score(session_id)
+                    print(f"📊 Score result: {score_result}")
                     
                     # Periodically get feedback
                     feedback_result = await enhanced_manager.generate_feedback(session_id)
+                    # print(f"💬 Feedback result: {feedback_result.keys() if feedback_result else 'None'}")
                     
                     # Send comprehensive response
-                    await enhanced_manager.broadcast_to_session(session_id, {
+                    response_data = {
                         "type": "analysis_result",
                         "facial_analysis": result.get("facial_analysis"),
                         "voice_analysis": result.get("voice_analysis"),
                         "score": score_result,
                         "feedback": feedback_result.get("feedback"),
                         "timestamp": datetime.now().isoformat()
-                    })
+                    }
+                    print(f"🚀 Broadcasting response to {session_id}")
+                    await enhanced_manager.broadcast_to_session(session_id, response_data)
                 
                 elif message_type == "audio_chunk":
                     # Process audio

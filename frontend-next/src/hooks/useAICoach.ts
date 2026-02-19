@@ -216,6 +216,8 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
         frame_data: frameData,
         timestamp: new Date().toISOString()
       }));
+    } else {
+      console.warn('⚠️ Cannot send frame: Not connected or WS missing', { connected: isConnected, ws: !!wsRef.current });
     }
   }, [sessionId, isConnected]);
 
