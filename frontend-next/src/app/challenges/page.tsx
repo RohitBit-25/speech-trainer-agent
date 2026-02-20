@@ -679,7 +679,7 @@ export default function ChallengesPage() {
                                         ))}
                                     </motion.div>
                                 ) : (
-                                    <EmptyState type={type} />
+                                    <EmptyState type={type} category={selectedCategory} />
                                 )}
                             </AnimatePresence>
                         </TabsContent>
