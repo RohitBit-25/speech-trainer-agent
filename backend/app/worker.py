@@ -196,6 +196,12 @@ Return ONLY valid raw JSON."""
             }
 
         # ─── STEP 4: Build Full Result ───────────────────────────────────────────
+        def to_float(val, default=0.0):
+            try:
+                return float(val)
+            except (TypeError, ValueError):
+                return default
+
         result = {
             "facial_expression_response": {
                 "emotion_timeline": emotion_timeline,
@@ -206,9 +212,9 @@ Return ONLY valid raw JSON."""
             },
             "voice_analysis_response": {
                 "transcription": transcription,
-                "speech_rate_wpm": float(speech_rate) if str(speech_rate).replace('.','').isdigit() else 0,
-                "pitch_variation": float(pitch_variation) if str(pitch_variation).replace('.','').isdigit() else 0,
-                "volume_consistency": float(volume_consistency) if str(volume_consistency).replace('.','').isdigit() else 0,
+                "speech_rate_wpm": to_float(speech_rate),
+                "pitch_variation": to_float(pitch_variation),
+                "volume_consistency": to_float(volume_consistency),
             },
             "content_analysis_response": llm_response.get("content_analysis_response", {}),
             "feedback_response": llm_response.get("feedback_response", {}),

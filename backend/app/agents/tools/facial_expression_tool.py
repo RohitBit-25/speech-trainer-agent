@@ -19,17 +19,6 @@ def log_after_call(fc):
     """Post-hook function that runs after the tool execution"""
     print(f"Function call completed with result: {fc.result}")
 
-@tool(
-    name="analyze_facial_expressions",              # Custom name for the tool (otherwise the function name is used)
-    description="Analyzes facial expressions to detect emotions and engagement.",  # Custom description (otherwise the function docstring is used)
-    show_result=True,                               # Show result after function call
-    stop_after_tool_call=True,                      # Return the result immediately after the tool call and stop the agent
-    pre_hook=log_before_call,                       # Hook to run before execution
-    post_hook=log_after_call,                       # Hook to run after execution
-    cache_results=False,                            # Enable caching of results
-    cache_dir="/tmp/agno_cache",                    # Custom cache directory
-    cache_ttl=3600                                  # Cache TTL in seconds (1 hour)
-)
 def _analyze_facial_expressions_impl(video_path: str) -> dict:
     """
     Internal implementation of facial expressions analysis.

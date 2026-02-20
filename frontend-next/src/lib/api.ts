@@ -65,9 +65,17 @@ function mapFacialAnalysis(raw: any) {
         });
     }
 
+    // Fall back to pre-computed emotion_counts from the backend (populated by worker)
+    if (Object.keys(emotions).length === 0) {
+        const emotionCounts = safeGet(r, 'emotion_counts');
+        if (emotionCounts && typeof emotionCounts === 'object' && !Array.isArray(emotionCounts)) {
+            emotions = emotionCounts;
+        }
+    }
+
     // Fall back to direct emotions object
     const directEmotions = safeGet(r, 'emotions', 'emotion_scores');
-    if (directEmotions && typeof directEmotions === 'object' && !Array.isArray(directEmotions)) {
+    if (Object.keys(emotions).length === 0 && directEmotions && typeof directEmotions === 'object' && !Array.isArray(directEmotions)) {
         emotions = directEmotions;
     }
 
