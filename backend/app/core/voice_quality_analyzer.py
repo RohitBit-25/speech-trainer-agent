@@ -88,9 +88,6 @@ class VoiceQualityAnalyzer:
             
             # Transcript-based metrics
             if transcript:
-                speech_rate = self._calculate_speech_rate(audio_data, transcript)
-                metrics['speech_rate_wpm'] = speech_rate
-                
                 filler_words = self._detect_filler_words(transcript)
                 metrics['filler_words'] = filler_words['words']
                 metrics['filler_word_density'] = filler_words['density']
@@ -199,7 +196,7 @@ class VoiceQualityAnalyzer:
             frame_length = int(self.sample_rate * 0.025)  # 25ms frames
             hop_length = int(self.sample_rate * 0.010)    # 10ms hop
             
-            frames = librosa.util.frame(audio_data, frame_length, hop_length)
+            frames = librosa.util.frame(y=audio_data, frame_length=frame_length, hop_length=hop_length)
             frame_rms = np.sqrt(np.mean(np.square(frames), axis=0))
             
             # Calculate coefficient of variation
@@ -250,9 +247,9 @@ class VoiceQualityAnalyzer:
             
             # Frame-by-frame energy for stability
             frames = librosa.util.frame(
-                audio_data, 
-                int(self.sample_rate * 0.025),
-                int(self.sample_rate * 0.010)
+                y=audio_data, 
+                frame_length=int(self.sample_rate * 0.025),
+                hop_length=int(self.sample_rate * 0.010)
             )
             frame_energy = np.sqrt(np.mean(np.square(frames), axis=0))
             
@@ -271,12 +268,10 @@ class VoiceQualityAnalyzer:
             print(f"⚠️ Energy analysis error: {e}")
             return 0.0, 0.0
     
-    def _calculate_speech_rate(self, audio_data: np.ndarray, 
-                              transcript: str) -> float:
+    def _calculate_speech_rate(self, duration_sec: float, transcript: str) -> float:
         """Calculate speech rate in words per minute"""
         try:
-            duration_sec = len(audio_data) / self.sample_rate
-            if duration_sec < 0.1:
+            if duration_sec < 0.1 or not transcript:
                 return 0.0
             
             words = len(transcript.split())

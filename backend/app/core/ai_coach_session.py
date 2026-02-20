@@ -52,9 +52,11 @@ class AICoachSession:
         self.transcript_buffer = ""
         
         # Real-time data
-        self.last_voice_analysis = None
         self.last_facial_analysis = None
         self.last_score = None
+        
+        # Audio buffer for rolling voice analysis
+        self.audio_buffer = np.array([], dtype=np.float32)
         
         print(f"✅ AICoachSession initialized: {session_id} for user: {user_id} (difficulty: {difficulty})")
     
@@ -136,20 +138,31 @@ class AICoachSession:
                     # Already bytes
                     audio_bytes = audio_data
                 
-                # Convert to float audio array
                 audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
                 
-                print(f"🎙️ Processing audio chunk ({len(audio_bytes)} bytes → {audio_np.shape})")
+                # Append to rolling buffer
+                self.audio_buffer = np.append(self.audio_buffer, audio_np)
+                
+                # print(f"🎙️ Processing audio chunk ({len(audio_bytes)} bytes → added to buffer, total {len(self.audio_buffer)} samples)")
                 
             except Exception as audio_decode_error:
                 print(f"❌ Audio decode failed: {audio_decode_error}")
                 return {"error": f"Audio decode failed: {audio_decode_error}", "voice_analysis": None}
             
-            # Analyze voice quality
-            voice_analysis = self.voice_analyzer.analyze_audio_chunk(audio_np, transcript)
+            # Require at least 0.5s (8000 samples at 16kHz) to run analysis
+            if len(self.audio_buffer) >= 8000:
+                # Analyze voice quality using rolling buffer
+                voice_analysis = self.voice_analyzer.analyze_audio_chunk(self.audio_buffer, transcript)
+                self.last_voice_analysis = voice_analysis
+                
+                # Retain max 2 seconds (32000 samples) of rolling history
+                if len(self.audio_buffer) > 32000:
+                    self.audio_buffer = self.audio_buffer[-32000:]
+            else:
+                # Fall back to previous analysis while filling buffer
+                voice_analysis = self.last_voice_analysis
             
             if not voice_analysis:
-                print("⚠️ WARNING: Voice analysis returned None")
                 voice_analysis = {
                     "speech_rate_wpm": 0,
                     "speech_rate_quality": "unknown",
@@ -160,8 +173,6 @@ class AICoachSession:
                     "overall_voice_score": 0
                 }
             
-            print(f"📊 Voice analysis result: speech_rate={voice_analysis.get('speech_rate_wpm')}, pitch={voice_analysis.get('pitch_hz')}")
-            
             self.last_voice_analysis = voice_analysis
             
             # Update transcript from client OR server verification
@@ -171,6 +182,14 @@ class AICoachSession:
                 self.transcript_buffer += " " + voice_analysis["generated_transcript"]
                 
             print(f"📝 Updated transcript buffer: {len(self.transcript_buffer)} chars")
+            
+            # Calculate true WPM based on session duration instead of chunk audio length
+            duration_sec = (datetime.now() - self.session_start).total_seconds()
+            word_count = len(self.transcript_buffer.split())
+            wpm = (word_count / duration_sec) * 60 if duration_sec > 2.0 else 0
+            
+            voice_analysis["speech_rate_wpm"] = wpm
+            voice_analysis["speech_rate_quality"] = self.voice_analyzer._rate_speech_rate(wpm)
             
             return {
                 "audio_processed": True,

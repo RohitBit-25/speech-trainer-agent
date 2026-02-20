@@ -49,6 +49,17 @@ class IntelligentScoringSystem:
         self.score_history = []
         self.performance_trends = {}
         
+        # Add EMA state tracking for smooth real-time metric transitions
+        self._ema_scores = {}
+        self.ema_alpha = 0.15  # Smoothing factor (15% new, 85% history)
+        
+    def _get_smoothed(self, key: str, new_val: float) -> float:
+        if key not in self._ema_scores:
+            self._ema_scores[key] = new_val
+        else:
+            self._ema_scores[key] = (self.ema_alpha * new_val) + ((1 - self.ema_alpha) * self._ema_scores[key])
+        return self._ema_scores[key]
+        
     def calculate_score(
         self,
         voice_metrics: Dict,
@@ -74,11 +85,17 @@ class IntelligentScoringSystem:
             }
         """
         
-        # Calculate component scores
-        voice_score = self._score_voice_metrics(voice_metrics)
-        facial_score = self._score_facial_metrics(facial_metrics)
-        content_score = self._score_content_metrics(content_metrics)
-        pacing_score = self._score_pacing_metrics(pacing_metrics)
+        # Calculate raw component scores
+        raw_v = self._score_voice_metrics(voice_metrics)
+        raw_f = self._score_facial_metrics(facial_metrics)
+        raw_c = self._score_content_metrics(content_metrics)
+        raw_p = self._score_pacing_metrics(pacing_metrics)
+        
+        # Apply Exponential Moving Average (EMA) to smooth out fluctuations
+        voice_score = self._get_smoothed("voice", raw_v)
+        facial_score = self._get_smoothed("facial", raw_f)
+        content_score = self._get_smoothed("content", raw_c)
+        pacing_score = self._get_smoothed("pacing", raw_p)
         
         # Weighted total
         total_score = (
@@ -88,7 +105,7 @@ class IntelligentScoringSystem:
             pacing_score * self.current_weights['pacing']
         )
         
-        total_score = float(min(100, max(0, total_score)))
+        total_score = self._get_smoothed("total", float(min(100, max(0, total_score))))
         
         # Determine grade
         grade = self._get_grade(total_score)
