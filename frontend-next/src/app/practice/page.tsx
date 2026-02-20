@@ -114,10 +114,8 @@ const UI_TEXT = {
         subtitle: 'Real-time Analysis Engine',
         version: 'v2.0',
         poweredBy: [
-            { text: 'VA', color: 'text-white' },
-            { text: 'AN', color: 'text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]' },
-            { text: 'I', color: 'text-white' },
-            { text: 'X', color: 'text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.8)] animate-pulse' },
+            { text: 'VAANI', color: 'text-white' },
+            { text: 'X', color: 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.9)] animate-pulse' },
         ]
     },
     buttons: {
