@@ -175,18 +175,22 @@ class AICoachSession:
             
             self.last_voice_analysis = voice_analysis
             
-            # Update transcript from client OR server verification
+            # Update transcript: frontend sends the FULL cumulative transcript each time,
+            # so we REPLACE instead of append to avoid exponential word count growth.
             if transcript:
-                self.transcript_buffer += " " + transcript
+                self.transcript_buffer = transcript
             elif voice_analysis.get("generated_transcript"):
+                # Only append server-generated transcripts since those are incremental
                 self.transcript_buffer += " " + voice_analysis["generated_transcript"]
                 
             print(f"📝 Updated transcript buffer: {len(self.transcript_buffer)} chars")
             
-            # Calculate true WPM based on session duration instead of chunk audio length
+            # Calculate true WPM based on session duration
             duration_sec = (datetime.now() - self.session_start).total_seconds()
-            word_count = len(self.transcript_buffer.split())
-            wpm = (word_count / duration_sec) * 60 if duration_sec > 2.0 else 0
+            word_count = len(self.transcript_buffer.split()) if self.transcript_buffer.strip() else 0
+            wpm = (word_count / duration_sec) * 60 if duration_sec > 2.0 and word_count > 0 else 0
+            # Clamp to realistic range (0-300 WPM)
+            wpm = min(wpm, 300.0)
             
             voice_analysis["speech_rate_wpm"] = wpm
             voice_analysis["speech_rate_quality"] = self.voice_analyzer._rate_speech_rate(wpm)

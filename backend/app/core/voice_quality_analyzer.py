@@ -196,7 +196,7 @@ class VoiceQualityAnalyzer:
             frame_length = int(self.sample_rate * 0.025)  # 25ms frames
             hop_length = int(self.sample_rate * 0.010)    # 10ms hop
             
-            frames = librosa.util.frame(y=audio_data, frame_length=frame_length, hop_length=hop_length)
+            frames = librosa.util.frame(x=audio_data, frame_length=frame_length, hop_length=hop_length)
             frame_rms = np.sqrt(np.mean(np.square(frames), axis=0))
             
             # Calculate coefficient of variation
@@ -247,7 +247,7 @@ class VoiceQualityAnalyzer:
             
             # Frame-by-frame energy for stability
             frames = librosa.util.frame(
-                y=audio_data, 
+                x=audio_data, 
                 frame_length=int(self.sample_rate * 0.025),
                 hop_length=int(self.sample_rate * 0.010)
             )
