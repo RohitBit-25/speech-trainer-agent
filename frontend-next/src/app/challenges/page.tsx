@@ -548,10 +548,17 @@ export default function ChallengesPage() {
         return filtered;
     };
 
+    // Calculate counts for tabs (without category filter to show total available)
+    const tabCounts = {
+        daily: challenges.filter(c => c.type === "daily").length,
+        weekly: challenges.filter(c => c.type === "weekly").length,
+        achievement: challenges.filter(c => c.type === "achievement").length,
+    };
+    
     const tabConfig = [
-        { value: "daily", label: "DAILY", icon: "🌅", count: filterChallenges("daily").length },
-        { value: "weekly", label: "WEEKLY", icon: "📅", count: filterChallenges("weekly").length },
-        { value: "achievement", label: "ACHIEVEMENTS", icon: "🏅", count: filterChallenges("achievement").length },
+        { value: "daily", label: "DAILY", icon: "🌅", count: tabCounts.daily },
+        { value: "weekly", label: "WEEKLY", icon: "📅", count: tabCounts.weekly },
+        { value: "achievement", label: "ACHIEVEMENTS", icon: "🏅", count: tabCounts.achievement },
     ];
 
     // Get unique skill categories from current challenges
