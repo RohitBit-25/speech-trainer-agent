@@ -195,6 +195,19 @@ class ChallengeRequirements(BaseModel):
     min_sessions: Optional[int] = None
     perfect_categories: Optional[List[str]] = None  # ["facial", "voice", "content"]
     specific_metrics: Optional[Dict[str, Any]] = None
+    
+    # Micro-challenge specific fields for speech skill improvement
+    min_eye_contact_percent: Optional[float] = None  # 0-100
+    target_wpm_min: Optional[int] = None  # Minimum words per minute
+    target_wpm_max: Optional[int] = None  # Maximum words per minute
+    min_facial_confidence: Optional[float] = None  # 0-100
+    min_content_clarity: Optional[float] = None  # 0-100
+    volume_min_db: Optional[float] = None  # Minimum volume in dB
+    volume_max_db: Optional[float] = None  # Maximum volume in dB
+    min_engagement_score: Optional[float] = None  # 0-100
+    consecutive_good_sessions: Optional[int] = None  # Streak requirement
+    target_session_count: Optional[int] = None  # For "complete N sessions" type
+    skill_category: Optional[str] = None  # "body_language", "voice_control", "content_clarity", "presence"
 
 class ChallengeRewards(BaseModel):
     xp: int
