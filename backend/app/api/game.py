@@ -169,6 +169,112 @@ async def get_challenge_progress(user_id: str):
     }
 
 
+@router.get("/challenges/active-session/{user_id}")
+async def get_active_session_challenges(user_id: str):
+    """
+    Get challenges that can be progressed during an active practice session.
+    Returns challenges with their current progress and targets for real-time display.
+    """
+    from datetime import datetime
+    
+    now = datetime.utcnow()
+    
+    # Get active challenges (not expired, not completed or not claimed)
+    query = {
+        "active": True,
+        "$or": [
+            {"expires_at": {"$gt": now}},
+            {"expires_at": None}
+        ]
+    }
+    
+    challenges = await challenges_collection.find(query).to_list(100)
+    
+    # Get user's progress
+    user_progress = {}
+    user_challenges = await user_challenges_collection.find(
+        {"user_id": user_id}
+    ).to_list(100)
+    
+    for uc in user_challenges:
+        user_progress[uc["challenge_id"]] = uc
+    
+    # Format for active session display
+    active_challenges = []
+    for challenge in challenges:
+        challenge_id = challenge["challenge_id"]
+        uc = user_progress.get(challenge_id, {})
+        
+        # Skip completed and claimed challenges
+        if uc.get("completed") and uc.get("claimed"):
+            continue
+        
+        requirements = challenge.get("requirements", {})
+        
+        # Build challenge info for frontend
+        challenge_info = {
+            "challenge_id": challenge_id,
+            "title": challenge["title"],
+            "description": challenge["description"],
+            "type": challenge["type"],
+            "difficulty": challenge["difficulty"],
+            "skill_category": requirements.get("skill_category", "general"),
+            "progress": uc.get("progress", 0),
+            "completed": uc.get("completed", False),
+            "claimed": uc.get("claimed", False),
+            "current_value": uc.get("current_value", 0),
+            "target_value": uc.get("target_value", _get_target_display(requirements)),
+            "rewards": challenge.get("rewards", {}),
+            "requirements": {
+                # Include relevant requirements for real-time tracking
+                "min_eye_contact_percent": requirements.get("min_eye_contact_percent"),
+                "target_wpm_min": requirements.get("target_wpm_min"),
+                "target_wpm_max": requirements.get("target_wpm_max"),
+                "min_facial_confidence": requirements.get("min_facial_confidence"),
+                "min_content_clarity": requirements.get("min_content_clarity"),
+                "volume_min_db": requirements.get("volume_min_db"),
+                "volume_max_db": requirements.get("volume_max_db"),
+                "min_engagement_score": requirements.get("min_engagement_score"),
+            }
+        }
+        
+        active_challenges.append(challenge_info)
+    
+    # Group by skill category
+    by_category = {}
+    for c in active_challenges:
+        cat = c["skill_category"]
+        if cat not in by_category:
+            by_category[cat] = []
+        by_category[cat].append(c)
+    
+    return {
+        "challenges": active_challenges,
+        "by_category": by_category,
+        "total_active": len(active_challenges),
+        "categories": list(by_category.keys())
+    }
+
+
+def _get_target_display(requirements: dict) -> str:
+    """Helper to format target value for display"""
+    if "min_eye_contact_percent" in requirements:
+        return f"{requirements['min_eye_contact_percent']}%"
+    if "target_wpm_min" in requirements and "target_wpm_max" in requirements:
+        return f"{requirements['target_wpm_min']}-{requirements['target_wpm_max']} WPM"
+    if "min_facial_confidence" in requirements:
+        return f"{requirements['min_facial_confidence']}%"
+    if "min_content_clarity" in requirements:
+        return f"{requirements['min_content_clarity']}%"
+    if "volume_min_db" in requirements and "volume_max_db" in requirements:
+        return f"{requirements['volume_min_db']}-{requirements['volume_max_db']} dB"
+    if "min_engagement_score" in requirements:
+        return f"{requirements['min_engagement_score']}%"
+    if "target_session_count" in requirements:
+        return f"{requirements['target_session_count']} sessions"
+    return "Complete"
+
+
 # ============= LEADERBOARD ENDPOINTS =============
 
 @router.get("/leaderboard/{category}")
