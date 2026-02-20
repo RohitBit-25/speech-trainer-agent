@@ -1,19 +1,17 @@
 # VAANIX - AI Speech Training Platform
 
 <p align="center">
-  <!-- GitHub badges - Replace YOUR_USERNAME with your actual GitHub username -->
-  <img src="https://img.shields.io/github/languages/top/YOUR_USERNAME/speech-trainer-agent?color=orange" alt="GitHub top language">
-  <img src="https://img.shields.io/github/languages/code-size/YOUR_USERNAME/speech-trainer-agent" alt="GitHub code size in bytes">
-  <img src="https://img.shields.io/github/repo-size/YOUR_USERNAME/speech-trainer-agent" alt="GitHub repo size">
-  <img src="https://img.shields.io/github/last-commit/YOUR_USERNAME/speech-trainer-agent" alt="GitHub last commit">
-  <img src="https://img.shields.io/github/issues/YOUR_USERNAME/speech-trainer-agent" alt="GitHub issues">
-  <img src="https://img.shields.io/github/issues-pr/YOUR_USERNAME/speech-trainer-agent" alt="GitHub pull requests">
-  <img src="https://img.shields.io/github/license/YOUR_USERNAME/speech-trainer-agent" alt="GitHub">
+  <img src="https://img.shields.io/github/languages/top/RohitBit-25/speech-trainer-agent?color=orange" alt="GitHub top language">
+  <img src="https://img.shields.io/github/languages/code-size/RohitBit-25/speech-trainer-agent" alt="GitHub code size in bytes">
+  <img src="https://img.shields.io/github/repo-size/RohitBit-25/speech-trainer-agent" alt="GitHub repo size">
+  <img src="https://img.shields.io/github/last-commit/RohitBit-25/speech-trainer-agent" alt="GitHub last commit">
+  <img src="https://img.shields.io/github/issues/RohitBit-25/speech-trainer-agent" alt="GitHub issues">
+  <img src="https://img.shields.io/github/issues-pr/RohitBit-25/speech-trainer-agent" alt="GitHub pull requests">
+  <img src="https://img.shields.io/github/license/RohitBit-25/speech-trainer-agent" alt="GitHub license">
 </p>
 
 <p align="center">
-  <!-- Logo placeholder - Replace with your actual logo -->
-  <img src="https://raw.githubusercontent.com/YOUR_USERNAME/speech-trainer-agent/main/frontend-next/public/vaanix-logo.svg" alt="VAANIX Logo" width="200">
+  <img src="https://raw.githubusercontent.com/RohitBit-25/speech-trainer-agent/main/frontend-next/public/vaanix-logo.png" alt="VAANIX Logo" width="200">
 </p>
 
 <h1 align="center">VAANIX - AI Speech Training Platform</h1>
@@ -26,11 +24,9 @@
 
 > 📝 **Important Setup Notes for GitHub Deployment:**
 > 
-> 1. **GitHub Badges**: Replace `YOUR_USERNAME` in badge URLs with your actual GitHub username
-> 2. **Logo**: Upload your logo to `frontend-next/public/` and update the logo URL
-> 3. **Repository Links**: Update all repository links to point to your actual GitHub repository
-> 4. **Deployment URLs**: Replace placeholder URLs with your actual deployment links
-> 5. **License**: Update the license badge with your actual license type
+> 1. **Logo**: Replace the logo file in `frontend-next/public/` if you update branding
+> 2. **Deployment URLs**: Add live demo and documentation links when available
+> 3. **License**: Confirm the license file matches the badge
 
 <p align="center">
   <a href="#-features"><strong>Features</strong></a> •
@@ -41,10 +37,8 @@
 </p>
 
 <p align="center">
-  <a href="https://your-deployment-url.com">Live Demo</a> •
-  <a href="https://your-docs-url.com">Documentation</a> •
-  <a href="https://github.com/yourusername/speech-trainer-agent/issues">Issues</a> •
-  <a href="https://github.com/yourusername/speech-trainer-agent/discussions">Discussions</a>
+  <a href="https://github.com/RohitBit-25/speech-trainer-agent/issues">Issues</a> •
+  <a href="https://github.com/RohitBit-25/speech-trainer-agent/discussions">Discussions</a>
 </p>
 
 ## 🎯 Overview
@@ -347,8 +341,8 @@ backend/
 
 ```bash
 # Clone the main repository
-git clone https://github.com/yourusername/vaanix.git
-cd vaanix
+git clone https://github.com/RohitBit-25/speech-trainer-agent.git
+cd speech-trainer-agent
 
 # Optional: Switch to development branch
 git checkout develop
@@ -1146,8 +1140,8 @@ By participating in this project, you agree to maintain a respectful and inclusi
 1. **Fork the repository**
 2. **Clone your fork**:
    ```bash
-   git clone https://github.com/yourusername/vaanix.git
-   cd vaanix
+  git clone https://github.com/RohitBit-25/speech-trainer-agent.git
+  cd speech-trainer-agent
    ```
 3. **Create a branch**:
    ```bash
@@ -1463,9 +1457,9 @@ docs/
 
 ### Community Resources
 
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/vaanix/discussions)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/vaanix/issues)
-- **Documentation**: [Project Wiki](https://github.com/yourusername/vaanix/wiki)
+- **Discussions**: [GitHub Discussions](https://github.com/RohitBit-25/speech-trainer-agent/discussions)
+- **Issues**: [GitHub Issues](https://github.com/RohitBit-25/speech-trainer-agent/issues)
+- **Documentation**: [Project Wiki](https://github.com/RohitBit-25/speech-trainer-agent/wiki)
 - **Chat**: [Discord/Slack community]
 
 ### Recognition
@@ -1484,9 +1478,7 @@ Contributors will be:
 
 Instead, please report them through our security channels:
 
-- **Email**: security@vaanix.com
-- **Security Form**: [Security Report Form](https://vaanix.com/security)
-- **PGP Key**: [PGP Public Key](https://vaanix.com/security/pgp-key.txt)
+- **Security Advisories**: https://github.com/RohitBit-25/speech-trainer-agent/security/advisories
 
 ### Security Response Process
 
@@ -1853,22 +1845,17 @@ Follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 ### Getting Help
 
 #### Documentation
-- [User Guide](https://docs.vaanix.com/guide)
-- [API Documentation](https://docs.vaanix.com/api)
-- [Developer Docs](https://docs.vaanix.com/development)
-- [FAQ](https://docs.vaanix.com/faq)
+- [Quick Start](#-quick-start-guide)
+- [API Documentation](#-api-documentation)
+- [Contributing](#-contributing-guidelines)
+- [License](#-license)
 
 #### Community Support
-- **GitHub Discussions**: [Community Forum](https://github.com/yourusername/vaanix/discussions)
-- **Stack Overflow**: Tag questions with `vaanix`
-- **Discord**: [Community Chat](https://discord.gg/vaanix)
-- **Twitter**: [@vaanixplatform](https://twitter.com/vaanixplatform)
+- **GitHub Discussions**: [Community Forum](https://github.com/RohitBit-25/speech-trainer-agent/discussions)
+- **GitHub Issues**: [Issue Tracker](https://github.com/RohitBit-25/speech-trainer-agent/issues)
 
 #### Professional Support
-- **Email**: support@vaanix.com
-- **Enterprise**: enterprise@vaanix.com
-- **SLA**: 24-hour response for paid plans
-- **Consulting**: Available for custom implementations
+- Open a discussion to talk about support or collaboration
 
 ### Issue Reporting
 
@@ -1906,7 +1893,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ❌ Hold the authors liable
 - ❌ Use trademarks without permission
 
-For commercial licensing options, contact licensing@vaanix.com
+For commercial licensing options, open a GitHub discussion.
 
 ## 🙏 Acknowledgments
 
@@ -1929,7 +1916,7 @@ For commercial licensing options, contact licensing@vaanix.com
 ### Contributors
 Thanks to all the amazing people who have contributed to VAANIX:
 
-[![Contributors](https://contrib.rocks/image?repo=yourusername/vaanix)](https://github.com/yourusername/vaanix/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=RohitBit-25/speech-trainer-agent)](https://github.com/RohitBit-25/speech-trainer-agent/graphs/contributors)
 
 ### Research & Inspiration
 - Public speaking research methodologies
@@ -1979,8 +1966,7 @@ Thanks to all the amazing people who have contributed to VAANIX:
 </p>
 
 <p align="center">
-  <a href="https://vaanix.com">Website</a> •
-  <a href="https://docs.vaanix.com">Documentation</a> •
-  <a href="https://github.com/yourusername/vaanix/issues">Issues</a> •
-  <a href="https://github.com/yourusername/vaanix/discussions">Community</a>
+  <a href="https://github.com/RohitBit-25/speech-trainer-agent">Repository</a> •
+  <a href="https://github.com/RohitBit-25/speech-trainer-agent/issues">Issues</a> •
+  <a href="https://github.com/RohitBit-25/speech-trainer-agent/discussions">Community</a>
 </p>
