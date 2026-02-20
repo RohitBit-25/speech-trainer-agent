@@ -130,26 +130,68 @@ def _analyze_voice_attributes_impl(file_path: str) -> dict:
     speech_rate = len(words) / (duration / 60.0) if duration > 0 else 0
     print(f"DEBUG: Speech rate calculated: {speech_rate}")
 
-    # Pitch variation
-    print(f"DEBUG: Calculating pitch...")
+    # Pitch variation - improved calculation
+    print(f"DEBUG: Calculating pitch variation...")
     try:
-        pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
-        pitch_values = pitches[magnitudes > np.median(magnitudes)]
-        pitch_variation = np.std(pitch_values) if pitch_values.size > 0 else 0
-        print(f"DEBUG: Pitch variation: {pitch_variation}")
+        # Try using pYIN (more robust)
+        try:
+            f0 = librosa.yin(y, fmin=75, fmax=400)  # Common human pitch range
+        except AttributeError:
+            # Fallback to piptrack if yin is not available
+            print("DEBUG: librosa.yin not available, using piptrack as fallback")
+            pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+            f0 = np.max(pitches, axis=0)
+        
+        # Remove zero values (unvoiced segments)
+        voiced_mask = f0 > 0
+        f0_voiced = f0[voiced_mask]
+        
+        if len(f0_voiced) > 5:
+            # Convert to semitones relative to median pitch (for normalized variation)
+            ref_freq = np.percentile(f0_voiced, 50)  # Use median as reference
+            # Prevent log errors from zero or very small values
+            f0_voiced_safe = np.clip(f0_voiced, 1, np.inf)
+            ref_freq = np.clip(ref_freq, 1, np.inf)
+            semitone_values = 12 * np.log2(f0_voiced_safe / ref_freq)
+            pitch_variation = float(np.std(semitone_values))
+            # Cap at 30 semitones (unrealistic variation detection)
+            pitch_variation = min(pitch_variation, 30)
+        else:
+            pitch_variation = 0.0
+        
+        print(f"DEBUG: Pitch variation (semitones): {pitch_variation}")
     except Exception as e:
         print(f"DEBUG: Error calculating pitch: {e}")
-        pitch_variation = 0
+        pitch_variation = 0.0
 
-    # Volume consistency
-    print(f"DEBUG: Calculating volume...")
+    # Volume consistency - normalized to 0-1 scale
+    print(f"DEBUG: Calculating volume consistency...")
     try:
         rms = librosa.feature.rms(y=y)[0]
-        volume_consistency = np.std(rms)
+        if len(rms) > 1:
+            # Normalize RMS values to 0-1 range
+            rms_min = np.min(rms)
+            rms_max = np.max(rms)
+            rms_range = rms_max - rms_min
+            
+            if rms_range > 1e-8:  # Avoid division by zero
+                rms_normalized = (rms - rms_min) / rms_range
+            else:
+                rms_normalized = np.ones_like(rms)  # All values are the same - perfect consistency
+            
+            # Volume consistency: how stable the volume is
+            # 1.0 = perfectly consistent, 0.0 = high variation
+            volume_std = float(np.std(rms_normalized))
+            volume_consistency = max(0.0, 1.0 - volume_std)  # Inverse relationship
+            # Scale to 0-100 for percentage display
+            volume_consistency = volume_consistency * 100
+        else:
+            volume_consistency = 100.0  # Single value = perfect consistency
+        
         print(f"DEBUG: Volume consistency: {volume_consistency}")
     except Exception as e:
         print(f"DEBUG: Error calculating volume: {e}")
-        volume_consistency = 0
+        volume_consistency = 0.0
 
     # Clean up temporary audio file if created
     if ext in video_extensions and os.path.exists(audio_path):

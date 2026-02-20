@@ -31,10 +31,15 @@ def _analyze_facial_expressions_impl(video_path: str) -> dict:
     eye_contact_count = 0
     smile_count = 0
     frame_count = 0
+    processed_frames_with_faces = 0
     fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
 
     # Process every nth frame for performance optimization
-    frame_interval = 5
+    frame_interval = 2  # Reduced from 5 to capture more frames
+
+    # Store baseline eye opening from first detected face (for normalized comparison)
+    baseline_eye_opening = None
+    eye_opening_values = []
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -51,6 +56,7 @@ def _analyze_facial_expressions_impl(video_path: str) -> dict:
         results = face_mesh.process(rgb_frame)
 
         if results.multi_face_landmarks:
+            processed_frames_with_faces += 1
             for face_landmarks in results.multi_face_landmarks:
                 # Extract landmarks
                 landmarks = face_landmarks.landmark
@@ -94,23 +100,72 @@ def _analyze_facial_expressions_impl(video_path: str) -> dict:
                 right_eye_opening = np.linalg.norm(np.array(right_eye_upper_lid) - np.array(right_eye_lower_lid))
 
                 eye_opening_avg = (left_eye_opening + right_eye_opening) / 2
-
-                # Simple heuristic: if eyes are wide open, assume eye contact
-                if eye_opening_avg > 5:  # Threshold adjustment through experimentation
-                    eye_contact_count += 1
+                eye_opening_values.append(eye_opening_avg)
 
     cap.release()
     face_mesh.close()
 
-    total_processed_frames = frame_count // frame_interval
-    if total_processed_frames == 0:
-        total_processed_frames = 1  # Avoid division by zero
+    # Calculate baseline and detect eye contact with normalized approach
+    if eye_opening_values:
+        baseline_eye_opening = np.mean(eye_opening_values)
+        std_eye_opening = np.std(eye_opening_values)
+        eye_contact_threshold = baseline_eye_opening - 0.5 * std_eye_opening
+        print(f"DEBUG: Baseline eye opening: {baseline_eye_opening:.2f}, Threshold: {eye_contact_threshold:.2f}")
+    else:
+        eye_contact_threshold = 10  # Fallback threshold if no data
+
+    # Re-process to count eye contact with proper threshold
+    cap = cv2.VideoCapture(video_path)
+    frame_count = 0
+    face_mesh_second = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1)
+    
+    try:
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            frame_count += 1
+            if frame_count % frame_interval != 0:
+                continue
+            
+            frame = cv2.resize(frame, (640, 480))
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = face_mesh_second.process(rgb_frame)
+            
+            if results.multi_face_landmarks:
+                for face_landmarks in results.multi_face_landmarks:
+                    landmarks = face_landmarks.landmark
+                    h, w, _ = frame.shape
+                    landmark_coords = [(int(lm.x * w), int(lm.y * h)) for lm in landmarks]
+                    
+                    left_eye_upper_lid = landmark_coords[159]
+                    left_eye_lower_lid = landmark_coords[145]
+                    right_eye_upper_lid = landmark_coords[386]
+                    right_eye_lower_lid = landmark_coords[374]
+                    
+                    left_eye_opening = np.linalg.norm(np.array(left_eye_upper_lid) - np.array(left_eye_lower_lid))
+                    right_eye_opening = np.linalg.norm(np.array(right_eye_upper_lid) - np.array(right_eye_lower_lid))
+                    eye_opening_avg = (left_eye_opening + right_eye_opening) / 2
+                    
+                    if eye_opening_avg >= eye_contact_threshold:
+                        eye_contact_count += 1
+    finally:
+        cap.release()
+        face_mesh_second.close()
+
+    # Normalize frequencies to 0-100 percentage
+    if processed_frames_with_faces == 0:
+        processed_frames_with_faces = 1  # Avoid division by zero
+
+    eye_contact_percentage = (eye_contact_count / processed_frames_with_faces) * 100
+    smile_percentage = (smile_count / processed_frames_with_faces) * 100
 
     return {
         "emotion_timeline": emotion_timeline,
         "engagement_metrics": {
-            "eye_contact_frequency": eye_contact_count / total_processed_frames,
-            "smile_frequency": smile_count / total_processed_frames
+            "eye_contact_frequency": round(eye_contact_percentage, 2),
+            "smile_frequency": round(smile_percentage, 2)
         }
     }
 
