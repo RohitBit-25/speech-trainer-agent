@@ -363,18 +363,23 @@ class AICoachSession:
                 long_words = sum(1 for w in words if len(w) > 6)
                 clarity = (long_words / max(word_count, 1)) * 100 if word_count > 0 else 0
                 
+                duration_sec = (datetime.now() - self.session_start).total_seconds()
+                words_per_second = word_count / duration_sec if duration_sec > 0 else 0
+                
                 content_metrics = {
                     "word_count": word_count,
+                    "words_per_second": round(words_per_second, 2),
                     "unique_words": unique_words,
                     "clarity": round(clarity, 1),  # Based on vocabulary complexity
                     "structure_quality": round(structure_quality, 1),  # Based on length
                     "vocabulary_quality": round(vocabulary_diversity, 1)  # Unique/total ratio
                 }
-                print(f"📝 Content metrics: {word_count} words, {unique_words} unique, vocab={vocabulary_diversity:.1f}%")
+                print(f"📝 Content metrics: {word_count} words ({words_per_second:.1f} w/s), {unique_words} unique, vocab={vocabulary_diversity:.1f}%")
             else:
                 # No transcript yet - return null metrics
                 content_metrics = {
                     "word_count": 0,
+                    "words_per_second": 0,
                     "clarity": None,
                     "structure_quality": None,
                     "vocabulary_quality": None,

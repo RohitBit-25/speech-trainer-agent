@@ -64,6 +64,8 @@ class VoiceQualityAnalyzer:
             'filler_words': [],
             'filler_word_density': 0.0,  # % of filler words
             'pause_frequency': 0.0,
+            'avg_pause_length': 0.0,
+            'rhythm_score': 0.0,
             'overall_voice_score': 0.0,
             'recommendations': []
         }
@@ -95,6 +97,12 @@ class VoiceQualityAnalyzer:
             # Pitch variation analysis
             pitch_variation = self._analyze_pitch_variation(audio_data)
             metrics['pitch_variation_semitones'] = pitch_variation
+            
+            # Pacing analysis
+            p_freq, avg_p_len, rhythm = self._analyze_pacing(audio_data)
+            metrics['pause_frequency'] = p_freq
+            metrics['avg_pause_length'] = avg_p_len
+            metrics['rhythm_score'] = rhythm
             
             # Calculate sub-scores
             metrics['speech_rate_quality'] = self._rate_speech_rate(
@@ -209,6 +217,44 @@ class VoiceQualityAnalyzer:
         except Exception as e:
             print(f"⚠️ Volume consistency error: {e}")
             return 0.0
+    
+    def _analyze_pacing(self, audio_data: np.ndarray) -> Tuple[float, float, float]:
+        """
+        Analyze pauses and rhythm
+        Returns: (pause_frequency, avg_pause_length, rhythm_score)
+        """
+        try:
+            # Use librosa to find non-silent intervals (30dB below max is considered silence)
+            non_silent_intervals = librosa.effects.split(audio_data, top_db=30)
+            
+            if len(non_silent_intervals) <= 1:
+                return 0.0, 0.0, 1.0 # 1 interval means no pauses detected
+            
+            # Calculate pauses (gaps between non-silent intervals)
+            pauses_samples = []
+            for i in range(1, len(non_silent_intervals)):
+                gap = non_silent_intervals[i][0] - non_silent_intervals[i-1][1]
+                if gap > 0:
+                    pauses_samples.append(gap)
+            
+            if not pauses_samples:
+                return 0.0, 0.0, 1.0
+                
+            # Convert to seconds
+            pauses_sec = [p / self.sample_rate for p in pauses_samples]
+            
+            duration_sec = len(audio_data) / self.sample_rate
+            pause_frequency = len(pauses_sec) / duration_sec if duration_sec > 0 else 0
+            avg_pause_length = float(np.mean(pauses_sec))
+            
+            # Rhythm score: standard deviation of pause lengths (lower std dev = more consistent)
+            pause_std = float(np.std(pauses_sec))
+            rhythm_score = 1.0 / (1.0 + pause_std)
+            
+            return float(pause_frequency), avg_pause_length, float(np.clip(rhythm_score, 0, 1))
+        except Exception as e:
+            print(f"⚠️ Pacing analysis error: {e}")
+            return 0.0, 0.0, 1.0
     
     def _analyze_clarity(self, audio_data: np.ndarray) -> float:
         """
