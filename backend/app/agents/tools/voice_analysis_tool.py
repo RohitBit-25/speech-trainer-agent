@@ -93,17 +93,11 @@ def log_after_call(fc):
     cache_dir="/tmp/agno_cache",                # Custom cache directory
     cache_ttl=3600                              # Cache TTL in seconds (1 hour)
 )
-def analyze_voice_attributes(file_path: str) -> dict:
+def _analyze_voice_attributes_impl(file_path: str) -> dict:
     """
-    Analyzes vocal attributes in an audio file.
-
-    Args:
-        file_path: The path to the audio or video file.
-
-    Returns:
-        A dictionary containing the transcribed text, speech rate, pitch variation, and volume consistency.
+    Internal implementation of voice attributes analysis.
     """
-    print(f"DEBUG: Starting analyze_voice_attributes for {file_path}")
+    print(f"DEBUG: Starting _analyze_voice_attributes_impl for {file_path}")
 
     # Determine file extension
     _, ext = os.path.splitext(file_path)
@@ -179,3 +173,26 @@ def analyze_voice_attributes(file_path: str) -> dict:
         "pitch_variation": str(round(pitch_variation, 2)),
         "volume_consistency": str(round(volume_consistency, 4))
     }
+
+@tool(
+    name="analyze_voice_attributes",
+    description="Analyzes vocal attributes like clarity, intonation, and pace.",
+    show_result=True,
+    stop_after_tool_call=True,
+    pre_hook=log_before_call,
+    post_hook=log_after_call,
+    cache_results=False,
+    cache_dir="/tmp/agno_cache",
+    cache_ttl=3600
+)
+def analyze_voice_attributes(file_path: str) -> dict:
+    """
+    Analyzes vocal attributes in an audio file.
+
+    Args:
+        file_path: The path to the audio or video file.
+
+    Returns:
+        A dictionary containing the transcribed text, speech rate, pitch variation, and volume consistency.
+    """
+    return _analyze_voice_attributes_impl(file_path)

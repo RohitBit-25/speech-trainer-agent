@@ -30,15 +30,9 @@ def log_after_call(fc):
     cache_dir="/tmp/agno_cache",                    # Custom cache directory
     cache_ttl=3600                                  # Cache TTL in seconds (1 hour)
 )
-def analyze_facial_expressions(video_path: str) -> dict:
+def _analyze_facial_expressions_impl(video_path: str) -> dict:
     """
-    Analyzes facial expressions in a video to detect emotions and engagement.
-
-    Args:
-        video_path: The path to the video file.
-
-    Returns:
-        A dictionary containing the emotion timeline and engagement metrics.
+    Internal implementation of facial expressions analysis.
     """
     mp_face_mesh = mp.solutions.face_mesh
     face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1)
@@ -48,7 +42,7 @@ def analyze_facial_expressions(video_path: str) -> dict:
     eye_contact_count = 0
     smile_count = 0
     frame_count = 0
-    fps = cap.get(cv2.CAP_PROP_FPS)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
 
     # Process every nth frame for performance optimization
     frame_interval = 5
@@ -123,10 +117,33 @@ def analyze_facial_expressions(video_path: str) -> dict:
     if total_processed_frames == 0:
         total_processed_frames = 1  # Avoid division by zero
 
-    return json.dumps({
+    return {
         "emotion_timeline": emotion_timeline,
         "engagement_metrics": {
             "eye_contact_frequency": eye_contact_count / total_processed_frames,
             "smile_frequency": smile_count / total_processed_frames
         }
-    })
+    }
+
+@tool(
+    name="analyze_facial_expressions",
+    description="Analyzes facial expressions to detect emotions and engagement.",
+    show_result=True,
+    stop_after_tool_call=True,
+    pre_hook=log_before_call,
+    post_hook=log_after_call,
+    cache_results=False,
+    cache_dir="/tmp/agno_cache",
+    cache_ttl=3600
+)
+def analyze_facial_expressions(video_path: str) -> dict:
+    """
+    Analyzes facial expressions in a video to detect emotions and engagement.
+
+    Args:
+        video_path: The path to the video file.
+
+    Returns:
+        A dictionary containing the emotion timeline and engagement metrics.
+    """
+    return _analyze_facial_expressions_impl(video_path)

@@ -63,13 +63,9 @@ def analyze_video_task(self, file_path: str):
         r.publish(f"task_logs:{self.request.id}", "Running voice analysis...\n")
         voice_data = {}
         try:
-            from app.agents.tools.voice_analysis_tool import analyze_voice_attributes
-            # If it's an agno Tool object, call its underlying function
-            if hasattr(analyze_voice_attributes, "function"):
-                raw_voice = analyze_voice_attributes.function(file_path)
-            else:
-                raw_voice = analyze_voice_attributes(file_path)
-                
+            from app.agents.tools.voice_analysis_tool import _analyze_voice_attributes_impl
+            raw_voice = _analyze_voice_attributes_impl(file_path)
+            
             if isinstance(raw_voice, str):
                 raw_voice = json.loads(raw_voice)
             voice_data = raw_voice
@@ -89,13 +85,9 @@ def analyze_video_task(self, file_path: str):
         r.publish(f"task_logs:{self.request.id}", "Running facial expression analysis...\n")
         facial_data = {}
         try:
-            from app.agents.tools.facial_expression_tool import analyze_facial_expressions
-            # If it's an agno Tool object, call its underlying function
-            if hasattr(analyze_facial_expressions, "function"):
-                raw_facial = analyze_facial_expressions.function(file_path)
-            else:
-                raw_facial = analyze_facial_expressions(file_path)
-                
+            from app.agents.tools.facial_expression_tool import _analyze_facial_expressions_impl
+            raw_facial = _analyze_facial_expressions_impl(file_path)
+            
             if isinstance(raw_facial, str):
                 raw_facial = json.loads(raw_facial)
             facial_data = raw_facial
