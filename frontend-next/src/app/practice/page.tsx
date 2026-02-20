@@ -1180,6 +1180,7 @@ export default function PracticePage() {
                                 className={`h-12 w-12 rounded-xl transition-all ${!videoEnabled && 'text-red-400 bg-red-500/10'}`}
                                 onClick={() => setVideoEnabled(!videoEnabled)}
                                 disabled={isRecording}
+                                title={UI_TEXT.tooltips.cameraToggle}
                             >
                                 {videoEnabled ? <Camera className="h-5 w-5" /> : <CameraOff className="h-5 w-5" />}
                             </Button>
@@ -1189,6 +1190,7 @@ export default function PracticePage() {
                                 className={`h-12 w-12 rounded-xl transition-all ${!audioEnabled && 'text-red-400 bg-red-500/10'}`}
                                 onClick={() => setAudioEnabled(!audioEnabled)}
                                 disabled={isRecording}
+                                title={UI_TEXT.tooltips.micToggle}
                             >
                                 {audioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
                             </Button>
@@ -1200,7 +1202,7 @@ export default function PracticePage() {
                                 className="flex-1 font-pixel text-sm h-14 bg-primary text-black hover:bg-white border-4 border-primary hover:border-white shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-[2px_2px_0px_#000]"
                             >
                                 <Play className="h-4 w-4 mr-2" />
-                                EXECUTE_SESSION
+                                {UI_TEXT.buttons.startSession.toUpperCase()}
                             </Button>
                         ) : (
                             <Button
@@ -1209,7 +1211,7 @@ export default function PracticePage() {
                                 className="flex-1 font-pixel text-sm h-14 border-4 border-red-500 bg-red-600 text-white hover:bg-red-500 shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-[2px_2px_0px_#000]"
                             >
                                 <Square className="h-4 w-4 mr-2" />
-                                TERMINATE_SESSION
+                                {UI_TEXT.buttons.stopSession.toUpperCase()}
                             </Button>
                         )}
                     </div>
