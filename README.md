@@ -1,542 +1,412 @@
-# 🎤 AI Speech Trainer Agent
+# VAANIX - AI Speech Training Platform
 
-> ✅ **Real-time Integration Fully Fixed & Tested** - All 7 critical issues resolved. Run `python test_integration.py` to verify. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for details.
+<p align="center">
+  <img src="https://img.shields.io/github/languages/top/yourusername/vaanix?color=orange" alt="GitHub top language">
+  <img src="https://img.shields.io/github/languages/code-size/yourusername/vaanix" alt="GitHub code size in bytes">
+  <img src="https://img.shields.io/github/repo-size/yourusername/vaanix" alt="GitHub repo size">
+  <img src="https://img.shields.io/github/last-commit/yourusername/vaanix" alt="GitHub last commit">
+  <img src="https://img.shields.io/github/issues/yourusername/vaanix" alt="GitHub issues">
+  <img src="https://img.shields.io/github/issues-pr/yourusername/vaanix" alt="GitHub pull requests">
+  <img src="https://img.shields.io/github/license/yourusername/vaanix" alt="GitHub">
+</p>
 
-<div align="center">
+<p align="center">
+  <img src="https://your-domain.com/vaanix-logo.png" alt="VAANIX Logo" width="200">
+</p>
 
-![Speech Trainer](./visuals/ai_speech_trainer.drawio.png)
+<h1 align="center">VAANIX - AI Speech Training Platform</h1>
 
-**Level up your public speaking skills with AI-powered analysis and gamified feedback**
+<p align="center">
+  <strong>Level up your speech with VAANIX — AI-powered analysis of voice, expressions, and content.</strong>
+  <br>
+  <strong>Earn XP, unlock achievements, and master communication.</strong>
+</p>
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+<p align="center">
+  <a href="#-features"><strong>Features</strong></a> •
+  <a href="#-quick-start"><strong>Quick Start</strong></a> •
+  <a href="#-documentation"><strong>Documentation</strong></a> •
+  <a href="#-contributing"><strong>Contributing</strong></a> •
+  <a href="#-license"><strong>License</strong></a>
+</p>
 
-</div>
+<p align="center">
+  <a href="https://your-deployment-url.com">Live Demo</a> •
+  <a href="https://your-docs-url.com">Documentation</a> •
+  <a href="https://github.com/yourusername/vaanix/issues">Issues</a> •
+  <a href="https://github.com/yourusername/vaanix/discussions">Discussions</a>
+</p>
 
----
+## 🎯 Overview
 
-## 📋 Table of Contents
+VAANIX is an advanced AI-powered speech training platform designed to transform how people develop their public speaking and communication skills. By combining cutting-edge artificial intelligence with gamified learning principles, VAANIX provides personalized, data-driven feedback that helps users overcome common speaking challenges and build confidence.
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Real-time Practice Mode](#-real-time-practice-mode-new)
-- [Architecture](#-architecture)
-- [Technology Stack](#-technology-stack)
-- [Getting Started](#-getting-started)
-- [Tutorial](#-tutorial)
-- [API Documentation](#-api-documentation)
-- [Project Structure](#-project-structure)
-- [Usage Guide](#-usage-guide)
-- [Contributing](#-contributing)
+Built with a modern tech stack featuring Next.js, FastAPI, and real-time AI analysis, VAANIX offers both live practice sessions and video analysis capabilities. The platform's unique approach combines technical metrics with human-centered coaching insights to deliver actionable feedback that actually improves performance.
 
----
+### 🎯 Key Value Propositions
 
-## 🌟 Overview
+- **Data-Driven Feedback**: Get precise, measurable insights instead of generic advice
+- **Real-Time Analysis**: Immediate feedback during live practice sessions
+- **Comprehensive Metrics**: 5-dimensional scoring covering all aspects of effective communication
+- **Gamified Learning**: Engaging progression system that makes improvement fun
+- **Personalized Growth**: Track your progress over time with detailed analytics
 
-**AI Speech Trainer Agent** is an advanced AI-powered platform designed to help individuals master public speaking and presentation skills. By leveraging cutting-edge multi-agent AI architecture, the platform analyzes speech videos across multiple dimensions—facial expressions, voice quality, and content structure—to provide comprehensive, actionable feedback.
+### 🎯 Target Audience
 
-### What Makes It Special?
+- **Professionals** seeking to improve presentation skills
+- **Students** preparing for speeches and presentations
+- **Public speakers** wanting to refine their craft
+- **Job seekers** practicing interview skills
+- **Anyone** looking to communicate more effectively
 
-- 🤖 **Multi-Agent AI System**: Specialized agents work together to analyze different aspects of your speech
-- ⚡ **Real-time Practice Mode**: Live AI feedback as you speak with instant performance metrics
-- 🎮 **Gamification**: Earn XP, unlock achievements, and progress through 7 speaker tiers
-- 📊 **Dual Analysis Modes**: Real-time practice + comprehensive video analysis
-- 🎯 **Personalized Coaching**: Receive tailored strengths, weaknesses, and improvement suggestions
-- 📈 **Progress Tracking**: Compare performances over time and track your improvement journey
+## 🚀 Key Features
 
----
+### 🎯 Practice Modes
 
-## ✨ Key Features
+| Feature | Description | Technology |
+|---------|-------------|------------|
+| **Live Practice Session** | Real-time analysis with webcam and microphone integration | WebRTC, Socket.IO |
+| **Video Upload Practice** | Detailed analysis of pre-recorded presentations | FFmpeg, Async Processing |
+| **Challenge Mode** | Structured speaking exercises with specific goals | Gamification Engine |
+| **Studio Mode** | Professional recording environment with advanced metrics | Real-time Analytics |
 
-### 🎭 **Facial Expression Analysis**
-- Real-time emotion detection using DeepFace and MediaPipe
-- Engagement scoring based on facial cues
-- Eye contact and body language assessment
-- Confidence level evaluation
+### 🤖 Real-time Analysis Engine
 
-### 🎵 **Voice Analysis**
-- Speech rate and pace measurement
-- Pitch variation and vocal quality assessment
-- Volume consistency tracking
-- Filler word detection (um, uh, like, etc.)
-- Audio transcription using Faster Whisper
+Our AI engine provides comprehensive feedback through three core analysis modules:
 
-### 📝 **Content Analysis**
-- Rhetorical structure evaluation
-- Persuasion and tone analysis
-- Clarity and organization scoring
-- Grammar and language quality assessment
+1. **Facial Expression Analysis**
+   - Tracks 468 facial landmarks using MediaPipe
+   - Detects micro-expressions and emotional states
+   - Measures eye contact frequency and engagement
+   - Analyzes smile patterns and facial dynamics
 
-### 🎯 **Comprehensive Feedback**
-Evaluate speakers on 5 key criteria:
-1. **Content & Organization** (1-5)
-2. **Delivery & Vocal Quality** (1-5)
-3. **Body Language & Eye Contact** (1-5)
-4. **Audience Engagement** (1-5)
-5. **Language & Clarity** (1-5)
+2. **Voice Quality Analysis**
+   - Speech rate monitoring (words per minute)
+   - Pitch variation detection
+   - Volume consistency analysis
+   - Filler word identification and counting
+   - Whisper-based transcription with timestamping
 
-### 🏆 **Gamification System**
-- **XP System**: Earn 500 XP per analysis
-- **7 Progression Tiers**: 
-  - Novice Speaker → Beginner Speaker → Intermediate Speaker → Advanced Speaker → Expert Speaker → Master Speaker → Legendary Orator
-- **Achievements**: Unlock badges and milestones
-- **Comparison Mode**: Compare multiple performances side-by-side
+3. **Content Delivery Analysis**
+   - Structure evaluation using LLM processing
+   - Clarity and persuasion scoring
+   - Language precision metrics
+   - Content flow and logical progression
 
----
+### 📊 Feedback & Scoring System
 
-## ⚡ Real-time Practice Mode (NEW)
+#### Five-Dimensional Scoring (0-100 each)
 
-### Live AI Feedback While You Speak
+| Dimension | Metrics | Weight | Focus Area |
+|-----------|---------|--------|------------|
+| **Content Clarity** | Structure, logic, coherence | 25% | Information delivery |
+| **Delivery Fluency** | Pace, rhythm, filler words | 20% | Speaking mechanics |
+| **Body Language** | Gestures, posture, movement | 20% | Non-verbal communication |
+| **Engagement Level** | Eye contact, audience connection | 20% | Connection quality |
+| **Language Precision** | Word choice, grammar, vocabulary | 15% | Verbal sophistication |
 
-Practice with **instant feedback** using our cutting-edge real-time analysis system:
+### 🎮 Gamified Progression System
 
-#### 🎥 **Real-time Video Analysis**
-- **Facial Expression Tracking**: Live emotion detection using MediaPipe
-- **Eye Contact Monitoring**: Real-time engagement scoring
-- **Smile Detection**: Instant feedback on facial expressions
-- **Performance < 100ms**: Lightning-fast analysis per frame
+#### Experience Points (XP) Structure
+- **Base XP**: 500 points per completed session
+- **Performance Bonuses**: Up to +300 XP for high scores
+- **Streak Multipliers**: 1.2x to 2.0x for consecutive days
+- **Achievement Rewards**: 100-1000 XP for milestones
+- **Challenge Completion**: 200-500 XP per challenge
 
-#### 🎤 **Real-time Voice Analysis**
-- **Speech-to-Text**: Browser-native Web Speech API
-- **Filler Word Detection**: Instant alerts for "um", "uh", "like", etc.
-- **Pitch & Volume Tracking**: Live vocal quality monitoring
-- **Speech Rate**: Real-time words-per-minute calculation
+#### Speaker Levels
 
-#### 🎮 **Gamified Practice**
-- **Combo System**: Build combos for sustained good performance
-  - 1-10x: Good Start (1x multiplier)
-  - 11-30x: On Fire 🔥 (1.5x multiplier)
-  - 31-60x: Unstoppable ⚡ (2x multiplier)
-  - 61+x: Legendary 👑 (3x multiplier)
-- **6 Achievements**: Unlock badges with XP rewards (100-500 XP)
-- **3 Difficulty Levels**: Beginner, Intermediate, Expert
-- **3 Practice Modes**: Practice, Challenge, Timed
+| Level | XP Range | Title | Benefits |
+|-------|----------|-------|----------|
+| 1 | 0-1,000 | **Novice Speaker** | Basic feedback, core features |
+| 2 | 1,001-2,500 | **Apprentice** | Advanced metrics, challenge access |
+| 3 | 2,501-5,000 | **Competent Communicator** | Detailed analytics, comparison tools |
+| 4 | 5,001-10,000 | **Proficient Speaker** | Premium features, priority processing |
+| 5 | 10,001-20,000 | **Expert Presenter** | Custom coaching, advanced insights |
+| 6 | 20,001-50,000 | **Master Communicator** | Elite features, community recognition |
+| 7 | 50,001+ | **Grandmaster** | VIP support, beta feature access |
 
-#### 📊 **Live Performance Dashboard**
-- **Performance Meters**: Facial, Voice, Engagement scores (0-100)
-- **Live Transcript**: Speech-to-text with filler word highlighting
-- **Feedback Pills**: Color-coded instant feedback messages
-- **Achievement Popups**: Confetti animations for unlocks
-- **Performance Monitor**: FPS, latency, Web Vitals tracking
+#### Achievement System
 
-#### 🚀 **Performance Optimized**
-- **Virtual Scrolling**: Handle 1000+ transcript segments
-- **Message Batching**: 40% reduction in WebSocket overhead
-- **Smart Reconnection**: Exponential backoff for reliability
-- **60 FPS**: Smooth animations and real-time updates
-- **< 150ms Latency**: Near-instant feedback
+| Achievement | Criteria | Reward | Badge |
+|-------------|----------|--------|-------|
+| **First Steps** | Complete first analysis | 100 XP | 🥇 |
+| **Perfect Score** | 100 in any category | 500 XP | 🏆 |
+| **Streak Master** | 7-day practice streak | 300 XP | 🔥 |
+| **Content Creator** | Upload 10 videos | 250 XP | 🎬 |
+| **Social Butterfly** | Engage with 50 community posts | 200 XP | 🦋 |
+| **Consistency King** | 30 consecutive days | 1000 XP | 👑 |
+| **Perfectionist** | 90+ in all categories | 750 XP | ✨ |
 
-#### 📥 **Export & Review**
-- **Transcript Export**: Download session transcript as .txt
-- **Session Stats**: Saved to database for progress tracking
-- **Auto-scroll**: Intelligent transcript scrolling
+### 👤 User Management
 
----
+- **Secure Authentication**: JWT-based authentication with refresh tokens
+- **Profile Management**: Customizable profiles with progress tracking
+- **Practice History**: Comprehensive session history with performance trends
+- **Social Features**: Leaderboards, community engagement, and peer feedback
+- **Privacy Controls**: Granular privacy settings for all content
 
 ## 🏗️ Architecture
 
-The application follows a **multi-agent architecture** where specialized AI agents collaborate to provide comprehensive speech analysis:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Coordinator Agent                        │
-│            (Orchestrates all analysis agents)                │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   Facial     │    │    Voice     │    │   Content    │
-│  Expression  │    │   Analysis   │    │   Analysis   │
-│    Agent     │    │    Agent     │    │    Agent     │
-└──────────────┘    └──────────────┘    └──────────────┘
-        │                     │                     │
-        └─────────────────────┼─────────────────────┘
-                              ▼
-                    ┌──────────────┐
-                    │   Feedback   │
-                    │    Agent     │
-                    └──────────────┘
+```mermaid
+graph TD
+    A[VAANIX Frontend] --> B[Next.js 13 App Router]
+    B --> C[FastAPI Backend]
+    C --> D[Celery Worker]
+    D --> E[Redis Queue]
+    C --> F[MongoDB]
+    C --> G[AI Analysis Engine]
+    G --> H[OpenRouter LLM]
+    G --> I[MediaPipe/OpenCV]
+    G --> J[Whisper Speech-to-Text]
 ```
 
-### Agent Responsibilities
-
-1. **Coordinator Agent**: Orchestrates the entire analysis workflow and coordinates between specialized agents
-2. **Facial Expression Agent**: Analyzes video frames for emotions, engagement, and non-verbal cues
-3. **Voice Analysis Agent**: Processes audio for speech patterns, transcription, and vocal quality
-4. **Content Analysis Agent**: Evaluates transcript for structure, persuasion, and clarity
-5. **Feedback Agent**: Synthesizes all analyses into actionable feedback with scoring
-
----
-
-## 🛠️ Technology Stack
-
-### Backend
-- **Framework**: FastAPI (Python)
-- **AI Framework**: Agno (Multi-agent orchestration)
-- **LLM**: Google Gemini 1.5 Flash
-- **Task Queue**: Celery with Redis
-- **Database**: SQLite (SQLAlchemy ORM)
-- **Computer Vision**: 
-  - DeepFace (facial emotion recognition)
-  - MediaPipe (facial landmarks)
-  - OpenCV (video processing)
-- **Audio Processing**:
-  - Faster Whisper (transcription)
-  - Librosa (audio analysis)
-  - MoviePy (video/audio extraction)
+## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 16 (React 19)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: Radix UI + shadcn/ui
-- **Animations**: Framer Motion
-- **State Management**: Zustand
-- **Charts**: Recharts
-- **Authentication**: NextAuth.js v5
+- **Next.js 13** with App Router
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **Framer Motion** for animations
+- **Shadcn/ui** component library
+- **Socket.IO** for real-time communication
 
-### DevOps & Tools
-- **API Server**: Uvicorn
-- **Package Manager**: npm
-- **Environment Management**: python-dotenv
+### Backend
+- **FastAPI** REST API
+- **Python 3.9+**
+- **Celery** for asynchronous task processing
+- **Redis** for task queue and caching
+- **MongoDB** for data persistence
+- **Pydantic** for data validation
 
----
+### AI/ML Components
+- **OpenRouter API** for LLM processing
+- **MediaPipe** for facial landmark detection
+- **OpenCV** for computer vision
+- **Whisper** for speech transcription
+- **FFmpeg** for video processing
 
-## 🚀 Getting Started
+## 📋 Prerequisites
 
-### Prerequisites
+- **Python 3.9+**
+- **Node.js 18+**
+- **Redis Server**
+- **MongoDB**
+- **FFmpeg**
+- **Git**
 
-- **Python**: 3.9 or higher
-- **Node.js**: 18.x or higher
-- **Redis**: For Celery task queue
-- **FFmpeg**: For audio/video processing
+## 🚀 Quick Start
 
-### Installation
-
-#### 1. Clone the Repository
-
+### 1. Clone the Repository
 ```bash
-git clone https://github.com/RohitBit-25/speech-trainer-agent.git
-cd speech-trainer-agent
+git clone https://github.com/yourusername/vaanix.git
+cd vaanix
 ```
 
-#### 2. Backend Setup
-
+### 2. Backend Setup
 ```bash
-# Navigate to backend directory
 cd backend
-
-# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Create .env file
-cp .env.example .env
-# Add your API keys:
-# GEMINI_API_KEY=your_gemini_api_key_here
-# REDIS_URL=redis://localhost:6379/0
 ```
 
-#### 3. Frontend Setup
-
+### 3. Frontend Setup
 ```bash
-# Navigate to frontend directory
 cd ../frontend-next
-
-# Install dependencies
 npm install
-
-# Create .env.local file
-cp .env.example .env.local
-# Add your configuration:
-# NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-### Running the Application
+### 4. Environment Configuration
+Create `.env` files in both `backend` and `frontend-next` directories:
 
-#### Start Redis (Required for Celery)
+**backend/.env:**
+```env
+# Database
+MONGODB_URL=mongodb://localhost:27017/speech_trainer
+MONGODB_DB_NAME=speech_trainer
 
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# Authentication
+JWT_SECRET_KEY=your-jwt-secret-key
+JWT_ALGORITHM=HS256
+
+# AI Services
+OPENROUTER_API_KEY=your-openrouter-api-key
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_MODEL=openrouter/auto
+
+# File Upload
+MAX_CONTENT_LENGTH=104857600
+UPLOAD_FOLDER=temp_uploads
+```
+
+**frontend-next/.env:**
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_WS_URL=ws://localhost:8000
+```
+
+### 5. Start Services
+
+**Terminal 1 - Redis:**
 ```bash
-# macOS (using Homebrew)
-brew services start redis
-
-# Linux
-sudo systemctl start redis
-
-# Or run directly
 redis-server
 ```
 
-#### Start Backend Services
-
+**Terminal 2 - Celery Worker:**
 ```bash
-# Terminal 1: Start FastAPI server
 cd backend
-python main.py
-
-# Terminal 2: Start Celery worker
-cd backend
-celery -A app.worker worker --loglevel=info
+celery -A app.worker.celery_app worker --loglevel=info
 ```
 
-#### Start Frontend
-
+**Terminal 3 - Backend:**
 ```bash
-# Terminal 3: Start Next.js development server
+cd backend
+python main.py
+```
+
+**Terminal 4 - Frontend:**
+```bash
 cd frontend-next
 npm run dev
 ```
 
-The application will be available at:
+### 6. Access the Application
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 
----
+## 🎮 Usage
 
-## � Tutorial
+1. **Sign Up/Login**: Create an account or log in to your existing account
+2. **Choose Practice Mode**: 
+   - Live Practice for real-time feedback
+   - Upload a video for detailed analysis
+3. **Record/Upload**: 
+   - For live practice: Enable camera and microphone
+   - For video upload: Select your presentation video
+4. **Get Analysis**: Receive comprehensive feedback on your performance
+5. **Track Progress**: Monitor your XP, levels, and achievements
+6. **Improve**: Use insights to enhance your speaking skills
 
-For a comprehensive step-by-step guide on using all features, see our **[Complete Tutorial](./TUTORIAL.md)**.
+## 📊 API Endpoints
 
-The tutorial covers:
-- ✅ Quick start guide
-- ✅ Real-time practice mode walkthrough
-- ✅ Video analysis guide
-- ✅ Understanding your results
-- ✅ Gamification system explained
-- ✅ Tips & best practices
-- ✅ Troubleshooting common issues
+### Authentication
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/profile` - Get user profile
 
-**New to the platform?** Start here: [TUTORIAL.md](./TUTORIAL.md)
+### Practice
+- `POST /api/practice/upload` - Upload video for analysis
+- `GET /api/practice/history` - Get practice history
+- `GET /api/practice/analysis/{task_id}` - Get analysis results
 
----
+### Challenges
+- `GET /api/challenges` - List available challenges
+- `POST /api/challenges/{id}/attempt` - Attempt a challenge
+- `GET /api/challenges/leaderboard` - Get leaderboard
 
-## �📡 API Documentation
+### User Progress
+- `GET /api/user/stats` - Get user statistics
+- `GET /api/user/achievements` - Get unlocked achievements
+- `GET /api/user/level` - Get current level information
 
-### Core Endpoints
+## 🎨 UI/UX Design
 
-#### `POST /analyze`
-Upload a video for AI analysis.
+The platform features a distinctive **cyberpunk/tech aesthetic** with:
+- **Color Palette**: 
+  - Primary: Orange/Saffron (#FB923C)
+  - Secondary: Teal (#06B6D4)
+  - Accent: Cyan-400 (#22D3EE) for VAANIX branding
+  - Backgrounds: Dark zinc tones
+- **Typography**: Pixel-perfect fonts for digital feel
+- **Animations**: Smooth Framer Motion transitions
+- **Visual Elements**: Grid patterns, glowing effects, and terminal-inspired designs
 
-**Request:**
-- **Content-Type**: `multipart/form-data`
-- **Body**: `video` (file, max 50MB)
+## 🏆 Gamification System
 
-**Response:**
-```json
-{
-  "task_id": "uuid-string",
-  "status": "processing"
-}
-```
+### XP System
+- Earn XP for completed practice sessions
+- Bonus XP for improved performance
+- Multipliers for streaks and achievements
 
-#### `GET /status/{task_id}`
-Check the status of an analysis task.
+### Speaker Levels
+1. **Novice** (0-1000 XP)
+2. **Apprentice** (1001-2500 XP)
+3. **Competent** (2501-5000 XP)
+4. **Proficient** (5001-10000 XP)
+5. **Expert** (10001-20000 XP)
+6. **Master** (20001-50000 XP)
+7. **Grandmaster** (50001+ XP)
 
-**Response:**
-```json
-{
-  "state": "SUCCESS",
-  "result": { /* analysis results */ }
-}
-```
-
-#### `GET /stream/{task_id}`
-Stream real-time analysis logs (Server-Sent Events).
-
-#### `GET /history`
-Retrieve analysis history for the user.
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "task_id": "uuid",
-    "video_filename": "speech.mp4",
-    "status": "SUCCESS",
-    "created_at": "2026-02-17T10:00:00",
-    "total_score": 22,
-    "feedback_summary": "Great presentation..."
-  }
-]
-```
-
-#### `GET /analysis/{task_id}`
-Get detailed analysis results.
-
-**Response:**
-```json
-{
-  "facial": { /* facial analysis data */ },
-  "voice": { /* voice analysis data */ },
-  "content": { /* content analysis data */ },
-  "feedback": {
-    "scores": {
-      "content_organization": 4,
-      "delivery_vocal_quality": 5,
-      "body_language_eye_contact": 4,
-      "audience_engagement": 4,
-      "language_clarity": 5
-    },
-    "total_score": 22,
-    "interpretation": "Proficient speaker",
-    "feedback_summary": "..."
-  },
-  "strengths": ["..."],
-  "weaknesses": ["..."],
-  "suggestions": ["..."]
-}
-```
-
-### Authentication Endpoints
-
-- `POST /auth/signup` - Create new account
-- `POST /auth/login` - User login
-- `POST /auth/logout` - User logout
-
----
-
-## 📁 Project Structure
-
-```
-speech-trainer-agent/
-├── backend/
-│   ├── app/
-│   │   ├── agents/              # AI agent implementations
-│   │   ├── api/                 # API routes (FastAPI)
-│   │   ├── core/                # Core configurations
-│   │   ├── db/                  # Database models
-│   │   └── worker.py            # Celery worker configuration
-│   ├── main.py                  # Application entry point
-│   ├── seed_challenges.py       # Script to seed daily challenges
-│   ├── seed_leaderboard.py      # Script to seed leaderboard data
-│   ├── test_whisper.py          # Whisper transcription test script
-│   └── requirements.txt
-│
-├── frontend-next/
-│   ├── src/
-│   │   ├── app/                 # Next.js app directory
-│   │   │   ├── (auth)/          # Auth pages
-│   │   │   ├── (dashboard)/     # Studio layout
-│   │   │   ├── analysis/        # Analysis results
-│   │   │   ├── challenges/      # Daily challenges page
-│   │   │   ├── comparison/      # Performance comparison
-│   │   │   ├── feedback/        # Feedback display
-│   │   │   ├── history/         # User history
-│   │   │   ├── leaderboard/     # Global leaderboard
-│   │   │   ├── practice/        # Real-time practice mode
-│   │   │   ├── settings/        # User settings
-│   │   │   └── page.tsx         # Landing page
-│   │   ├── components/          # React components
-│   │   │   ├── analysis/        # Analysis visualizations
-│   │   │   ├── gamification/    # XP & Achievements
-│   │   │   ├── practice/        # Practice mode components
-│   │   │   ├── ui/              # Shadcn UI components
-│   │   │   └── upload/          # Studio upload components
-│   │   └── lib/                 # Utilities & API clients
-│   ├── package.json
-│   └── tailwind.config.ts
-│
-├── visuals/                     # Project diagrams & assets
-├── IMPLEMENTATION_STATUS.md     # Setup & Status tracking
-├── TUTORIAL.md                  # Comprehensive user guide
-└── README.md                    # Project documentation
-```
-
----
-
-## 📖 Usage Guide
-
-### 1. **Upload Your Speech Video**
-- Navigate to the dashboard
-- Click "Upload Video" or drag & drop your video file
-- Supported formats: MP4, MOV, MKV, WebM (max 50MB)
-
-### 2. **Real-time Analysis**
-- Watch as the AI agents analyze your speech in real-time
-- See live progress updates as each agent completes its analysis
-
-### 3. **Review Feedback**
-- **Scores**: View your performance across 5 key criteria
-- **Strengths**: Celebrate what you're doing well
-- **Weaknesses**: Identify areas for improvement
-- **Suggestions**: Get actionable tips to enhance your skills
-
-### 4. **Track Progress**
-- Earn 500 XP per analysis
-- Level up through 7 speaker tiers
-- Unlock achievements and badges
-- Compare multiple performances to see improvement
-
-### 5. **Compare Performances**
-- Select multiple analyses from your history
-- View side-by-side comparisons
-- Track improvement over time
-
----
-
-## 🎯 Scoring Rubric
-
-Each speech is evaluated on a scale of 5-25 points:
-
-| Score Range | Interpretation                |
-| ----------- | ----------------------------- |
-| 5-9         | Needs significant improvement |
-| 10-14       | Developing skills             |
-| 15-18       | Competent speaker             |
-| 19-22       | Proficient speaker            |
-| 23-25       | Outstanding speaker           |
-
----
+### Achievements
+- **First Analysis**: Complete your first speech analysis
+- **Perfect Score**: Achieve 100 in any category
+- **Streak Master**: Maintain 7-day practice streak
+- **Content Creator**: Upload 10 videos
+- **Social Butterfly**: Engage with community features
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Please follow these steps:
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
----
+### Development Guidelines
+- Follow the existing code style
+- Write clear, descriptive commit messages
+- Add tests for new functionality
+- Update documentation as needed
+- Ensure all tests pass before submitting PR
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-
----
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- **Agno**: Multi-agent orchestration framework
-- **Google Gemini**: Advanced language model
-- **DeepFace**: Facial recognition and emotion analysis
-- **MediaPipe**: Real-time facial landmark detection
-- **Faster Whisper**: High-performance speech transcription
+- **OpenRouter** for LLM services
+- **MediaPipe** for facial analysis
+- **OpenCV** for computer vision
+- **Whisper** for speech recognition
+- **Next.js** and **FastAPI** communities
+
+## 📞 Support
+
+For support, feature requests, or bug reports:
+- Open an issue on GitHub
+- Contact the development team
+- Check our documentation
+
+## 🚧 Roadmap
+
+### Upcoming Features
+- [ ] Mobile application
+- [ ] Advanced analytics dashboard
+- [ ] Community features and forums
+- [ ] Integration with video conferencing platforms
+- [ ] Multi-language support
+- [ ] Advanced challenge system
+- [ ] AI-powered personalized coaching
+
+### Future Enhancements
+- [ ] Voice cloning for practice
+- [ ] Virtual reality presentation practice
+- [ ] Integration with professional speaking platforms
+- [ ] Advanced progress visualization
+- [ ] Team/corporate training features
 
 ---
 
-## 📧 Contact
-
-**Rohit Singh** - [@RohitBit-25](https://github.com/RohitBit-25)
-
-**Project Link**: [https://github.com/RohitBit-25/speech-trainer-agent](https://github.com/RohitBit-25/speech-trainer-agent)
-
----
-
-<div align="center">
-
-**Made with ❤️ and AI**
-
-*Level up your speech skills today!*
-
-</div>
+<p align="center">
+  <strong>Built with ❤️ for better communication</strong>
+  <br/>
+  <strong>VAANIX - Command Your Vocal Presence</strong>
+</p>
