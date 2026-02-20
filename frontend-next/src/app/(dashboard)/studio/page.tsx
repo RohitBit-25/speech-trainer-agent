@@ -294,39 +294,64 @@ export default function StudioPage() {
             </div>
 
             {/* ─── ENHANCED HEADER: STATUS BAR ──────────────────────────────── */}
-            <header className="h-14 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-6 z-20 shrink-0">
+            <header className="h-16 border-b-2 border-primary/20 bg-zinc-950/90 backdrop-blur-xl flex items-center justify-between px-6 z-20 shrink-0 shadow-[0_4px_20px_rgba(251,146,60,0.1)]">
                 <div className="flex items-center gap-6">
                     <motion.div
-                        className="flex items-center gap-2 text-primary"
+                        className="flex items-center gap-3 text-primary"
                         animate={{ opacity: [0.7, 1, 0.7] }}
                         transition={{ duration: STUDIO_CONFIG.PULSE_ANIMATION_DURATION, repeat: Infinity }}
                     >
                         <div className="relative">
-                            <Activity className="h-4 w-4" />
-                            <div className="absolute inset-0 bg-primary/50 blur-sm rounded-full" />
+                            <Activity className="h-5 w-5" />
+                            <motion.div 
+                                className="absolute inset-0 bg-primary/30 blur-md rounded-full"
+                                animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.8, 0.4] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                            />
                         </div>
-                        <span className="text-xs font-bold tracking-[0.2em]">{UI_TEXT.header.terminal}</span>
+                        <span className="text-sm font-bold tracking-[0.25em]">{UI_TEXT.header.terminal}</span>
                     </motion.div>
-                    <div className="h-4 w-[1px] bg-zinc-800"></div>
-                    <div className="flex items-center gap-4 text-[10px] tracking-widest">
-                        <div className="flex items-center gap-1.5">
-                            <Wifi className="h-3 w-3 text-green-500" />
+                    <div className="h-5 w-[2px] bg-gradient-to-b from-transparent via-zinc-700 to-transparent"></div>
+                    <div className="flex items-center gap-5 text-[11px] tracking-widest">
+                        <motion.div 
+                            className="flex items-center gap-2 group cursor-pointer"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <Wifi className="h-3.5 w-3.5 text-green-500 group-hover:text-green-400 transition-colors" />
                             <span className="text-zinc-500">{UI_TEXT.header.network.label}</span>
-                            <span className="text-green-500 font-medium">{UI_TEXT.header.network.status}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <Shield className="h-3 w-3 text-secondary" />
+                            <span className="text-green-500 font-medium group-hover:text-green-400 transition-colors">{UI_TEXT.header.network.status}</span>
+                        </motion.div>
+                        <motion.div 
+                            className="flex items-center gap-2 group cursor-pointer"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <Shield className="h-3.5 w-3.5 text-secondary group-hover:text-cyan-400 transition-colors" />
                             <span className="text-zinc-500">{UI_TEXT.header.security.label}</span>
-                            <span className="text-secondary font-medium">{UI_TEXT.header.security.status}</span>
-                        </div>
+                            <span className="text-secondary font-medium group-hover:text-cyan-400 transition-colors">{UI_TEXT.header.security.status}</span>
+                        </motion.div>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-950/50">
-                        <Radio className="h-3 w-3 text-primary animate-pulse" />
-                        <span className="font-pixel text-[10px] text-zinc-400">{UI_TEXT.header.liveIndicator}</span>
-                    </div>
-                    <div className="font-pixel text-[10px] text-zinc-500 tabular-nums">
+                    <motion.div 
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-full border-2 border-primary/30 bg-primary/5 backdrop-blur-sm shadow-[0_0_15px_rgba(251,146,60,0.2)]"
+                        animate={{ boxShadow: [
+                            "0_0_15px_rgba(251,146,60,0.2)",
+                            "0_0_25px_rgba(251,146,60,0.4)",
+                            "0_0_15px_rgba(251,146,60,0.2)"
+                        ]}}
+                        transition={{ duration: 2, repeat: Infinity }}
+                    >
+                        <motion.div
+                            animate={{ scale: [1, 1.3, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                            <Radio className="h-3.5 w-3.5 text-primary" />
+                        </motion.div>
+                        <span className="font-pixel text-[11px] text-primary font-bold">{UI_TEXT.header.liveIndicator}</span>
+                    </motion.div>
+                    <div className="font-pixel text-[11px] text-zinc-500 tabular-nums bg-zinc-900/50 px-3 py-1.5 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors">
                         {currentTime}
                     </div>
                 </div>
@@ -336,11 +361,11 @@ export default function StudioPage() {
             <div className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden relative z-10">
 
                 {/* LEFT COLUMN: Enhanced System Metrics */}
-                <div className="hidden lg:flex lg:col-span-3 flex-col gap-5 border-r border-zinc-800/50 pr-6">
+                <div className="hidden lg:flex lg:col-span-3 flex-col gap-6 border-r-2 border-zinc-800/50 pr-6">
                     {/* System Status Panel */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-600 mb-3">
-                            <Cpu className="w-3 h-3" />
+                    <div className="space-y-4 p-4 rounded-xl bg-zinc-950/40 border border-zinc-800/50 backdrop-blur-sm">
+                        <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-zinc-500 mb-3">
+                            <Cpu className="w-4 h-4 text-primary" />
                             <span>{UI_TEXT.sidebar.metrics}</span>
                         </div>
                         <MetricBar label={STUDIO_CONFIG.METRICS.CPU.label} value={metrics.cpu} color="primary" />
@@ -350,86 +375,137 @@ export default function StudioPage() {
                     </div>
 
                     {/* Data Nodes */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         <DataNode label={UI_TEXT.sidebar.queue} value="001" icon={Database} status="active" />
                         <DataNode label={UI_TEXT.sidebar.nodes} value="04" icon={Zap} status="standby" />
                     </div>
 
                     {/* Visualizer */}
-                    <div className="flex-1 border border-zinc-800/50 rounded-lg bg-zinc-950/30 relative overflow-hidden">
-                        <div className="absolute top-2 left-2 text-[9px] uppercase tracking-widest text-zinc-700">{UI_TEXT.sidebar.signal}</div>
+                    <div className="flex-1 border-2 border-zinc-800/50 rounded-xl bg-zinc-950/40 relative overflow-hidden backdrop-blur-sm">
+                        <div className="absolute top-3 left-3 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">{UI_TEXT.sidebar.signal}</div>
                         <div className="absolute inset-0 flex items-center justify-center">
                             <motion.div
-                                className="w-24 h-24 rounded-full border border-primary/20"
+                                className="w-28 h-28 rounded-full border-2 border-primary/20"
                                 animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
                                 transition={{ duration: 2, repeat: Infinity }}
                             />
                             <motion.div
-                                className="absolute w-16 h-16 rounded-full border border-secondary/30"
+                                className="absolute w-20 h-20 rounded-full border-2 border-secondary/30"
                                 animate={{ scale: [1.2, 1, 1.2], opacity: [0.4, 0.7, 0.4] }}
                                 transition={{ duration: 2.5, repeat: Infinity }}
                             />
-                            <div className="absolute w-2 h-2 bg-primary rounded-full" />
+                            <motion.div 
+                                className="absolute w-3 h-3 bg-primary rounded-full shadow-[0_0_15px_rgba(251,146,60,0.8)]"
+                                animate={{ scale: [1, 1.2, 1] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                            />
                         </div>
                         {/* Grid overlay */}
                         <div className="absolute inset-0 bg-[linear-gradient(to_right,transparent_49%,rgba(63,63,70,0.1)_50%,transparent_51%),linear-gradient(to_bottom,transparent_49%,rgba(63,63,70,0.1)_50%,transparent_51%)] bg-[size:20px_20px]" />
                     </div>
 
                     {/* Terminal hint */}
-                    <div className="text-[9px] text-zinc-700 uppercase tracking-wider text-center">
-                        <Terminal className="w-3 h-3 inline mr-1" />
+                    <div className="text-[10px] text-zinc-600 uppercase tracking-wider text-center py-2 bg-zinc-900/30 rounded-lg border border-zinc-800/50">
+                        <Terminal className="w-3 h-3 inline mr-1.5" />
                         {UI_TEXT.sidebar.terminalHint}
                     </div>
                 </div>
 
                 {/* CENTER COLUMN: Enhanced Main Interface */}
                 <div className="col-span-1 lg:col-span-6 flex flex-col items-center justify-center relative">
-                    {/* Enhanced Corner Brackets with glow */}
-                    <div className="absolute top-0 left-0 w-12 h-12">
-                        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary/50 to-transparent"></div>
-                        <div className="absolute top-0 left-0 h-full w-[2px] bg-gradient-to-b from-primary/50 to-transparent"></div>
-                    </div>
-                    <div className="absolute top-0 right-0 w-12 h-12">
-                        <div className="absolute top-0 right-0 w-full h-[2px] bg-gradient-to-l from-primary/50 to-transparent"></div>
-                        <div className="absolute top-0 right-0 h-full w-[2px] bg-gradient-to-b from-primary/50 to-transparent"></div>
-                    </div>
-                    <div className="absolute bottom-0 left-0 w-12 h-12">
-                        <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary/50 to-transparent"></div>
-                        <div className="absolute bottom-0 left-0 h-full w-[2px] bg-gradient-to-t from-primary/50 to-transparent"></div>
-                    </div>
-                    <div className="absolute bottom-0 right-0 w-12 h-12">
-                        <div className="absolute bottom-0 right-0 w-full h-[2px] bg-gradient-to-l from-primary/50 to-transparent"></div>
-                        <div className="absolute bottom-0 right-0 h-full w-[2px] bg-gradient-to-t from-primary/50 to-transparent"></div>
-                    </div>
+                    {/* Enhanced Corner Brackets with animated glow */}
+                    <motion.div 
+                        className="absolute top-0 left-0 w-16 h-16"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary via-primary/50 to-transparent shadow-[0_0_10px_rgba(251,146,60,0.5)]"></div>
+                        <div className="absolute top-0 left-0 h-full w-[3px] bg-gradient-to-b from-primary via-primary/50 to-transparent shadow-[0_0_10px_rgba(251,146,60,0.5)]"></div>
+                    </motion.div>
+                    <motion.div 
+                        className="absolute top-0 right-0 w-16 h-16"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                    >
+                        <div className="absolute top-0 right-0 w-full h-[3px] bg-gradient-to-l from-primary via-primary/50 to-transparent shadow-[0_0_10px_rgba(251,146,60,0.5)]"></div>
+                        <div className="absolute top-0 right-0 h-full w-[3px] bg-gradient-to-b from-primary via-primary/50 to-transparent shadow-[0_0_10px_rgba(251,146,60,0.5)]"></div>
+                    </motion.div>
+                    <motion.div 
+                        className="absolute bottom-0 left-0 w-16 h-16"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                    >
+                        <div className="absolute bottom-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary via-primary/50 to-transparent shadow-[0_0_10px_rgba(251,146,60,0.5)]"></div>
+                        <div className="absolute bottom-0 left-0 h-full w-[3px] bg-gradient-to-t from-primary via-primary/50 to-transparent shadow-[0_0_10px_rgba(251,146,60,0.5)]"></div>
+                    </motion.div>
+                    <motion.div 
+                        className="absolute bottom-0 right-0 w-16 h-16"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                    >
+                        <div className="absolute bottom-0 right-0 w-full h-[3px] bg-gradient-to-l from-primary via-primary/50 to-transparent shadow-[0_0_10px_rgba(251,146,60,0.5)]"></div>
+                        <div className="absolute bottom-0 right-0 h-full w-[3px] bg-gradient-to-t from-primary via-primary/50 to-transparent shadow-[0_0_10px_rgba(251,146,60,0.5)]"></div>
+                    </motion.div>
 
-                    {/* Subtle border frame */}
-                    <div className="absolute inset-4 border border-zinc-800/30 rounded-lg pointer-events-none" />
+                    {/* Subtle animated border frame */}
+                    <motion.div 
+                        className="absolute inset-4 border-2 border-zinc-800/40 rounded-xl pointer-events-none"
+                        animate={{ borderColor: ["rgba(39,39,42,0.4)", "rgba(251,146,60,0.2)", "rgba(39,39,42,0.4)"] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                    />
 
                     <div className="w-full max-w-2xl space-y-8 relative z-20">
                         {/* Enhanced Header */}
                         <motion.div
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="text-center space-y-3 mb-12"
+                            className="text-center space-y-4 mb-12"
                         >
-                            <div className="flex items-center justify-center gap-3 mb-2">
+                            <div className="flex items-center justify-center gap-3 mb-3">
                                 <motion.div
                                     animate={{ rotate: 360 }}
                                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                    className="w-10 h-10 rounded-full border border-primary/30 flex items-center justify-center"
+                                    className="w-12 h-12 rounded-full border-2 border-primary/40 flex items-center justify-center relative shadow-[0_0_20px_rgba(251,146,60,0.3)]"
                                 >
-                                    <Sparkles className="w-5 h-5 text-primary" />
+                                    <Sparkles className="w-6 h-6 text-primary" />
+                                    <motion.div
+                                        className="absolute inset-0 rounded-full border-2 border-cyan-400/30"
+                                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                                        transition={{ duration: 2, repeat: Infinity }}
+                                    />
                                 </motion.div>
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-bold font-pixel text-white tracking-tighter drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]">
+                            <motion.h1 
+                                className="text-5xl md:text-6xl font-bold font-pixel text-white tracking-tighter relative"
+                                animate={{ 
+                                    textShadow: [
+                                        "0 0 20px rgba(251,146,60,0.3), 0 0 40px rgba(251,146,60,0.2)",
+                                        "0 0 30px rgba(251,146,60,0.5), 0 0 60px rgba(251,146,60,0.3)",
+                                        "0 0 20px rgba(251,146,60,0.3), 0 0 40px rgba(251,146,60,0.2)"
+                                    ]
+                                }}
+                                transition={{ duration: 3, repeat: Infinity }}
+                            >
                                 {UI_TEXT.main.title}
-                            </h1>
-                            <div className="flex items-center justify-center gap-2">
-                                <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-primary/50"></div>
-                                <p className="text-xs text-primary/70 tracking-[0.3em] uppercase font-medium">
+                            </motion.h1>
+                            <div className="flex items-center justify-center gap-3">
+                                <motion.div 
+                                    className="h-[2px] w-16 bg-gradient-to-r from-transparent via-primary to-transparent"
+                                    animate={{ opacity: [0.5, 1, 0.5] }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                />
+                                <p className="text-sm text-primary/80 tracking-[0.35em] uppercase font-medium">
                                     {UI_TEXT.main.subtitle}
                                 </p>
-                                <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-primary/50"></div>
+                                <motion.div 
+                                    className="h-[2px] w-16 bg-gradient-to-l from-transparent via-primary to-transparent"
+                                    animate={{ opacity: [0.5, 1, 0.5] }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                />
                             </div>
                         </motion.div>
 
@@ -451,9 +527,9 @@ export default function StudioPage() {
                 </div>
 
                 {/* RIGHT COLUMN: Enhanced Activity Log */}
-                <div className="hidden lg:flex lg:col-span-3 flex-col gap-4 border-l border-zinc-800/50 pl-6">
-                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-600 mb-2">
-                        <Terminal className="w-3 h-3" />
+                <div className="hidden lg:flex lg:col-span-3 flex-col gap-5 border-l-2 border-zinc-800/50 pl-6">
+                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-zinc-500 mb-2">
+                        <Terminal className="w-4 h-4 text-cyan-400" />
                         <span>{UI_TEXT.sidebar.recentBatches}</span>
                     </div>
                     <div className="space-y-3">
@@ -463,18 +539,19 @@ export default function StudioPage() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.1 }}
-                                className="group border border-zinc-800/50 hover:border-zinc-700 rounded-lg p-3 bg-zinc-950/30 hover:bg-zinc-900/30 transition-all cursor-pointer"
+                                whileHover={{ scale: 1.02, x: -5 }}
+                                className="group border-2 border-zinc-800/60 hover:border-zinc-700 rounded-xl p-4 bg-zinc-950/40 hover:bg-zinc-900/50 transition-all cursor-pointer backdrop-blur-sm shadow-lg hover:shadow-xl"
                             >
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-zinc-500 font-medium">BATCH_00{batch.id}</span>
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-zinc-400 font-medium text-sm">BATCH_00{batch.id}</span>
                                     <span className={cn(
-                                        "text-[9px] px-2 py-0.5 rounded-full",
+                                        "text-[10px] px-2.5 py-1 rounded-full font-medium",
                                         BATCH_COLORS[batch.color].bg,
                                         BATCH_COLORS[batch.color].text
                                     )}>{batch.status}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <div className="flex-1 h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                                    <div className="flex-1 h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${batch.score}%` }}
@@ -482,24 +559,52 @@ export default function StudioPage() {
                                             className={cn("h-full rounded-full", BATCH_COLORS[batch.color].bar)}
                                         />
                                     </div>
-                                    <span className="text-zinc-600 font-pixel text-[10px]">{batch.score}</span>
+                                    <span className="text-zinc-500 font-pixel text-[11px] min-w-[35px] text-right">{batch.score}</span>
                                 </div>
                             </motion.div>
                         ))}
                     </div>
 
                     {/* Quick Stats */}
-                    <div className="mt-auto border-t border-zinc-800/50 pt-4 space-y-3">
-                        <div className="text-[10px] uppercase tracking-widest text-zinc-600">{UI_TEXT.sidebar.sessionStats}</div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="text-center p-2 rounded bg-zinc-950/50 border border-zinc-800/30">
-                                <div className={`text-lg font-pixel ${SESSION_STATS.analyses.color}`}>{SESSION_STATS.analyses.value}</div>
-                                <div className="text-[9px] text-zinc-600 uppercase">{UI_TEXT.sidebar.analyses}</div>
-                            </div>
-                            <div className="text-center p-2 rounded bg-zinc-950/50 border border-zinc-800/30">
-                                <div className={`text-lg font-pixel ${SESSION_STATS.avgScore.color}`}>{SESSION_STATS.avgScore.value}</div>
-                                <div className="text-[9px] text-zinc-600 uppercase">{UI_TEXT.sidebar.avgScore}</div>
-                            </div>
+                    <div className="mt-auto border-t-2 border-zinc-800/50 pt-5 space-y-4">
+                        <div className="text-[11px] uppercase tracking-widest text-zinc-500 font-medium">{UI_TEXT.sidebar.sessionStats}</div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <motion.div 
+                                className="text-center p-4 rounded-xl bg-zinc-950/50 border-2 border-zinc-800/50 hover:border-primary/30 transition-all cursor-pointer group backdrop-blur-sm"
+                                whileHover={{ scale: 1.05, y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <motion.div 
+                                    className={`text-2xl font-pixel ${SESSION_STATS.analyses.color} group-hover:scale-110 transition-transform`}
+                                    animate={{ textShadow: [
+                                        "0 0 10px rgba(251,146,60,0.3)",
+                                        "0 0 20px rgba(251,146,60,0.5)",
+                                        "0 0 10px rgba(251,146,60,0.3)"
+                                    ]}}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                >
+                                    {SESSION_STATS.analyses.value}
+                                </motion.div>
+                                <div className="text-[10px] text-zinc-600 uppercase mt-2 font-medium">{UI_TEXT.sidebar.analyses}</div>
+                            </motion.div>
+                            <motion.div 
+                                className="text-center p-4 rounded-xl bg-zinc-950/50 border-2 border-zinc-800/50 hover:border-secondary/30 transition-all cursor-pointer group backdrop-blur-sm"
+                                whileHover={{ scale: 1.05, y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <motion.div 
+                                    className={`text-2xl font-pixel ${SESSION_STATS.avgScore.color} group-hover:scale-110 transition-transform`}
+                                    animate={{ textShadow: [
+                                        "0 0 10px rgba(34,211,238,0.3)",
+                                        "0 0 20px rgba(34,211,238,0.5)",
+                                        "0 0 10px rgba(34,211,238,0.3)"
+                                    ]}}
+                                    transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                                >
+                                    {SESSION_STATS.avgScore.value}
+                                </motion.div>
+                                <div className="text-[10px] text-zinc-600 uppercase mt-2 font-medium">{UI_TEXT.sidebar.avgScore}</div>
+                            </motion.div>
                         </div>
                     </div>
                 </div>

@@ -872,7 +872,18 @@ export default function PracticePage() {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-black text-zinc-100 overflow-hidden font-mono selection:bg-primary/30 relative">
+        <div className="flex flex-col h-screen bg-gradient-to-br from-black via-zinc-950 to-black text-zinc-100 overflow-hidden font-mono selection:bg-primary/30 relative">
+            {/* Enhanced Background Effects */}
+            <div className="absolute inset-0 pointer-events-none z-0">
+                {/* Primary grid with glow */}
+                <div className="absolute inset-0 opacity-[0.12] bg-[linear-gradient(to_right,#27272a_1px,transparent_1px),linear-gradient(to_bottom,#27272a_1px,transparent_1px)] bg-[size:80px_80px]"></div>
+                {/* Secondary finer grid */}
+                <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_right,#3f3f46_1px,transparent_1px),linear-gradient(to_bottom,#3f3f46_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+                {/* Radial gradient overlay */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,146,60,0.05),transparent_50%),radial-gradient(ellipse_at_bottom,rgba(6,182,212,0.05),transparent_50%)]"></div>
+                {/* Vignette */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.7)_80%,black_100%)]"></div>
+            </div>
 
             {/* Session Summary Overlay */}
             <AnimatePresence>
@@ -885,20 +896,31 @@ export default function PracticePage() {
             </AnimatePresence>
 
             {/* --- TOP NAVIGATION BAR --- */}
-            <header className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-3 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-md z-20">
+            <header className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-4 border-b-2 border-primary/20 bg-zinc-950/90 backdrop-blur-xl z-20 shadow-[0_4px_20px_rgba(251,146,60,0.1)]">
                 <div className="flex items-center gap-3 md:gap-4">
                     <motion.div 
-                        whileHover={{ scale: 1.05 }}
-                        className="p-2 bg-primary/10 rounded-lg border border-primary/20"
+                        whileHover={{ scale: 1.05, rotate: 5 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2.5 bg-primary/10 rounded-lg border-2 border-primary/30 shadow-[0_0_15px_rgba(251,146,60,0.2)]"
                     >
                         <Play className="h-5 w-5 text-primary" />
                     </motion.div>
                     <div>
-                        <h1 className="font-pixel text-lg md:text-xl text-primary leading-none tracking-tight">
+                        <motion.h1 
+                            className="font-pixel text-lg md:text-xl text-primary leading-none tracking-tight"
+                            animate={{ 
+                                textShadow: [
+                                    "0 0 10px rgba(251,146,60,0.3)",
+                                    "0 0 20px rgba(251,146,60,0.5)",
+                                    "0 0 10px rgba(251,146,60,0.3)"
+                                ]
+                            }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                        >
                             {UI_TEXT.page.title.toUpperCase()}
                             <span className="opacity-50">.{UI_TEXT.page.version}</span>
-                        </h1>
-                        <p className="hidden md:flex items-center gap-2 text-[10px] text-zinc-500 mt-1 uppercase tracking-widest">
+                        </motion.h1>
+                        <p className="hidden md:flex items-center gap-2 text-[11px] text-zinc-500 mt-1 uppercase tracking-widest">
                             {UI_TEXT.page.subtitle}
                             <span className="text-zinc-700 mx-1">•</span>
                             <span className="text-zinc-600">Powered by</span>
@@ -911,37 +933,40 @@ export default function PracticePage() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                     {/* Filler word badge (always visible during session) */}
                     {isRecording && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-pixel text-[10px] transition-colors ${
+                            whileHover={{ scale: 1.05 }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 font-pixel text-[11px] transition-colors backdrop-blur-sm shadow-lg ${
                                 fillerCount > 10 
-                                    ? 'border-red-500/50 bg-red-500/10 text-red-400' 
+                                    ? 'border-red-500/50 bg-red-500/10 text-red-400 shadow-red-500/20' 
                                     : fillerCount > 5 
-                                    ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400' 
-                                    : 'border-green-500/50 bg-green-500/10 text-green-400'
+                                    ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400 shadow-yellow-500/20' 
+                                    : 'border-green-500/50 bg-green-500/10 text-green-400 shadow-green-500/20'
                             }`}
                         >
-                            <Target className="w-3 h-3" />
-                            <span className="text-sm">{fillerCount}</span>
+                            <Target className="w-4 h-4" />
+                            <span className="text-sm font-bold">{fillerCount}</span>
                         </motion.div>
                     )}
                     <div className="hidden md:flex flex-col items-end mr-2">
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{UI_TEXT.labels.pilot}</span>
+                        <span className="text-[11px] text-zinc-500 uppercase tracking-wider">{UI_TEXT.labels.pilot}</span>
                         <span className="text-sm font-pixel text-zinc-300">{user?.name || UI_TEXT.labels.guest.toUpperCase()}</span>
                     </div>
-                    <Button
-                        onClick={() => setShowTutorial(true)}
-                        variant="ghost"
-                        size="sm"
-                        className="font-pixel text-xs hover:bg-zinc-800 border border-transparent hover:border-zinc-700 transition-all"
-                    >
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        <span className="hidden md:inline">{UI_TEXT.buttons.tutorial.toUpperCase()}</span>
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button
+                            onClick={() => setShowTutorial(true)}
+                            variant="ghost"
+                            size="sm"
+                            className="font-pixel text-xs hover:bg-zinc-800 border-2 border-transparent hover:border-zinc-700 transition-all rounded-lg shadow-lg hover:shadow-xl"
+                        >
+                            <BookOpen className="h-4 w-4 mr-2" />
+                            <span className="hidden md:inline">{UI_TEXT.buttons.tutorial.toUpperCase()}</span>
+                        </Button>
+                    </motion.div>
                 </div>
             </header>
 
@@ -952,7 +977,7 @@ export default function PracticePage() {
                 <div className="flex-[2] flex flex-col gap-3 md:gap-4 min-h-0 lg:h-full">
 
                     {/* VIDEO STAGE */}
-                    <div className="relative flex-1 min-h-[300px] md:min-h-[400px] bg-zinc-950 rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl flex flex-col group">
+                    <div className="relative flex-1 min-h-[300px] md:min-h-[400px] bg-zinc-950 rounded-2xl border-2 border-zinc-800/60 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] flex flex-col group hover:border-zinc-700/80 transition-colors">
                         {isStreaming ? (
                             <div className="relative w-full h-full">
                                 <video
@@ -963,12 +988,25 @@ export default function PracticePage() {
                                     className="w-full h-full object-cover transform scale-x-[-1]"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                                {/* Corner accents */}
+                                <div className="absolute top-0 left-0 w-12 h-12 pointer-events-none">
+                                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary/50 to-transparent"></div>
+                                    <div className="absolute top-0 left-0 h-full w-[2px] bg-gradient-to-b from-primary/50 to-transparent"></div>
+                                </div>
+                                <div className="absolute top-0 right-0 w-12 h-12 pointer-events-none">
+                                    <div className="absolute top-0 right-0 w-full h-[2px] bg-gradient-to-l from-primary/50 to-transparent"></div>
+                                    <div className="absolute top-0 right-0 h-full w-[2px] bg-gradient-to-b from-primary/50 to-transparent"></div>
+                                </div>
                             </div>
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/40 backdrop-blur-sm">
-                                <div className="p-6 rounded-full bg-zinc-800/50 mb-4 border border-zinc-700/50 shadow-inner">
-                                    <Camera className="h-12 w-12 text-zinc-600" />
-                                </div>
+                                <motion.div 
+                                    className="p-8 rounded-full bg-zinc-800/50 mb-4 border-2 border-zinc-700/50 shadow-inner"
+                                    animate={{ scale: [1, 1.05, 1] }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                >
+                                    <Camera className="h-14 w-14 text-zinc-600" />
+                                </motion.div>
                                 <p className="text-zinc-500 font-pixel text-sm tracking-wide">{UI_TEXT.labels.cameraOffline.toUpperCase()}</p>
                             </div>
                         )}
@@ -980,10 +1018,14 @@ export default function PracticePage() {
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="flex items-center gap-2 bg-red-500/10 backdrop-blur-md px-3 py-1.5 border border-red-500/30 rounded-full"
+                                        className="flex items-center gap-2 bg-red-500/10 backdrop-blur-md px-4 py-2 border-2 border-red-500/40 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)]"
                                     >
-                                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
-                                        <span className="text-red-400 font-pixel text-[10px] tracking-widest">{UI_TEXT.labels.recording.toUpperCase()}</span>
+                                        <motion.div 
+                                            className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.8)]"
+                                            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+                                            transition={{ duration: 1.5, repeat: Infinity }}
+                                        />
+                                        <span className="text-red-400 font-pixel text-[11px] tracking-widest font-bold">{UI_TEXT.labels.recording.toUpperCase()}</span>
                                     </motion.div>
                                 )}
 
@@ -1051,18 +1093,22 @@ export default function PracticePage() {
                     </div>
 
                     {/* WAVEFORM + TRANSCRIPT AREA */}
-                    <div className="h-[200px] lg:h-[220px] flex-shrink-0 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl overflow-hidden flex flex-col backdrop-blur-sm">
-                        <div className="px-4 py-2.5 border-b border-zinc-800/50 bg-zinc-900/30 flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full ${isTranscribing ? 'bg-primary animate-pulse' : 'bg-zinc-700'}`} />
-                                <span className="text-[10px] font-pixel text-zinc-500 uppercase tracking-wider">{UI_TEXT.labels.liveTranscript}</span>
+                    <div className="h-[200px] lg:h-[220px] flex-shrink-0 bg-zinc-900/40 border-2 border-zinc-800/60 rounded-2xl overflow-hidden flex flex-col backdrop-blur-sm hover:border-zinc-700/80 transition-colors shadow-lg">
+                        <div className="px-4 py-3 border-b-2 border-zinc-800/50 bg-zinc-900/30 flex justify-between items-center">
+                            <div className="flex items-center gap-2.5">
+                                <motion.div 
+                                    className={`w-2 h-2 rounded-full ${isTranscribing ? 'bg-primary' : 'bg-zinc-700'}`}
+                                    animate={isTranscribing ? { scale: [1, 1.3, 1], opacity: [1, 0.7, 1] } : {}}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                />
+                                <span className="text-[11px] font-pixel text-zinc-500 uppercase tracking-wider font-medium">{UI_TEXT.labels.liveTranscript}</span>
                             </div>
                             {/* Waveform */}
                             <WaveformVisualizer isActive={isTranscribing} />
                             {/* Filler word count inline */}
                             {isRecording && (
-                                <div className="text-[10px] font-mono text-zinc-600" title={`${fillerCount} ${UI_TEXT.labels.fillerWords.toLowerCase()}`}>
-                                    <span className={fillerCount > 5 ? 'text-red-400' : 'text-zinc-500'}>
+                                <div className="text-[11px] font-mono text-zinc-600" title={`${fillerCount} ${UI_TEXT.labels.fillerWords.toLowerCase()}`}>
+                                    <span className={fillerCount > 5 ? 'text-red-400 font-bold' : 'text-zinc-500'}>
                                         {fillerCount} {fillerCount !== 1 ? UI_TEXT.labels.fillerWords.toLowerCase() : 'filler'}
                                     </span>
                                 </div>
@@ -1089,40 +1135,60 @@ export default function PracticePage() {
                     <div className="flex-1 flex flex-col gap-3 md:gap-4 overflow-y-auto custom-scrollbar min-h-0 pr-1 pb-2">
 
                         {/* SCORE CARD */}
-                        <div className="flex-shrink-0 bg-black border-4 border-zinc-800 rounded-none p-5 shadow-[8px_8px_0px_#000] relative overflow-hidden group hover:border-zinc-700 transition-colors">
+                        <motion.div 
+                            className="flex-shrink-0 bg-black border-4 border-zinc-800 rounded-none p-5 shadow-[8px_8px_0px_#000] relative overflow-hidden group hover:border-primary/40 transition-all"
+                            whileHover={{ y: -2, boxShadow: "10px_10px_0px_#000" }}
+                        >
                             <div className="flex items-start justify-between relative z-10">
                                 <div>
-                                    <label className="text-[10px] font-pixel text-zinc-500 mb-1 block uppercase tracking-wider">{UI_TEXT.labels.sessionScore}</label>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-4xl md:text-5xl font-pixel text-primary tracking-tighter leading-none drop-shadow-[0_2px_10px_rgba(var(--primary-rgb),0.3)]">
+                                    <label className="text-[11px] font-pixel text-zinc-500 mb-2 block uppercase tracking-wider">{UI_TEXT.labels.sessionScore}</label>
+                                    <div className="flex items-baseline gap-2.5">
+                                        <motion.span 
+                                            className="text-5xl md:text-6xl font-pixel text-primary tracking-tighter leading-none drop-shadow-[0_2px_10px_rgba(var(--primary-rgb),0.3)]"
+                                            animate={{ 
+                                                textShadow: [
+                                                    "0 0 10px rgba(251,146,60,0.3)",
+                                                    "0 0 20px rgba(251,146,60,0.5)",
+                                                    "0 0 10px rgba(251,146,60,0.3)"
+                                                ]
+                                            }}
+                                            transition={{ duration: 3, repeat: Infinity }}
+                                        >
                                             {currentScore?.total_score?.toLocaleString() ?? "0000"}
-                                        </span>
+                                        </motion.span>
                                         <span className="text-xs font-pixel text-zinc-600">PTS</span>
                                     </div>
                                 </div>
                                 <motion.div 
-                                    whileHover={{ rotate: 5 }}
-                                    className="p-2 bg-zinc-800/50 rounded-lg border border-zinc-700/50"
+                                    whileHover={{ rotate: 15, scale: 1.1 }}
+                                    className="p-2.5 bg-zinc-800/50 rounded-lg border-2 border-zinc-700/50 shadow-lg"
                                 >
-                                    <Trophy className="h-5 w-5 text-zinc-400" />
+                                    <Trophy className="h-6 w-6 text-primary" />
                                 </motion.div>
                             </div>
 
                             {isRecording && currentScore && (
-                                <div className="mt-4 pt-4 border-t border-zinc-800/50">
+                                <div className="mt-4 pt-4 border-t-2 border-zinc-800/50">
                                     <MultiplierDisplay
                                         multiplier={currentMultiplier}
                                         breakdown={multiplierBreakdown}
                                     />
                                 </div>
                             )}
-                        </div>
+                        </motion.div>
 
                         {/* ANALYTICS METERS (Replaced with RealtimeDashboard when recording) */}
                         {!isRecording && (
-                            <div className="bg-black border-4 border-zinc-800 rounded-none p-4 md:p-5 shadow-[8px_8px_0px_#000] relative group hover:border-zinc-700 transition-colors">
-                                <h3 className="text-[10px] font-pixel text-zinc-500 mb-4 flex items-center gap-2 uppercase tracking-widest border-b-2 border-zinc-800 pb-2">
-                                    <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                            <motion.div 
+                                className="bg-black border-4 border-zinc-800 rounded-none p-4 md:p-5 shadow-[8px_8px_0px_#000] relative group hover:border-secondary/40 transition-all"
+                                whileHover={{ y: -2, boxShadow: "10px_10px_0px_#000" }}
+                            >
+                                <h3 className="text-[11px] font-pixel text-zinc-500 mb-4 flex items-center gap-2 uppercase tracking-widest border-b-2 border-zinc-800 pb-2.5">
+                                    <motion.span 
+                                        className="w-2 h-2 bg-primary rounded-full"
+                                        animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+                                        transition={{ duration: 1.5, repeat: Infinity }}
+                                    />
                                     {UI_TEXT.labels.systemTelemetry}
                                 </h3>
                                 <Suspense fallback={<ComponentLoader />}>
@@ -1132,7 +1198,7 @@ export default function PracticePage() {
                                         engagementScore={currentScore ? (currentScore.facial_score + currentScore.voice_score) / 2 : 0}
                                     />
                                 </Suspense>
-                            </div>
+                            </motion.div>
                         )}
 
                         {/* INLINE AI DASHBOARD */}
@@ -1150,9 +1216,16 @@ export default function PracticePage() {
                         )}
 
                         {/* AI COACH */}
-                        <div className="bg-black border-4 border-zinc-800 rounded-none p-4 shadow-[8px_8px_0px_#000] flex-1 min-h-[150px] relative group hover:border-zinc-700 transition-colors">
-                            <h3 className="text-[10px] font-pixel text-primary mb-3 flex items-center gap-2 uppercase tracking-widest border-b-2 border-zinc-800 pb-2">
-                                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                        <motion.div 
+                            className="bg-black border-4 border-zinc-800 rounded-none p-4 shadow-[8px_8px_0px_#000] flex-1 min-h-[150px] relative group hover:border-primary/40 transition-all"
+                            whileHover={{ y: -2, boxShadow: "10px_10px_0px_#000" }}
+                        >
+                            <h3 className="text-[11px] font-pixel text-primary mb-3 flex items-center gap-2 uppercase tracking-widest border-b-2 border-zinc-800 pb-2.5">
+                                <motion.span 
+                                    className="w-2 h-2 bg-primary rounded-full"
+                                    animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                />
                                 {UI_TEXT.labels.aiCoach.toUpperCase()}_UPLINK
                             </h3>
                             <Suspense fallback={<ComponentLoader />}>
@@ -1164,11 +1237,14 @@ export default function PracticePage() {
                                     voiceScore={currentScore?.voice_score || 0}
                                 />
                             </Suspense>
-                        </div>
+                        </motion.div>
 
                         {/* ARENA LOADOUT (Idle Only) */}
                         {!isRecording && (
-                            <div className="bg-black border-4 border-zinc-800 rounded-none p-4 shadow-[8px_8px_0px_#000] hover:border-zinc-700 transition-colors">
+                            <motion.div 
+                                className="bg-black border-4 border-zinc-800 rounded-none p-4 shadow-[8px_8px_0px_#000] hover:border-secondary/40 transition-all"
+                                whileHover={{ y: -2, boxShadow: "10px_10px_0px_#000" }}
+                            >
                                 <ArenaLoadout
                                     mode={mode}
                                     setMode={setMode}
@@ -1178,52 +1254,60 @@ export default function PracticePage() {
                                     streak={0}
                                     multiplier={currentMultiplier}
                                 />
-                            </div>
+                            </motion.div>
                         )}
                     </div>
 
                     {/* BOTTOM CONTROLS */}
-                    <div className="flex-shrink-0 bg-zinc-900/80 border border-zinc-800 p-3 rounded-2xl flex items-center gap-3 backdrop-blur-md shadow-lg">
-                        <div className="flex gap-2 border-r border-zinc-800 pr-3">
-                            <Button
-                                variant={videoEnabled ? "secondary" : "ghost"}
-                                size="icon"
-                                className={`h-12 w-12 rounded-xl transition-all ${!videoEnabled && 'text-red-400 bg-red-500/10'}`}
-                                onClick={() => setVideoEnabled(!videoEnabled)}
-                                disabled={isRecording}
-                                title={UI_TEXT.tooltips.cameraToggle}
-                            >
-                                {videoEnabled ? <Camera className="h-5 w-5" /> : <CameraOff className="h-5 w-5" />}
-                            </Button>
-                            <Button
-                                variant={audioEnabled ? "secondary" : "ghost"}
-                                size="icon"
-                                className={`h-12 w-12 rounded-xl transition-all ${!audioEnabled && 'text-red-400 bg-red-500/10'}`}
-                                onClick={() => setAudioEnabled(!audioEnabled)}
-                                disabled={isRecording}
-                                title={UI_TEXT.tooltips.micToggle}
-                            >
-                                {audioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-                            </Button>
+                    <div className="flex-shrink-0 bg-zinc-950/90 border-2 border-zinc-800/60 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+                        <div className="flex gap-3 border-r-2 border-zinc-800 pr-4">
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Button
+                                    variant={videoEnabled ? "secondary" : "ghost"}
+                                    size="icon"
+                                    className={`h-14 w-14 rounded-xl transition-all border-2 shadow-lg ${!videoEnabled && 'text-red-400 bg-red-500/10 border-red-500/50'}`}
+                                    onClick={() => setVideoEnabled(!videoEnabled)}
+                                    disabled={isRecording}
+                                    title={UI_TEXT.tooltips.cameraToggle}
+                                >
+                                    {videoEnabled ? <Camera className="h-6 w-6" /> : <CameraOff className="h-6 w-6" />}
+                                </Button>
+                            </motion.div>
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Button
+                                    variant={audioEnabled ? "secondary" : "ghost"}
+                                    size="icon"
+                                    className={`h-14 w-14 rounded-xl transition-all border-2 shadow-lg ${!audioEnabled && 'text-red-400 bg-red-500/10 border-red-500/50'}`}
+                                    onClick={() => setAudioEnabled(!audioEnabled)}
+                                    disabled={isRecording}
+                                    title={UI_TEXT.tooltips.micToggle}
+                                >
+                                    {audioEnabled ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
+                                </Button>
+                            </motion.div>
                         </div>
 
                         {!isRecording ? (
-                            <Button
-                                onClick={handleStartSession}
-                                className="flex-1 font-pixel text-sm h-14 bg-primary text-black hover:bg-white border-4 border-primary hover:border-white shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-[2px_2px_0px_#000]"
-                            >
-                                <Play className="h-4 w-4 mr-2" />
-                                {UI_TEXT.buttons.startSession.toUpperCase()}
-                            </Button>
+                            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                <Button
+                                    onClick={handleStartSession}
+                                    className="w-full font-pixel text-sm h-16 bg-primary text-black hover:bg-white border-4 border-primary hover:border-white shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-[2px_2px_0px_#000]"
+                                >
+                                    <Play className="h-5 w-5 mr-2" />
+                                    {UI_TEXT.buttons.startSession.toUpperCase()}
+                                </Button>
+                            </motion.div>
                         ) : (
-                            <Button
-                                onClick={handleStopSession}
-                                variant="destructive"
-                                className="flex-1 font-pixel text-sm h-14 border-4 border-red-500 bg-red-600 text-white hover:bg-red-500 shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-[2px_2px_0px_#000]"
-                            >
-                                <Square className="h-4 w-4 mr-2" />
-                                {UI_TEXT.buttons.stopSession.toUpperCase()}
-                            </Button>
+                            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                <Button
+                                    onClick={handleStopSession}
+                                    variant="destructive"
+                                    className="w-full font-pixel text-sm h-16 border-4 border-red-500 bg-red-600 text-white hover:bg-red-500 shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-[2px_2px_0px_#000]"
+                                >
+                                    <Square className="h-5 w-5 mr-2" />
+                                    {UI_TEXT.buttons.stopSession.toUpperCase()}
+                                </Button>
+                            </motion.div>
                         )}
                     </div>
                 </div>
@@ -1231,15 +1315,23 @@ export default function PracticePage() {
 
             {/* Error Toast */}
             {(webrtcError) && (
-                <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-50">
-                    <div className="bg-red-950/90 border border-red-500/50 p-4 rounded-xl shadow-2xl flex items-start gap-3 backdrop-blur-md">
-                        <div className="mt-1 h-2 w-2 bg-red-500 rounded-full animate-ping flex-shrink-0" />
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-50"
+                >
+                    <div className="bg-red-950/90 border-2 border-red-500/50 p-5 rounded-xl shadow-[0_8px_30px_rgba(239,68,68,0.4)] flex items-start gap-3 backdrop-blur-md">
+                        <motion.div 
+                            className="mt-1 h-2.5 w-2.5 bg-red-500 rounded-full flex-shrink-0"
+                            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                        />
                         <div className="flex-1 min-w-0">
-                            <h4 className="text-red-400 font-pixel text-xs mb-1">SYSTEM_ERROR</h4>
+                            <h4 className="text-red-400 font-pixel text-xs mb-1.5 font-bold">SYSTEM_ERROR</h4>
                             <p className="text-red-200 font-mono text-xs break-words">{webrtcError}</p>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {/* End Main Container */}
