@@ -628,14 +628,31 @@ export default function ChallengesPage() {
 
                 {/* Category Filter */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-600">
-                        <Filter className="w-3 h-3" />
-                        <span>Filter by Skill</span>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-600">
+                            <Filter className="w-3 h-3" />
+                            <span>Filter by Skill</span>
+                        </div>
+                        {selectedCategory !== "all" && (
+                            <button
+                                onClick={() => setSelectedCategory("all")}
+                                className="text-[10px] text-primary hover:text-primary/80 underline underline-offset-2"
+                            >
+                                Clear Filter
+                            </button>
+                        )}
                     </div>
                     <CategoryFilter 
                         selected={selectedCategory} 
                         onSelect={setSelectedCategory} 
                     />
+                    {selectedCategory !== "all" && (
+                        <div className="text-[10px] text-zinc-500">
+                            Showing {challenges.filter(c => 
+                                (c.requirements?.skill_category || "general") === selectedCategory
+                            ).length} challenges in {SKILL_CATEGORIES[selectedCategory]?.label || selectedCategory}
+                        </div>
+                    )}
                 </div>
 
                 {/* Tabs */}
@@ -656,34 +673,48 @@ export default function ChallengesPage() {
                         ))}
                     </TabsList>
 
-                    {(["daily", "weekly", "achievement"] as const).map(type => (
-                        <TabsContent key={type} value={type} className="space-y-3 mt-5">
-                            <AnimatePresence mode="wait">
-                                {filterChallenges(type).length > 0 ? (
-                                    <motion.div
-                                        key={type}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="space-y-3"
-                                    >
-                                        {filterChallenges(type).map((challenge, i) => (
-                                            <motion.div
-                                                key={challenge.challenge_id}
-                                                initial={{ opacity: 0, y: 16 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: i * 0.07 }}
-                                            >
-                                                <ChallengeCard challenge={challenge} onClaim={claimReward} />
-                                            </motion.div>
-                                        ))}
-                                    </motion.div>
-                                ) : (
-                                    <EmptyState type={type} category={selectedCategory} />
-                                )}
-                            </AnimatePresence>
-                        </TabsContent>
-                    ))}
+                    {(["daily", "weekly", "achievement"] as const).map(type => {
+                        const filtered = filterChallenges(type);
+                        const filterKey = `${type}-${selectedCategory}`;
+                        
+                        return (
+                            <TabsContent key={type} value={type} className="space-y-3 mt-5">
+                                <AnimatePresence mode="wait">
+                                    {filtered.length > 0 ? (
+                                        <motion.div
+                                            key={`${filterKey}-content`}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="space-y-3"
+                                        >
+                                            {filtered.map((challenge, i) => (
+                                                <motion.div
+                                                    key={challenge.challenge_id}
+                                                    initial={{ opacity: 0, y: 16 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: i * 0.07 }}
+                                                >
+                                                    <ChallengeCard challenge={challenge} onClaim={claimReward} />
+                                                </motion.div>
+                                            ))}
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key={`${filterKey}-empty`}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <EmptyState type={type} category={selectedCategory} />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </TabsContent>
+                        );
+                    })}
                 </Tabs>
             </div>
         </div>
