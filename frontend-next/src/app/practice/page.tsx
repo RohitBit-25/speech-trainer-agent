@@ -204,93 +204,113 @@ function SessionSummary({ score, duration, fillerCount, facialScore, voiceScore,
     const gradeColor = score >= 80 ? 'text-yellow-400' : score >= 65 ? 'text-green-400' : score >= 50 ? 'text-blue-400' : score >= 35 ? 'text-orange-400' : 'text-red-400';
 
     const stats = [
-        { label: "Session Score", value: score.toFixed(0), unit: "pts", icon: <Trophy className="h-4 w-4 text-yellow-500" />, color: "text-yellow-400" },
-        { label: "Duration", value: `${mins}:${secs.toString().padStart(2, '0')}`, unit: "min", icon: <Clock className="h-4 w-4 text-blue-400" />, color: "text-blue-400" },
+        { label: "Final Score", value: score.toFixed(0), unit: "pts", icon: <Trophy className="h-4 w-4 text-yellow-500" />, color: "text-yellow-400" },
+        { label: "Operation Time", value: `${mins}:${secs.toString().padStart(2, '0')}`, unit: "min", icon: <Clock className="h-4 w-4 text-blue-400" />, color: "text-blue-400" },
         { label: "Filler Words", value: fillerCount.toString(), unit: "used", icon: <Target className="h-4 w-4 text-red-400" />, color: fillerCount > 10 ? "text-red-400" : fillerCount > 5 ? "text-orange-400" : "text-green-400" },
-        { label: "XP Earned", value: `+${xpEarned}`, unit: "xp", icon: <Zap className="h-4 w-4 text-primary" />, color: "text-primary" },
+        { label: "Credits Earned", value: `+${xpEarned}`, unit: "xp", icon: <Zap className="h-4 w-4 text-primary" />, color: "text-primary" },
     ];
 
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="absolute inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6 overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 md:p-6"
         >
-            {/* Grade */}
+            {/* Scanlines Background */}
+            <div className="absolute inset-0 pointer-events-none z-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] opacity-20"></div>
+
             <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-                className="mb-6 text-center"
+                initial={{ scale: 0.95, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                transition={{ type: "spring", damping: 20 }}
+                className="bg-black border-4 border-zinc-700 shadow-[16px_16px_0px_#000] w-full max-w-2xl relative z-10"
             >
-                <div className="text-xs font-pixel text-zinc-500 mb-2 tracking-widest uppercase">Mission Complete</div>
-                <div className={`text-8xl font-pixel ${gradeColor} drop-shadow-[0_0_30px_currentColor]`}>{overallGrade}</div>
-                <div className="text-xs font-mono text-zinc-500 mt-2">
-                    {score >= 80 ? 'Outstanding Performance!' : score >= 65 ? 'Great Job!' : score >= 50 ? 'Good Effort!' : 'Keep Practicing!'}
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b-4 border-zinc-800 bg-zinc-900 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rotate-45 -mr-16 -mt-16"></div>
+                    <div className="flex items-center gap-3 relative z-10">
+                        <Shield className="w-5 h-5 text-primary" />
+                        <h2 className="font-pixel text-lg text-white uppercase tracking-widest">Post-Operation Report</h2>
+                    </div>
                 </div>
-            </motion.div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 w-full max-w-sm mb-6">
-                {stats.map((stat, i) => (
+                <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center md:items-stretch">
+                    {/* Grade Section */}
                     <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 + i * 0.1 }}
-                        className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 text-center"
+                        initial={{ scale: 0, rotate: -10 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.2, type: "spring" }}
+                        className="flex-shrink-0 flex flex-col items-center justify-center bg-zinc-950 border-4 border-zinc-800 p-8 shadow-[8px_8px_0px_rgba(0,0,0,1)] w-full md:w-auto min-w-[200px]"
                     >
-                        <div className="flex justify-center mb-2">{stat.icon}</div>
-                        <div className={`text-2xl font-pixel ${stat.color}`}>{stat.value}</div>
-                        <div className="text-[10px] font-mono text-zinc-500 mt-1">{stat.label}</div>
-                    </motion.div>
-                ))}
-            </div>
-
-            {/* Performance Bars */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="w-full max-w-sm space-y-3 mb-6"
-            >
-                {[
-                    { label: "Facial Expression", value: facialScore, color: "bg-blue-500" },
-                    { label: "Voice Quality", value: voiceScore, color: "bg-green-500" },
-                    { label: "Filler Word Control", value: Math.max(0, 100 - fillerCount * 5), color: "bg-orange-500" },
-                ].map((bar) => (
-                    <div key={bar.label}>
-                        <div className="flex justify-between text-[10px] font-mono text-zinc-500 mb-1">
-                            <span>{bar.label}</span>
-                            <span>{bar.value.toFixed(0)}%</span>
+                        <div className="text-[10px] font-pixel text-zinc-500 mb-4 tracking-widest uppercase">Performance Rank</div>
+                        <div className={`text-8xl md:text-9xl font-pixel ${gradeColor} drop-shadow-[0_0_15px_currentColor]`}>{overallGrade}</div>
+                        <div className="text-xs font-mono text-zinc-400 mt-4 px-4 py-1 border border-zinc-800 bg-zinc-900 rounded-none">
+                            {score >= 80 ? 'OUTSTANDING' : score >= 65 ? 'ACCEPTABLE' : score >= 50 ? 'MARGINAL' : 'UNACCEPTABLE'}
                         </div>
-                        <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${bar.value}%` }}
-                                transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
-                                className={`h-full ${bar.color} rounded-full`}
-                            />
+                    </motion.div>
+
+                    {/* Stats Section */}
+                    <div className="flex-1 w-full space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            {stats.map((stat, i) => (
+                                <motion.div
+                                    key={stat.label}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 + i * 0.1 }}
+                                    className="bg-zinc-900 border-l-4 border-zinc-800 p-3 relative group overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-primary/5 -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                                    <div className="flex justify-between items-start relative z-10">
+                                        <div className="text-[10px] font-mono text-zinc-500 uppercase">{stat.label}</div>
+                                        {stat.icon}
+                                    </div>
+                                    <div className={`text-xl font-pixel ${stat.color} mt-2 relative z-10`}>{stat.value}</div>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Breakdown Bars */}
+                        <div className="space-y-4 pt-4 border-t-2 border-dashed border-zinc-800">
+                            {[
+                                { label: "Facial Diagnostics", value: facialScore, color: "bg-blue-500" },
+                                { label: "Vocal Telemetry", value: voiceScore, color: "bg-green-500" },
+                                { label: "Syntax Control", value: Math.max(0, 100 - fillerCount * 5), color: "bg-orange-500" },
+                            ].map((bar, i) => (
+                                <motion.div
+                                    key={bar.label}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.6 + i * 0.1 }}
+                                >
+                                    <div className="flex justify-between text-[10px] font-pixel text-zinc-400 mb-2 uppercase">
+                                        <span>{bar.label}</span>
+                                        <span className="text-zinc-300">{bar.value.toFixed(0)}%</span>
+                                    </div>
+                                    <div className="h-3 bg-zinc-950 border border-zinc-800 w-full overflow-hidden shadow-inner p-[1px]">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${bar.value}%` }}
+                                            transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
+                                            className={`h-full ${bar.color}`}
+                                        />
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
                     </div>
-                ))}
-            </motion.div>
+                </div>
 
-            {/* Action Buttons */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
-                className="flex gap-3 w-full max-w-sm"
-            >
-                <Button
-                    onClick={onRestart}
-                    className="flex-1 font-pixel text-xs h-12 bg-primary text-black hover:bg-primary/90 rounded-xl"
-                >
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    PRACTICE AGAIN
-                </Button>
+                <div className="p-4 bg-zinc-900 border-t-4 border-zinc-800">
+                    <Button
+                        onClick={onRestart}
+                        className="w-full font-pixel text-sm h-14 bg-primary text-black hover:bg-white border-4 border-primary hover:border-white shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-none"
+                    >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        INITIALIZE_NEXT_SESSION
+                    </Button>
+                </div>
             </motion.div>
         </motion.div>
     );
@@ -332,8 +352,6 @@ export default function PracticePage() {
     const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
     const [multiplierBreakdown, setMultiplierBreakdown] = useState<any>({});
     const [user, setUser] = useState<any>(null);
-    const [showAICoachDashboard, setShowAICoachDashboard] = useState(false);
-    const [dashboardMinimized, setDashboardMinimized] = useState(false);
     const [goodFramesCount, setGoodFramesCount] = useState(0);
     const [totalFramesProcessed, setTotalFramesProcessed] = useState(0);
     // Session state
@@ -520,7 +538,6 @@ export default function PracticePage() {
             startListening();
 
             setIsRecording(true);
-            setShowAICoachDashboard(true);
 
             // Start frame capture and send to AI Coach
             frameIntervalRef.current = setInterval(() => {
@@ -562,7 +579,6 @@ export default function PracticePage() {
         if (durationRef.current) clearInterval(durationRef.current);
 
         setIsRecording(false);
-        setShowAICoachDashboard(false);
         stopListening();
         stopCapture();
 
@@ -825,8 +841,7 @@ export default function PracticePage() {
                     <div className="flex-1 flex flex-col gap-3 md:gap-4 overflow-y-auto custom-scrollbar min-h-0 pr-1 pb-2">
 
                         {/* SCORE CARD */}
-                        <div className="flex-shrink-0 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="flex-shrink-0 bg-black border-4 border-zinc-800 rounded-none p-5 shadow-[8px_8px_0px_#000] relative overflow-hidden group hover:border-zinc-700 transition-colors">
                             <div className="flex items-start justify-between relative z-10">
                                 <div>
                                     <label className="text-[10px] font-pixel text-zinc-500 mb-1 block uppercase tracking-wider">Session Score</label>
@@ -852,23 +867,43 @@ export default function PracticePage() {
                             )}
                         </div>
 
-                        {/* ANALYTICS METERS */}
-                        <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 md:p-5 backdrop-blur-sm">
-                            <h3 className="text-xs font-pixel text-zinc-400 mb-4 flex items-center gap-2 uppercase tracking-wide">
-                                <span className="w-1 h-4 bg-primary rounded-full"></span>
-                                Performance Metrics
-                            </h3>
+                        {/* ANALYTICS METERS (Replaced with RealtimeDashboard when recording) */}
+                        {!isRecording && (
+                            <div className="bg-black border-4 border-zinc-800 rounded-none p-4 md:p-5 shadow-[8px_8px_0px_#000] relative group hover:border-zinc-700 transition-colors">
+                                <h3 className="text-[10px] font-pixel text-zinc-500 mb-4 flex items-center gap-2 uppercase tracking-widest border-b-2 border-zinc-800 pb-2">
+                                    <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                                    System Telemetry
+                                </h3>
+                                <Suspense fallback={<ComponentLoader />}>
+                                    <PerformanceMeters
+                                        facialScore={currentScore?.facial_score || 0}
+                                        voiceScore={currentScore?.voice_score || 0}
+                                        engagementScore={currentScore ? (currentScore.facial_score + currentScore.voice_score) / 2 : 0}
+                                    />
+                                </Suspense>
+                            </div>
+                        )}
+
+                        {/* INLINE AI DASHBOARD */}
+                        {isRecording && (
                             <Suspense fallback={<ComponentLoader />}>
-                                <PerformanceMeters
-                                    facialScore={currentScore?.facial_score || 0}
-                                    voiceScore={currentScore?.voice_score || 0}
-                                    engagementScore={currentScore ? (currentScore.facial_score + currentScore.voice_score) / 2 : 0}
+                                <RealtimeDashboard
+                                    emotion={currentEmotion}
+                                    voice={currentVoice}
+                                    score={currentScore}
+                                    feedback={currentFeedback}
+                                    isLoading={!aiCoachConnected}
+                                    goodFramesPercentage={goodFramesCount / (totalFramesProcessed || 1) * 100}
                                 />
                             </Suspense>
-                        </div>
+                        )}
 
                         {/* AI COACH */}
-                        <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-0 flex-1 min-h-[150px] backdrop-blur-sm overflow-hidden">
+                        <div className="bg-black border-4 border-zinc-800 rounded-none p-4 shadow-[8px_8px_0px_#000] flex-1 min-h-[150px] relative group hover:border-zinc-700 transition-colors">
+                            <h3 className="text-[10px] font-pixel text-primary mb-3 flex items-center gap-2 uppercase tracking-widest border-b-2 border-zinc-800 pb-2">
+                                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+                                AI_COACH_UPLINK
+                            </h3>
                             <Suspense fallback={<ComponentLoader />}>
                                 <AICoach
                                     isConnected={aiCoachConnected}
@@ -882,15 +917,17 @@ export default function PracticePage() {
 
                         {/* ARENA LOADOUT (Idle Only) */}
                         {!isRecording && (
-                            <ArenaLoadout
-                                mode={mode}
-                                setMode={setMode}
-                                difficulty={difficulty}
-                                setDifficulty={setDifficulty}
-                                bestScore={bestScore}
-                                streak={0}
-                                multiplier={currentMultiplier}
-                            />
+                            <div className="bg-black border-4 border-zinc-800 rounded-none p-4 shadow-[8px_8px_0px_#000] hover:border-zinc-700 transition-colors">
+                                <ArenaLoadout
+                                    mode={mode}
+                                    setMode={setMode}
+                                    difficulty={difficulty}
+                                    setDifficulty={setDifficulty}
+                                    bestScore={bestScore}
+                                    streak={0}
+                                    multiplier={currentMultiplier}
+                                />
+                            </div>
                         )}
                     </div>
 
@@ -920,19 +957,19 @@ export default function PracticePage() {
                         {!isRecording ? (
                             <Button
                                 onClick={handleStartSession}
-                                className="flex-1 font-pixel h-12 bg-primary text-black hover:bg-primary/90 rounded-xl shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="flex-1 font-pixel text-sm h-14 bg-primary text-black hover:bg-white border-4 border-primary hover:border-white shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-[2px_2px_0px_#000]"
                             >
-                                <Play className="h-4 w-4 mr-2 fill-current" />
-                                START SESSION
+                                <Play className="h-4 w-4 mr-2" />
+                                EXECUTE_SESSION
                             </Button>
                         ) : (
                             <Button
                                 onClick={handleStopSession}
                                 variant="destructive"
-                                className="flex-1 font-pixel h-12 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                                className="flex-1 font-pixel text-sm h-14 border-4 border-red-500 bg-red-600 text-white hover:bg-red-500 shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-[2px_2px_0px_#000]"
                             >
-                                <Square className="h-4 w-4 mr-2 fill-current" />
-                                STOP & REVIEW
+                                <Square className="h-4 w-4 mr-2" />
+                                TERMINATE_SESSION
                             </Button>
                         )}
                     </div>
@@ -952,22 +989,7 @@ export default function PracticePage() {
                 </div>
             )}
 
-            {/* AI Coach Real-Time Dashboard */}
-            <AnimatePresence>
-                {showAICoachDashboard && isRecording && (
-                    <RealtimeDashboard
-                        emotion={currentEmotion}
-                        voice={currentVoice}
-                        score={currentScore}
-                        feedback={currentFeedback}
-                        isLoading={!aiCoachConnected}
-                        goodFramesPercentage={goodFramesCount / (totalFramesProcessed || 1) * 100}
-                        onClose={() => setShowAICoachDashboard(false)}
-                        isMinimized={dashboardMinimized}
-                        onToggleMinimize={() => setDashboardMinimized(!dashboardMinimized)}
-                    />
-                )}
-            </AnimatePresence>
+            {/* End Main Container */}
 
             {/* Achievement Popup & Performance Monitor */}
             <Suspense fallback={null}><PerformanceMonitor wsLatency={0} messageQueue={0} show={isRecording} /></Suspense>
