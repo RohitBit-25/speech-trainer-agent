@@ -10,111 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Trophy, Zap, Clock, Target, CheckCircle2, Gift, Flame,
     Lock, Star, RefreshCw, Sparkles, Calendar, Award, ArrowRight,
-    Eye, Mic, Brain, User, Filter, ChevronDown, Timer
+    Eye, Mic, Brain, User, Filter, ChevronDown, Timer, AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getActiveSessionChallenges, claimChallengeReward } from "@/lib/api";
 import type { Challenge, SkillCategory, ChallengeType } from "@/lib/types";
-
-// ─── Mock fallback challenges ──────────────────────────────────────────────────
-const MOCK_CHALLENGES: Challenge[] = [
-    {
-        challenge_id: "daily_1",
-        type: "daily",
-        title: "First Words",
-        description: "Complete a 60-second practice session today.",
-        difficulty: "beginner",
-        requirements: { min_sessions: 1, min_duration: 60, skill_category: "general" },
-        rewards: { xp: 150 },
-        expires_at: new Date(Date.now() + 8 * 3600 * 1000).toISOString(),
-        user_progress: { progress: 0, completed: false, claimed: false },
-    },
-    {
-        challenge_id: "daily_2",
-        type: "daily",
-        title: "Filler Slayer",
-        description: "Complete a session with fewer than 5 filler words.",
-        difficulty: "intermediate",
-        requirements: { max_filler_words: 5, skill_category: "content_clarity" },
-        rewards: { xp: 250, badge_id: "clean_speaker" },
-        expires_at: new Date(Date.now() + 8 * 3600 * 1000).toISOString(),
-        user_progress: { progress: 40, completed: false, claimed: false },
-    },
-    {
-        challenge_id: "daily_3",
-        type: "daily",
-        title: "Confidence Surge",
-        description: "Achieve a facial confidence score above 80%.",
-        difficulty: "intermediate",
-        requirements: { min_facial_confidence: 80, skill_category: "presence" },
-        rewards: { xp: 300 },
-        expires_at: new Date(Date.now() + 8 * 3600 * 1000).toISOString(),
-        user_progress: { progress: 75, completed: false, claimed: false },
-    },
-    {
-        challenge_id: "weekly_1",
-        type: "weekly",
-        title: "7-Day Warrior",
-        description: "Practice every day for 7 consecutive days.",
-        difficulty: "expert",
-        requirements: { consecutive_good_sessions: 7, skill_category: "general" },
-        rewards: { xp: 1000, badge_id: "warrior", title: "The Consistent" },
-        expires_at: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
-        user_progress: { progress: 43, completed: false, claimed: false },
-    },
-    {
-        challenge_id: "weekly_2",
-        type: "weekly",
-        title: "Score Hunter",
-        description: "Accumulate 5,000 total points across all sessions this week.",
-        difficulty: "intermediate",
-        requirements: { specific_metrics: { total_score: 5000 }, skill_category: "general" },
-        rewards: { xp: 600, badge_id: "score_hunter" },
-        expires_at: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
-        user_progress: { progress: 62, completed: false, claimed: false },
-    },
-    {
-        challenge_id: "weekly_3",
-        type: "weekly",
-        title: "Expert Initiation",
-        description: "Complete 3 sessions on Expert difficulty.",
-        difficulty: "expert",
-        requirements: { target_session_count: 3, specific_metrics: { difficulty: "expert" }, skill_category: "general" },
-        rewards: { xp: 800, title: "Expert Speaker" },
-        expires_at: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
-        user_progress: { progress: 33, completed: false, claimed: false },
-    },
-    {
-        challenge_id: "ach_1",
-        type: "achievement",
-        title: "First Blood",
-        description: "Complete your very first practice session.",
-        difficulty: "beginner",
-        requirements: { min_sessions: 1, skill_category: "general" },
-        rewards: { xp: 100, badge_id: "first_blood" },
-        user_progress: { progress: 100, completed: true, claimed: false },
-    },
-    {
-        challenge_id: "ach_2",
-        type: "achievement",
-        title: "Combo King",
-        description: "Reach a 10x combo multiplier in a single session.",
-        difficulty: "expert",
-        requirements: { specific_metrics: { max_combo: 10 }, skill_category: "general" },
-        rewards: { xp: 500, badge_id: "combo_king", title: "Combo King" },
-        user_progress: { progress: 0, completed: false, claimed: false },
-    },
-    {
-        challenge_id: "ach_3",
-        type: "achievement",
-        title: "Leaderboard Legend",
-        description: "Reach the Top 10 on the global leaderboard.",
-        difficulty: "expert",
-        requirements: { specific_metrics: { rank: 10 }, skill_category: "general" },
-        rewards: { xp: 2000, badge_id: "legend", title: "Legend" },
-        user_progress: { progress: 0, completed: false, claimed: false },
-    },
-];
 
 // ─── Skill Category Helpers ────────────────────────────────────────────────────
 
@@ -515,16 +416,35 @@ function StatsBar({ challenges }: { challenges: Challenge[] }) {
 }
 
 // ─── Empty State ───────────────────────────────────────────────────────────────
-function EmptyState({ type }: { type: string }) {
+function EmptyState({ type, category }: { type: string; category?: string }) {
+    const icons: Record<string, string> = {
+        daily: '🌅',
+        weekly: '📅',
+        achievement: '🏅'
+    };
+    
+    const messages: Record<string, string> = {
+        daily: "Check back tomorrow for new daily challenges!",
+        weekly: "New weekly challenges arrive every Monday!",
+        achievement: "Complete practice sessions to unlock achievements!"
+    };
+    
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-16 space-y-3"
         >
-            <div className="text-5xl">{type === 'daily' ? '🌅' : type === 'weekly' ? '📅' : '🏅'}</div>
-            <div className="font-pixel text-zinc-500 text-sm">NO_{type.toUpperCase()}_CHALLENGES</div>
-            <div className="text-xs font-mono text-zinc-600">Check back later or complete a practice session</div>
+            <div className="text-5xl">{icons[type] || '🎯'}</div>
+            <div className="font-pixel text-zinc-500 text-sm">
+                NO_{type.toUpperCase()}_CHALLENGES{category && category !== 'all' ? '_IN_CATEGORY' : ''}
+            </div>
+            <div className="text-xs font-mono text-zinc-600 max-w-xs mx-auto">
+                {category && category !== 'all' 
+                    ? `No ${type} challenges for this skill category. Try another filter!`
+                    : messages[type] || "Check back later or complete a practice session"
+                }
+            </div>
         </motion.div>
     );
 }
@@ -533,35 +453,52 @@ function EmptyState({ type }: { type: string }) {
 export default function ChallengesPage() {
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState("daily");
     const [selectedCategory, setSelectedCategory] = useState<SkillCategory | "all">("all");
     const [streak] = useState(1); // TODO: get from user profile
 
     const fetchChallenges = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        
         try {
             const userStr = localStorage.getItem("user");
-            const userId = userStr ? JSON.parse(userStr).id : "";
-            const url = new URL('/api/game/challenges/active', window.location.origin);
-            if (userId) {
-                url.searchParams.set('user_id', userId);
+            const userId = userStr ? JSON.parse(userStr).id : null;
+            
+            if (!userId) {
+                setError("Please log in to view challenges");
+                setChallenges([]);
+                return;
             }
 
-            const response = await fetch(url.toString());
-            if (!response.ok) throw new Error("API error");
-            const data = await response.json();
-            const fetched: Challenge[] = data.challenges || [];
-
-            if (fetched.length === 0) {
-                setChallenges(MOCK_CHALLENGES);
-            } else {
-                // Fill in missing types with mock data so all tabs have content
-                const types = new Set(fetched.map(c => c.type));
-                const missing = MOCK_CHALLENGES.filter(c => !types.has(c.type));
-                setChallenges([...fetched, ...missing]);
-            }
-        } catch (error) {
-            console.error('Error fetching challenges:', error);
-            setChallenges(MOCK_CHALLENGES);
+            const data = await getActiveSessionChallenges(userId);
+            
+            // Transform backend response to Challenge type
+            const transformed: Challenge[] = data.challenges.map(c => ({
+                challenge_id: c.challenge_id,
+                type: c.type,
+                title: c.title,
+                description: c.description,
+                difficulty: c.difficulty,
+                requirements: c.requirements,
+                rewards: c.rewards,
+                expires_at: undefined, // Backend doesn't return this for active session endpoint
+                skill_category: c.skill_category,
+                user_progress: {
+                    progress: c.progress,
+                    completed: c.completed,
+                    claimed: c.claimed,
+                    current_value: c.current_value,
+                    target_value: c.target_value
+                }
+            }));
+            
+            setChallenges(transformed);
+        } catch (err) {
+            console.error('Error fetching challenges:', err);
+            setError(err instanceof Error ? err.message : 'Failed to load challenges');
+            setChallenges([]);
         } finally {
             setLoading(false);
         }
@@ -572,22 +509,18 @@ export default function ChallengesPage() {
     const claimReward = async (challengeId: string) => {
         try {
             const userStr = localStorage.getItem("user");
-            const userId = userStr ? JSON.parse(userStr).id : "";
-            const response = await fetch(`/api/game/challenges/${challengeId}/claim`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: userId })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                toast.success(`🎉 Claimed ${data.rewards?.xp || '???'} XP!`, {
-                    description: "Reward added to your profile",
-                });
-            } else {
-                // Optimistic update for mock data
-                toast.success("🎉 Reward claimed!", { description: "XP added to your profile" });
+            const userId = userStr ? JSON.parse(userStr).id : null;
+            
+            if (!userId) {
+                toast.error("Please log in to claim rewards");
+                return;
             }
+
+            const data = await claimChallengeReward(challengeId, userId);
+
+            toast.success(`🎉 Claimed ${data.rewards?.xp || 0} XP!`, {
+                description: data.rewards?.badge_id ? "Badge unlocked!" : "Reward added to your profile",
+            });
 
             // Optimistic UI update
             setChallenges(prev => prev.map(c =>
@@ -595,13 +528,13 @@ export default function ChallengesPage() {
                     ? { ...c, user_progress: { ...c.user_progress!, claimed: true } }
                     : c
             ));
-        } catch {
-            toast.success("🎉 Reward claimed!", { description: "XP added to your profile" });
-            setChallenges(prev => prev.map(c =>
-                c.challenge_id === challengeId
-                    ? { ...c, user_progress: { ...c.user_progress!, claimed: true } }
-                    : c
-            ));
+            
+            // Refresh to get updated state
+            setTimeout(() => fetchChallenges(), 500);
+        } catch (err) {
+            toast.error("Failed to claim reward", {
+                description: err instanceof Error ? err.message : "Please try again"
+            });
         }
     };
 
@@ -632,8 +565,36 @@ export default function ChallengesPage() {
                 <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="flex flex-col items-center gap-4"
                 >
                     <RefreshCw className="h-8 w-8 text-primary" />
+                    <span className="text-sm font-mono text-zinc-500">Loading challenges...</span>
+                </motion.div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center px-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center space-y-4 max-w-md"
+                >
+                    <div className="w-16 h-16 mx-auto rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+                        <AlertCircle className="h-8 w-8 text-red-500" />
+                    </div>
+                    <h2 className="font-pixel text-xl text-white">Oops!</h2>
+                    <p className="text-sm font-mono text-zinc-400">{error}</p>
+                    <Button
+                        onClick={fetchChallenges}
+                        variant="outline"
+                        className="border-zinc-700 hover:border-primary"
+                    >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Try Again
+                    </Button>
                 </motion.div>
             </div>
         );
