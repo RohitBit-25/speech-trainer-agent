@@ -19,6 +19,9 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
+    # Use 'solo' pool to avoid SIGSEGV crashes from forking processes
+    # that use MediaPipe/OpenCV (known macOS fork-safety issue)
+    worker_pool="solo",
 )
 
 @celery_app.task(bind=True, name="analyze_video_task")

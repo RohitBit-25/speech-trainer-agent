@@ -53,6 +53,7 @@ class AICoachSession:
         
         # Real-time data
         self.last_facial_analysis = None
+        self.last_voice_analysis = None
         self.last_score = None
         
         # Audio buffer for rolling voice analysis
@@ -183,8 +184,6 @@ class AICoachSession:
                 # Only append server-generated transcripts since those are incremental
                 self.transcript_buffer += " " + voice_analysis["generated_transcript"]
                 
-            print(f"📝 Updated transcript buffer: {len(self.transcript_buffer)} chars")
-            
             # Calculate true WPM based on session duration
             duration_sec = (datetime.now() - self.session_start).total_seconds()
             word_count = len(self.transcript_buffer.split()) if self.transcript_buffer.strip() else 0
@@ -194,6 +193,8 @@ class AICoachSession:
             
             voice_analysis["speech_rate_wpm"] = wpm
             voice_analysis["speech_rate_quality"] = self.voice_analyzer._rate_speech_rate(wpm)
+            
+            print(f"🎙️ Voice metrics: WPM={wpm:.0f} ({word_count} words / {duration_sec:.0f}s), clarity={voice_analysis.get('clarity_score', 0):.2f}, vol_consistency={voice_analysis.get('volume_consistency', 0):.2f}, transcript_len={len(self.transcript_buffer)}")
             
             return {
                 "audio_processed": True,
