@@ -250,7 +250,7 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
 
   // Send audio chunk for voice analysis
   const sendAudioChunk = useCallback((audioData: string, transcript = '') => {
-    if (wsRef.current && isConnected) {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
         type: 'audio_chunk',
         session_id: sessionId,

@@ -178,13 +178,18 @@ class AICoachSession:
                     "speech_rate_wpm": round(voice_analysis.get("speech_rate_wpm", 0), 1),
                     "speech_rate_quality": voice_analysis.get("speech_rate_quality", "unknown"),
                     "pitch_hz": round(voice_analysis.get("pitch_hz", 0), 1),
+                    "pitch_variation_semitones": round(voice_analysis.get("pitch_variation_semitones", 0), 1),
                     "pitch_quality": voice_analysis.get("pitch_quality", "unknown"),
-                    "clarity_score": round(voice_analysis.get("clarity_score", 0) * 100, 1) if voice_analysis.get("clarity_score") else 0,
-                    "volume_consistency": round(voice_analysis.get("volume_consistency", 0) * 100, 1) if voice_analysis.get("volume_consistency") else 0,
+                    "clarity_score": round(voice_analysis.get("clarity_score", 0) * 100, 1) if voice_analysis.get("clarity_score") is not None else 0,
+                    "volume_db": round(voice_analysis.get("volume_db", 0), 1),
+                    "volume_consistency": round(voice_analysis.get("volume_consistency", 0) * 100, 1) if voice_analysis.get("volume_consistency") is not None else 0,
+                    "speech_energy": round(voice_analysis.get("speech_energy", 0), 1),
+                    "speech_energy_stability": round(voice_analysis.get("speech_energy_stability", 0) * 100, 1) if voice_analysis.get("speech_energy_stability") is not None else 0,
                     "filler_words": voice_analysis.get("filler_words", []),
-                    "voice_score": round(voice_analysis.get("overall_voice_score", 0), 1),
+                    "filler_word_density": round(voice_analysis.get("filler_word_density", 0), 1),
+                    "overall_voice_score": round(voice_analysis.get("overall_voice_score", 0), 1),
                     "recommendations": voice_analysis.get("recommendations", []),
-                    "transcript": voice_analysis.get("generated_transcript")  # Send back to frontend
+                    "transcript": voice_analysis.get("generated_transcript")
                 }
             }
             
@@ -228,8 +233,8 @@ class AICoachSession:
                 "smile_score": self.last_facial_analysis.get("smile_score", 0)
             }
             
-            # Generate Gemini feedback
-            feedback = self.gemini_coach.generate_feedback_sync(
+            # Generate OpenRouter feedback
+            feedback = await self.gemini_coach.generate_real_time_feedback(
                 voice_metrics,
                 facial_metrics,
                 transcript_segment,
@@ -385,18 +390,17 @@ class AICoachSession:
             
             return {
                 "score": {
-                    "total": score_result.get('total_score', 0),
+                    "total_score": score_result.get('total_score', 0),
                     "grade": score_result.get('grade', 'N/A'),
-                    "components": {
-                        "voice": score_result.get('voice_score', 0),
-                        "facial": score_result.get('facial_score', 0),
-                        "content": score_result.get('content_score', 0),
-                        "pacing": score_result.get('pacing_score', 0)
-                    },
+                    "voice_score": score_result.get('voice_score', 0),
+                    "facial_score": score_result.get('facial_score', 0),
+                    "content_score": score_result.get('content_score', 0),
+                    "pacing_score": score_result.get('pacing_score', 0),
                     "is_good_frame": score_result.get('is_good_frame', False),
-                    "feedback_priority": score_result.get('feedback_priority', 'none'),
+                    "feedback_priority": score_result.get('feedback_priority', []),
                     "strengths": score_result.get('strengths', []),
-                    "weaknesses": score_result.get('weaknesses', [])
+                    "weaknesses": score_result.get('weaknesses', []),
+                    "timestamp": score_result.get('timestamp', datetime.now().isoformat())
                 }
             }
             
