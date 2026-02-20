@@ -24,6 +24,14 @@
   <strong>Earn XP, unlock achievements, and master communication.</strong>
 </p>
 
+> 📝 **Important Setup Notes for GitHub Deployment:**
+> 
+> 1. **GitHub Badges**: Replace `YOUR_USERNAME` in badge URLs with your actual GitHub username
+> 2. **Logo**: Upload your logo to `frontend-next/public/` and update the logo URL
+> 3. **Repository Links**: Update all repository links to point to your actual GitHub repository
+> 4. **Deployment URLs**: Replace placeholder URLs with your actual deployment links
+> 5. **License**: Update the license badge with your actual license type
+
 <p align="center">
   <a href="#-features"><strong>Features</strong></a> •
   <a href="#-quick-start"><strong>Quick Start</strong></a> •
