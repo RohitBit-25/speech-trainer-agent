@@ -82,8 +82,11 @@ export function Navbar() {
                                 <img src="/vaanix-logo.png" alt="VaaniX Logo" className="h-full w-full object-cover" />
                             </div>
                             <div className="hidden sm:block">
-                                <span className="font-pixel text-sm text-white">Vaani</span><span className="font-pixel text-sm text-orange-400">X</span>
-                                <span className="font-mono text-xs text-orange-500/70 ml-2">v2.0</span>
+                                <div className="flex items-center gap-1">
+                                    <span className="font-pixel text-sm text-white">VAANI</span>
+                                    <span className="font-pixel text-sm text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.9)] animate-pulse">X</span>
+                                    <span className="font-mono text-xs text-orange-500/70 ml-2">v2.0</span>
+                                </div>
                             </div>
                         </Link>
                     </div>
@@ -102,8 +105,11 @@ export function Navbar() {
                             <img src="/vaanix-logo.png" alt="VaaniX Logo" className="h-full w-full object-cover" />
                         </div>
                         <div className="hidden sm:block">
-                            <span className="font-pixel text-sm text-white">Vaani</span><span className="font-pixel text-sm text-orange-400">X</span>
-                            <span className="font-mono text-xs text-orange-500/70 ml-2">v2.0</span>
+                            <div className="flex items-center gap-1">
+                                <span className="font-pixel text-sm text-white">VAANI</span>
+                                <span className="font-pixel text-sm text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.9)] animate-pulse">X</span>
+                                <span className="font-mono text-xs text-orange-500/70 ml-2">v2.0</span>
+                            </div>
                         </div>
                     </Link>
 

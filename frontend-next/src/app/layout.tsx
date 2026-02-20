@@ -12,18 +12,18 @@ const pressStart2P = Press_Start_2P({ weight: "400", subsets: ["latin"], variabl
 const vt323 = VT323({ weight: "400", subsets: ["latin"], variable: "--font-retro" });
 
 export const metadata: Metadata = {
-    title: "VaaniX — AI-Powered Speech Training",
-    description: "Level up your speech with VaaniX — AI-powered analysis of voice, expressions, and content. Earn XP, unlock achievements, and master communication.",
-    keywords: ["VaaniX", "speech training", "AI speech analysis", "public speaking", "communication skills", "voice analysis", "presentation skills"],
-    authors: [{ name: "VaaniX Team" }],
+    title: "VAANIX — AI Speech Training Platform",
+    description: "Level up your speech with VAANIX — AI-powered analysis of voice, expressions, and content. Earn XP, unlock achievements, and master communication.",
+    keywords: ["VAANIX", "VaaniX", "speech training", "AI speech analysis", "public speaking", "communication skills", "voice analysis", "presentation skills"],
+    authors: [{ name: "VAANIX Team" }],
     openGraph: {
-        title: "VaaniX — AI-Powered Speech Training",
+        title: "VAANIX — AI Speech Training Platform",
         description: "Your personal AI companion for mastering communication. Upload a video, get instant XP, and unlock confidence.",
         type: "website",
     },
     twitter: {
         card: "summary_large_image",
-        title: "VaaniX",
+        title: "VAANIX",
         description: "AI-powered speech analysis and training platform",
     },
 };
@@ -60,7 +60,12 @@ export default function RootLayout({
                                 <div className="w-3 h-3 bg-yellow-500 rounded-full border border-black"></div>
                                 <div className="w-3 h-3 bg-green-500 rounded-full border border-black"></div>
                             </div>
-                            <div className="font-pixel text-xs text-primary-foreground tracking-widest">VAANIX_OS_v2.0</div>
+                            <div className="font-pixel text-xs text-primary-foreground tracking-widest flex items-center gap-1">
+                                <span className="text-white">VAANI</span>
+                                <span className="text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.9)] animate-pulse">X</span>
+                                <span className="text-zinc-400 ml-1">_OS</span>
+                                <span className="text-orange-500/70">v2.0</span>
+                            </div>
                             <div className="flex gap-1">
                                 <div className="w-4 h-1 bg-primary-foreground/50"></div>
                                 <div className="w-4 h-1 bg-primary-foreground/50"></div>

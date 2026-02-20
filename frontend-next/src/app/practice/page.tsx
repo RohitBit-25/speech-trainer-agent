@@ -112,7 +112,13 @@ const UI_TEXT = {
     page: {
         title: 'Practice Arena',
         subtitle: 'Real-time Analysis Engine',
-        version: 'v2.0'
+        version: 'v2.0',
+        poweredBy: [
+            { text: 'VA', color: 'text-white' },
+            { text: 'AN', color: 'text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]' },
+            { text: 'I', color: 'text-white' },
+            { text: 'X', color: 'text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.8)] animate-pulse' },
+        ]
     },
     buttons: {
         startSession: 'Start Session',
@@ -163,7 +169,7 @@ const UI_TEXT = {
         'Avoid filler words (um, uh, like)',
         'Challenge mode scores go to leaderboard',
         'Timed mode has 2-minute countdown'
-    ]
+    ] as string[]
 } as const;
 
 // ─── Arena Loadout Panel ───────────────────────────────────────────────────────
@@ -567,8 +573,8 @@ export default function PracticePage() {
     const [totalFramesProcessed, setTotalFramesProcessed] = useState(0);
     // Session state
     const [fillerCount, setFillerCount] = useState(0);
-    const [sessionDuration, setSessionDuration] = useState(0);
-    const [timedSeconds, setTimedSeconds] = useState(120);
+    const [sessionDuration, setSessionDuration] = useState<number>(0);
+    const [timedSeconds, setTimedSeconds] = useState<number>(PRACTICE_CONFIG.TIMED_DURATION);
     const [showSummary, setShowSummary] = useState(false);
     const [summaryData, setSummaryData] = useState<any>(null);
     const [sessionStartTime, setSessionStartTime] = useState<number>(0);
@@ -695,7 +701,7 @@ export default function PracticePage() {
 
             // Update combo and multiplier based on score
             // We use functional state updates so we don't need 'combo' in dependencies
-            if (currentScore.total_score >= 70) {
+            if (currentScore.total_score >= PRACTICE_CONFIG.COMBO_THRESHOLD) {
                 setCombo(prev => prev + 1);
                 setComboStatus('HOT STREAK!');
             } else {
@@ -714,7 +720,7 @@ export default function PracticePage() {
                 base: baseMult,
                 combo: comboBonus,
                 streak: 0, // Could be calculated if we tracked streak separately
-                perfect: (currentScore.facial_score > 90 && currentScore.voice_score > 90) ? 0.5 : 0
+                perfect: (currentScore.facial_score > PRACTICE_CONFIG.PERFECT_SCORE_THRESHOLD && currentScore.voice_score > PRACTICE_CONFIG.PERFECT_SCORE_THRESHOLD) ? 0.5 : 0
             });
         }
     }, [currentScore, currentFeedback, difficulty]); // REMOVED 'combo' dependency
@@ -767,16 +773,16 @@ export default function PracticePage() {
                 if (frame && aiCoachConnectedRef.current) {
                     aiSendVideoFrame(frame as any);
                 }
-            }, 100);
+            }, PRACTICE_CONFIG.FRAME_CAPTURE_INTERVAL);
 
             // Duration tracker
             durationRef.current = setInterval(() => {
                 setSessionDuration(prev => prev + 1);
-            }, 1000);
+            }, PRACTICE_CONFIG.SESSION_TICK_INTERVAL);
 
             // Timed mode countdown
             if (mode === 'timed') {
-                setTimedSeconds(120);
+                setTimedSeconds(PRACTICE_CONFIG.TIMED_DURATION);
                 timerRef.current = setInterval(() => {
                     setTimedSeconds(prev => {
                         if (prev <= 1) {
@@ -785,7 +791,7 @@ export default function PracticePage() {
                         }
                         return prev - 1;
                     });
-                }, 1000);
+                }, PRACTICE_CONFIG.SESSION_TICK_INTERVAL);
             }
 
         } catch (error) {
@@ -894,8 +900,15 @@ export default function PracticePage() {
                             {UI_TEXT.page.title.toUpperCase()}
                             <span className="opacity-50">.{UI_TEXT.page.version}</span>
                         </h1>
-                        <p className="hidden md:block text-[10px] text-zinc-500 mt-1 uppercase tracking-widest">
+                        <p className="hidden md:flex items-center gap-2 text-[10px] text-zinc-500 mt-1 uppercase tracking-widest">
                             {UI_TEXT.page.subtitle}
+                            <span className="text-zinc-700 mx-1">•</span>
+                            <span className="text-zinc-600">Powered by</span>
+                            <span className="flex items-center gap-0.5">
+                                {UI_TEXT.page.poweredBy.map((part, idx) => (
+                                    <span key={idx} className={`font-pixel ${part.color}`}>{part.text}</span>
+                                ))}
+                            </span>
                         </p>
                     </div>
                 </div>
@@ -1010,7 +1023,7 @@ export default function PracticePage() {
                                                 >
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <Zap className="h-3 w-3 text-primary" />
-                                                        <span className="text-[10px] font-pixel text-primary uppercase">AI_COACH_INSIGHT</span>
+                                                        <span className="text-[10px] font-pixel text-primary uppercase">{UI_TEXT.labels.aiInsight}</span>
                                                     </div>
                                                     <p className="text-xs font-mono text-zinc-100 leading-relaxed shadow-sm">
                                                         {msg.message}
@@ -1236,7 +1249,7 @@ export default function PracticePage() {
             {/* Achievement Popup & Performance Monitor */}
             <Suspense fallback={null}><PerformanceMonitor wsLatency={0} messageQueue={0} show={isRecording} /></Suspense>
             <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} mode="practice" />
-            <QuickHelp title="Arena Tips" tips={["Maintain eye contact with camera", "Speak at 120-160 WPM", "Avoid filler words (um, uh, like)", "Challenge mode scores go to leaderboard", "Timed mode = 2-minute countdown"]} />
+            <QuickHelp title="Arena Tips" tips={UI_TEXT.arenaHelp} />
         </div>
     );
 }

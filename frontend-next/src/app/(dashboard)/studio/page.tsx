@@ -404,6 +404,16 @@ export default function StudioPage() {
                     <span className="text-zinc-600">ENV <span className="text-green-500/70">SECURE</span></span>
                     <span className="text-zinc-700">|</span>
                     <span className="text-zinc-600">LATENCY <span className="text-primary/70">12ms</span></span>
+                    <span className="text-zinc-700">|</span>
+                    <span className="text-zinc-600 flex items-center gap-1.5">
+                        POWERED BY
+                        <span className="flex items-center gap-0.5 font-pixel">
+                            <span className="text-white">VA</span>
+                            <span className="text-orange-400 drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]">AN</span>
+                            <span className="text-white">I</span>
+                            <span className="text-orange-400 drop-shadow-[0_0_6px_rgba(251,146,60,0.8)] animate-pulse">X</span>
+                        </span>
+                    </span>
                 </div>
                 <div className="flex items-center gap-2">
                     <motion.div

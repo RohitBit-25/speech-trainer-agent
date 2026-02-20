@@ -42,7 +42,10 @@ export function Hero() {
 
                 <div className="flex items-center justify-center gap-3 mt-2">
                     <img src="/vaanix-logo.png" alt="VaaniX" className="h-10 w-10 rounded-lg border-2 border-orange-500/50" />
-                    <span className="font-pixel text-2xl text-white">Vaani</span><span className="font-pixel text-2xl text-orange-400">X</span>
+                    <div className="flex items-center gap-1">
+                        <span className="font-pixel text-2xl text-white">VAANI</span>
+                        <span className="font-pixel text-2xl text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,1)] animate-pulse">X</span>
+                    </div>
                     <span className="font-mono text-xs text-orange-500/70 self-end mb-1">v2.0</span>
                 </div>
 
