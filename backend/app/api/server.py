@@ -67,7 +67,7 @@ async def root():
 async def health_check():
     """Check if service is running and components are healthy"""
     from app.core.component_health import get_health_status
-    return get_health_status()
+    return await get_health_status()
 
 # Define the analysis endpoint
 @app.post("/analyze")

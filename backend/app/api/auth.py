@@ -18,7 +18,7 @@ pwd_context = CryptContext(
 )
 
 # JWT Configuration
-SECRET_KEY = "your-secret-key-change-in-production"  # TODO: Move to env
+SECRET_KEY = ""  # TODO: Move to env
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
@@ -69,7 +69,7 @@ async def verify_token(
         return user
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")

@@ -44,6 +44,31 @@ async def get_difficulty_detail(level: str):
 
 # ============= CHALLENGES ENDPOINTS =============
 
+def serialize_doc(doc):
+    """Convert MongoDB document to JSON-serializable dict"""
+    if doc is None:
+        return None
+    result = {}
+    for key, value in doc.items():
+        if key == "_id":
+            result["id"] = str(value)
+        elif isinstance(value, ObjectId):
+            result[key] = str(value)
+        elif isinstance(value, datetime):
+            result[key] = value.isoformat()
+        elif isinstance(value, dict):
+            result[key] = serialize_doc(value)
+        elif isinstance(value, list):
+            result[key] = [
+                serialize_doc(item) if isinstance(item, dict) else 
+                str(item) if isinstance(item, ObjectId) else item
+                for item in value
+            ]
+        else:
+            result[key] = value
+    return result
+
+
 @router.get("/challenges/active")
 async def get_active_challenges(user_id: Optional[str] = None):
     """Get all currently active challenges"""
@@ -58,16 +83,19 @@ async def get_active_challenges(user_id: Optional[str] = None):
         ]
     }
     
-    challenges = await challenges_collection.find(query).to_list(100)
+    challenges_raw = await challenges_collection.find(query).to_list(100)
+    
+    # Serialize challenges to convert ObjectId to string
+    challenges = [serialize_doc(c) for c in challenges_raw]
     
     # If user_id provided, get their progress
     if user_id:
         user_progress = {}
-        user_challenges = await user_challenges_collection.find(
+        user_challenges_raw = await user_challenges_collection.find(
             {"user_id": user_id}
         ).to_list(100)
         
-        for uc in user_challenges:
+        for uc in user_challenges_raw:
             user_progress[uc["challenge_id"]] = {
                 "progress": uc.get("progress", 0),
                 "completed": uc.get("completed", False),

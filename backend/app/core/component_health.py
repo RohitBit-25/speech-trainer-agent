@@ -91,14 +91,13 @@ async def check_component_health() -> Dict[str, bool]:
     return results
 
 
-def get_health_status() -> Dict:
+async def get_health_status() -> Dict:
     """
     Get current health status of all components
     """
-    # This is a synchronous wrapper that runs async check
-    # In production, this would cache and update periodically
+    # This is now an async function that can be called from async endpoints
     try:
-        results = asyncio.run(check_component_health())
+        results = await check_component_health()
         
         total = len(results)
         healthy = sum(1 for v in results.values() if v)
