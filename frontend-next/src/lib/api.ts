@@ -1,4 +1,4 @@
-import { ParsedAnalysisResult, HistoryItem } from "./types";
+import { ParsedAnalysisResult, HistoryItem, ActiveSessionChallengesResponse } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -216,4 +216,26 @@ export async function getAnalysis(taskId: string): Promise<ParsedAnalysisResult>
         weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
         suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
     };
+}
+
+// ==================== CHALLENGE API ====================
+
+export async function getActiveSessionChallenges(userId: string): Promise<ActiveSessionChallengesResponse> {
+    const response = await fetchWithAuth(`${API_URL}/game/challenges/active-session/${userId}`);
+    if (!response.ok) {
+        throw new Error("Failed to fetch active session challenges");
+    }
+    return await response.json();
+}
+
+export async function claimChallengeReward(challengeId: string, userId: string): Promise<{ success: boolean; rewards: { xp: number; badge_id?: string; title?: string } }> {
+    const response = await fetchWithAuth(`${API_URL}/game/challenges/${challengeId}/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId }),
+    });
+    if (!response.ok) {
+        throw new Error("Failed to claim challenge reward");
+    }
+    return await response.json();
 }

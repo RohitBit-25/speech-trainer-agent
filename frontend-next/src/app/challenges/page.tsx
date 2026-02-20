@@ -665,6 +665,18 @@ export default function ChallengesPage() {
                 {/* Streak Bonus */}
                 <StreakBonusCard streak={streak} />
 
+                {/* Category Filter */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-600">
+                        <Filter className="w-3 h-3" />
+                        <span>Filter by Skill</span>
+                    </div>
+                    <CategoryFilter 
+                        selected={selectedCategory} 
+                        onSelect={setSelectedCategory} 
+                    />
+                </div>
+
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-3 bg-zinc-900/80 border border-zinc-800 rounded-xl p-1 h-auto">
