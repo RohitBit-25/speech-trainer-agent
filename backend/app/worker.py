@@ -61,8 +61,36 @@ def analyze_video_task(self, file_path: str):
         prompt = f"Analyze the following video: {file_path}"
         response: RunOutput = coordinator_agent.run(prompt)
         
-        # Serialize the response
-        result = jsonable_encoder(response.content)
+        import json
+        import re
+        
+        # Helper to clean and parse markdown JSON from LLM
+        def parse_agent_json(text_content):
+            if not isinstance(text_content, str):
+                return text_content
+            text = text_content.strip()
+            if text.startswith('```json'):
+                text = text[7:]
+            elif text.startswith('```'):
+                text = text[3:]
+            if text.endswith('```'):
+                text = text[:-3]
+            try:
+                return json.loads(text.strip())
+            except json.JSONDecodeError:
+                match = re.search(r'\{.*\}', text, re.DOTALL)
+                if match:
+                    try:
+                        return json.loads(match.group(0))
+                    except:
+                        pass
+                # Print raw response to celery logs for debugging if it fully fails
+                print(f"Failed to parse JSON. Raw response: {text[:200]}...")
+                return {"error": "Failed to parse JSON", "raw": text}
+                
+        # Parse the JSON response before saving and returning
+        parsed_content = parse_agent_json(response.content)
+        result = jsonable_encoder(parsed_content)
         
         # Save to MongoDB
         from app.db.mongodb import sync_analysis_results_collection

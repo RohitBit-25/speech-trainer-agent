@@ -23,7 +23,10 @@ def extract_audio_from_video(video_path: str, output_audio_path: str) -> str:
     """
     video_clip = VideoFileClip(video_path)
     audio_clip = video_clip.audio
-    audio_clip.write_audiofile(output_audio_path)
+    if audio_clip is None:
+        video_clip.close()
+        raise ValueError("No audio track found in the uploaded video.")
+    audio_clip.write_audiofile(output_audio_path, logger=None)
     audio_clip.close()
     video_clip.close()
     return output_audio_path
@@ -106,9 +109,21 @@ def analyze_voice_attributes(file_path: str) -> dict:
     ext = ext.lower()
 
     # If the file is a video, extract audio
-    if ext in ['.mp4']:
+    video_extensions = ['.mp4', '.mov', '.webm', '.mkv', '.avi']
+    if ext in video_extensions:
         with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_audio_file:
-            audio_path = extract_audio_from_video(file_path, temp_audio_file.name)
+            try:
+                audio_path = extract_audio_from_video(file_path, temp_audio_file.name)
+            except ValueError as e:
+                # E.g. No audio track found
+                if os.path.exists(temp_audio_file.name):
+                    os.remove(temp_audio_file.name)
+                return json.dumps({
+                    "transcription": "Error: No audio track found in the video.",
+                    "speech_rate_wpm": "0",
+                    "pitch_variation": "0",
+                    "volume_consistency": "0"
+                })
     else:
         audio_path = file_path
 
@@ -135,7 +150,7 @@ def analyze_voice_attributes(file_path: str) -> dict:
     volume_consistency = np.std(rms)
 
     # Clean up temporary audio file if created
-    if ext in ['.mp4']:
+    if ext in video_extensions and os.path.exists(audio_path):
         os.remove(audio_path)
 
     return json.dumps({
