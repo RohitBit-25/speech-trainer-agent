@@ -33,6 +33,139 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const FILLER_WORDS = ['um', 'uh', 'like', 'you know', 'basically', 'literally', 'actually', 'so', 'right', 'okay'];
 
+// ─── Configuration Constants ───────────────────────────────────────────────────
+const PRACTICE_CONFIG = {
+    TIMED_DURATION: 120, // seconds
+    FRAME_CAPTURE_INTERVAL: 100, // milliseconds
+    SESSION_TICK_INTERVAL: 1000, // milliseconds
+    MAX_FEEDBACK_HISTORY: 5,
+    COMBO_THRESHOLD: 70,
+    PERFECT_SCORE_THRESHOLD: 90,
+} as const;
+
+const MODE_CONFIG = [
+    { 
+        id: 'practice' as const, 
+        label: 'Practice', 
+        icon: Shield, 
+        description: 'Free practice session', 
+        color: 'border-teal-500/50 text-teal-400 bg-teal-500/10',
+        hoverColor: 'hover:border-teal-400 hover:bg-teal-500/20'
+    },
+    { 
+        id: 'challenge' as const, 
+        label: 'Challenge', 
+        icon: Swords, 
+        description: 'Compete for top score', 
+        color: 'border-primary/50 text-primary bg-primary/10',
+        hoverColor: 'hover:border-primary hover:bg-primary/20'
+    },
+    { 
+        id: 'timed' as const, 
+        label: 'Timed', 
+        icon: Clock, 
+        description: '2-minute countdown', 
+        color: 'border-purple-500/50 text-purple-400 bg-purple-500/10',
+        hoverColor: 'hover:border-purple-400 hover:bg-purple-500/20'
+    },
+] as const;
+
+const DIFFICULTY_CONFIG = [
+    { 
+        id: 'beginner' as const, 
+        label: 'Beginner', 
+        displayLabel: 'Rookie',
+        multiplier: 1.0, 
+        color: 'text-green-400 border-green-500/40 bg-green-500/10',
+        hoverColor: 'hover:border-green-400 hover:bg-green-500/20',
+        description: 'Perfect for getting started'
+    },
+    { 
+        id: 'intermediate' as const, 
+        label: 'Intermediate', 
+        displayLabel: 'Veteran',
+        multiplier: 1.5, 
+        color: 'text-yellow-400 border-yellow-500/40 bg-yellow-500/10',
+        hoverColor: 'hover:border-yellow-400 hover:bg-yellow-500/20',
+        description: 'Balanced challenge'
+    },
+    { 
+        id: 'expert' as const, 
+        label: 'Expert', 
+        displayLabel: 'Legend',
+        multiplier: 2.0, 
+        color: 'text-red-400 border-red-500/40 bg-red-500/10',
+        hoverColor: 'hover:border-red-400 hover:bg-red-500/20',
+        description: 'Maximum difficulty'
+    },
+] as const;
+
+const GRADE_CONFIG = [
+    { min: 80, grade: 'S', label: 'Outstanding', color: 'text-yellow-400' },
+    { min: 65, grade: 'A', label: 'Excellent', color: 'text-green-400' },
+    { min: 50, grade: 'B', label: 'Good', color: 'text-blue-400' },
+    { min: 35, grade: 'C', label: 'Fair', color: 'text-orange-400' },
+    { min: 0, grade: 'D', label: 'Needs Work', color: 'text-red-400' },
+] as const;
+
+const UI_TEXT = {
+    page: {
+        title: 'Practice Arena',
+        subtitle: 'Real-time Analysis Engine',
+        version: 'v2.0'
+    },
+    buttons: {
+        startSession: 'Start Session',
+        stopSession: 'End Session',
+        tutorial: 'Tutorial',
+        restart: 'New Session'
+    },
+    labels: {
+        sessionConfig: 'Session Setup',
+        bestScore: 'Best',
+        streak: 'Streak',
+        multiplier: 'Multiplier',
+        mode: 'Mode',
+        difficulty: 'Difficulty',
+        sessionScore: 'Session Score',
+        systemTelemetry: 'System Telemetry',
+        aiCoach: 'AI Coach',
+        liveTranscript: 'Live Transcript',
+        recording: 'Recording',
+        online: 'Online',
+        connecting: 'Connecting',
+        cameraOffline: 'Camera Offline',
+        fillerWords: 'Filler Words',
+        aiInsight: 'AI Insight',
+        pilot: 'Pilot',
+        guest: 'Guest'
+    },
+    summary: {
+        title: 'Session Summary',
+        performanceRank: 'Performance Rank',
+        finalScore: 'Final Score',
+        duration: 'Duration',
+        fillers: 'Filler Words',
+        xpEarned: 'XP Earned',
+        facialDiagnostics: 'Facial Analysis',
+        vocalTelemetry: 'Voice Quality',
+        syntaxControl: 'Speech Clarity'
+    },
+    tooltips: {
+        cameraToggle: 'Toggle camera',
+        micToggle: 'Toggle microphone',
+        expandConfig: 'Expand configuration',
+        collapseConfig: 'Collapse configuration'
+    },
+    arenaHelp: [
+        'Maintain eye contact with camera',
+        'Speak at 120-160 words per minute',
+        'Avoid filler words (um, uh, like)',
+        'Challenge mode scores go to leaderboard',
+        'Timed mode has 2-minute countdown'
+    ]
+} as const;
+
 // ─── Arena Loadout Panel ───────────────────────────────────────────────────────
 // ─── Arena Loadout Panel ───────────────────────────────────────────────────────
 function ArenaLoadout({
@@ -48,15 +181,28 @@ function ArenaLoadout({
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
 
-    const modeConfig = [
-        { id: 'practice' as const, label: 'PRACTICE', icon: <Shield className="h-4 w-4" />, desc: 'Free session', color: 'border-blue-500/50 text-blue-400 bg-blue-500/10' },
-        { id: 'challenge' as const, label: 'CHALLENGE', icon: <Swords className="h-4 w-4" />, desc: 'Top score', color: 'border-orange-500/50 text-orange-400 bg-orange-500/10' },
-        { id: 'timed' as const, label: 'TIMED', icon: <Clock className="h-4 w-4" />, desc: '2-min limit', color: 'border-red-500/50 text-red-400 bg-red-500/10' },
-    ];
-    const diffConfig = [
-        { id: 'beginner' as const, label: 'ROOKIE', mult: '1.0×', color: 'text-green-400 border-green-500/40 bg-green-500/10' },
-        { id: 'intermediate' as const, label: 'VETERAN', mult: '1.5×', color: 'text-yellow-400 border-yellow-500/40 bg-yellow-500/10' },
-        { id: 'expert' as const, label: 'LEGEND', mult: '2.0×', color: 'text-red-400 border-red-500/40 bg-red-500/10' },
+    const statsConfig = [
+        { 
+            label: UI_TEXT.labels.bestScore, 
+            value: bestScore > 0 ? bestScore.toFixed(0) : '---', 
+            icon: Trophy, 
+            color: 'text-yellow-400',
+            iconColor: 'text-yellow-500' 
+        },
+        { 
+            label: UI_TEXT.labels.streak, 
+            value: streak > 0 ? `${streak}🔥` : '0', 
+            icon: Flame, 
+            color: 'text-orange-400',
+            iconColor: 'text-orange-500' 
+        },
+        { 
+            label: UI_TEXT.labels.multiplier, 
+            value: `${multiplier.toFixed(1)}×`, 
+            icon: Zap, 
+            color: 'text-primary',
+            iconColor: 'text-primary' 
+        },
     ];
 
     return (
@@ -67,8 +213,14 @@ function ArenaLoadout({
         >
             {/* Header / Toggle */}
             <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-pixel text-zinc-500 uppercase tracking-widest">Session Config</h3>
-                <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)} className="h-6 w-6 p-0 text-zinc-500 hover:text-primary">
+                <h3 className="text-xs font-pixel text-zinc-500 uppercase tracking-widest">{UI_TEXT.labels.sessionConfig}</h3>
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setIsExpanded(!isExpanded)} 
+                    className="h-6 w-6 p-0 text-zinc-500 hover:text-primary transition-colors"
+                    title={isExpanded ? UI_TEXT.tooltips.collapseConfig : UI_TEXT.tooltips.expandConfig}
+                >
                     {isExpanded ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                 </Button>
             </div>
@@ -83,59 +235,75 @@ function ArenaLoadout({
                     >
                         {/* Arena stats bar */}
                         <div className="grid grid-cols-3 gap-2">
-                            {[
-                                { label: 'BEST', value: bestScore > 0 ? bestScore.toFixed(0) : '---', icon: <Trophy className="h-3.5 w-3.5 text-yellow-500" />, color: 'text-yellow-400' },
-                                { label: 'STREAK', value: `${streak}🔥`, icon: <Flame className="h-3.5 w-3.5 text-orange-500" />, color: 'text-orange-400' },
-                                { label: 'MULT', value: `${multiplier.toFixed(1)}×`, icon: <Zap className="h-3.5 w-3.5 text-primary" />, color: 'text-primary' },
-                            ].map(s => (
-                                <div key={s.label} className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-2 text-center">
-                                    <div className="flex justify-center mb-1">{s.icon}</div>
-                                    <div className={`font-pixel text-sm ${s.color}`}>{s.value}</div>
-                                    <div className="text-[9px] font-mono text-zinc-600 mt-0.5">{s.label}</div>
-                                </div>
-                            ))}
+                            {statsConfig.map((stat) => {
+                                const IconComponent = stat.icon;
+                                return (
+                                    <motion.div
+                                        key={stat.label}
+                                        whileHover={{ scale: 1.02 }}
+                                        className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-2 text-center hover:border-zinc-700 transition-colors"
+                                    >
+                                        <div className="flex justify-center mb-1">
+                                            <IconComponent className={`h-3.5 w-3.5 ${stat.iconColor}`} />
+                                        </div>
+                                        <div className={`font-pixel text-sm ${stat.color}`}>{stat.value}</div>
+                                        <div className="text-[9px] font-mono text-zinc-600 mt-0.5 uppercase">{stat.label}</div>
+                                    </motion.div>
+                                );
+                            })}
                         </div>
 
                         {/* Mode selector */}
                         <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-3 space-y-2">
-                            <label className="text-[9px] font-pixel text-zinc-500 uppercase tracking-widest">Mode</label>
+                            <label className="text-[9px] font-pixel text-zinc-500 uppercase tracking-widest">{UI_TEXT.labels.mode}</label>
                             <div className="space-y-1.5">
-                                {modeConfig.map(m => (
-                                    <button
-                                        key={m.id}
-                                        onClick={() => setMode(m.id)}
-                                        className={`w-full flex items-center gap-2 p-2 rounded-lg border transition-all duration-200 text-left ${mode === m.id ? m.color : 'border-zinc-800 text-zinc-500 bg-zinc-900/50 hover:border-zinc-700'
+                                {MODE_CONFIG.map(m => {
+                                    const IconComponent = m.icon;
+                                    return (
+                                        <motion.button
+                                            key={m.id}
+                                            onClick={() => setMode(m.id)}
+                                            whileHover={{ scale: 1.01 }}
+                                            whileTap={{ scale: 0.99 }}
+                                            className={`w-full flex items-center gap-2 p-2 rounded-lg border transition-all duration-200 text-left ${
+                                                mode === m.id ? m.color : `border-zinc-800 text-zinc-500 bg-zinc-900/50 ${m.hoverColor}`
                                             }`}
-                                    >
-                                        <span className={mode === m.id ? '' : 'opacity-40'}>{m.icon}</span>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="font-pixel text-[10px] truncate">{m.label}</div>
-                                        </div>
-                                        {mode === m.id && (
-                                            <motion.div
-                                                layoutId="mode-indicator"
-                                                className="w-1.5 h-1.5 rounded-full bg-current"
-                                            />
-                                        )}
-                                    </button>
-                                ))}
+                                        >
+                                            <IconComponent className={`h-4 w-4 ${mode === m.id ? '' : 'opacity-40'}`} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-pixel text-[10px] truncate">{m.label.toUpperCase()}</div>
+                                                <div className="text-[8px] font-mono text-zinc-600 opacity-70">{m.description}</div>
+                                            </div>
+                                            {mode === m.id && (
+                                                <motion.div
+                                                    layoutId="mode-indicator"
+                                                    className="w-1.5 h-1.5 rounded-full bg-current"
+                                                />
+                                            )}
+                                        </motion.button>
+                                    );
+                                })}
                             </div>
                         </div>
 
                         {/* Difficulty selector */}
                         <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-3 space-y-2">
-                            <label className="text-[9px] font-pixel text-zinc-500 uppercase tracking-widest">Difficulty</label>
+                            <label className="text-[9px] font-pixel text-zinc-500 uppercase tracking-widest">{UI_TEXT.labels.difficulty}</label>
                             <div className="grid grid-cols-3 gap-1.5">
-                                {diffConfig.map(d => (
-                                    <button
+                                {DIFFICULTY_CONFIG.map(d => (
+                                    <motion.button
                                         key={d.id}
                                         onClick={() => setDifficulty(d.id)}
-                                        className={`py-2 rounded-lg border transition-all duration-200 text-center ${difficulty === d.id ? d.color : 'border-zinc-800 text-zinc-600 bg-zinc-900/50 hover:border-zinc-700'
-                                            }`}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className={`py-2 rounded-lg border transition-all duration-200 text-center ${
+                                            difficulty === d.id ? d.color : `border-zinc-800 text-zinc-600 bg-zinc-900/50 ${d.hoverColor}`
+                                        }`}
+                                        title={d.description}
                                     >
-                                        <div className="font-pixel text-[9px]">{d.label}</div>
-                                        <div className="text-[8px] font-mono opacity-70 mt-0.5">{d.mult}</div>
-                                    </button>
+                                        <div className="font-pixel text-[9px]">{d.displayLabel.toUpperCase()}</div>
+                                        <div className="text-[8px] font-mono opacity-70 mt-0.5">{d.multiplier.toFixed(1)}×</div>
+                                    </motion.button>
                                 ))}
                             </div>
                         </div>
@@ -144,17 +312,27 @@ function ArenaLoadout({
             </AnimatePresence>
 
             {!isExpanded && (
-                <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-3 flex justify-between items-center text-[10px] font-mono text-zinc-500">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-3 flex justify-between items-center text-[10px] font-mono text-zinc-500"
+                >
                     <div className="flex items-center gap-2">
-                        {mode === 'practice' && <Shield className="h-3 w-3 text-blue-400" />}
-                        {mode === 'challenge' && <Swords className="h-3 w-3 text-orange-400" />}
-                        {mode === 'timed' && <Clock className="h-3 w-3 text-red-400" />}
-                        <span className="uppercase">{mode}</span>
+                        {MODE_CONFIG.find(m => m.id === mode) && (() => {
+                            const config = MODE_CONFIG.find(m => m.id === mode)!;
+                            const IconComponent = config.icon;
+                            return (
+                                <>
+                                    <IconComponent className={`h-3 w-3 ${config.color.split(' ').find(c => c.startsWith('text-'))}`} />
+                                    <span className="uppercase">{config.label}</span>
+                                </>
+                            );
+                        })()}
                     </div>
-                    <div className={difficulty === 'expert' ? 'text-red-400' : difficulty === 'intermediate' ? 'text-yellow-400' : 'text-green-400'}>
-                        {difficulty.toUpperCase()}
+                    <div className={DIFFICULTY_CONFIG.find(d => d.id === difficulty)?.color.split(' ').find(c => c.startsWith('text-'))}>
+                        {DIFFICULTY_CONFIG.find(d => d.id === difficulty)?.label.toUpperCase()}
                     </div>
-                </div>
+                </motion.div>
             )}
         </motion.div>
     );
@@ -200,14 +378,48 @@ interface SessionSummaryProps {
 function SessionSummary({ score, duration, fillerCount, facialScore, voiceScore, xpEarned, onRestart }: SessionSummaryProps) {
     const mins = Math.floor(duration / 60);
     const secs = duration % 60;
-    const overallGrade = score >= 80 ? 'S' : score >= 65 ? 'A' : score >= 50 ? 'B' : score >= 35 ? 'C' : 'D';
-    const gradeColor = score >= 80 ? 'text-yellow-400' : score >= 65 ? 'text-green-400' : score >= 50 ? 'text-blue-400' : score >= 35 ? 'text-orange-400' : 'text-red-400';
+    
+    const gradeInfo = GRADE_CONFIG.find(g => score >= g.min) || GRADE_CONFIG[GRADE_CONFIG.length - 1];
 
     const stats = [
-        { label: "Final Score", value: score.toFixed(0), unit: "pts", icon: <Trophy className="h-4 w-4 text-yellow-500" />, color: "text-yellow-400" },
-        { label: "Operation Time", value: `${mins}:${secs.toString().padStart(2, '0')}`, unit: "min", icon: <Clock className="h-4 w-4 text-blue-400" />, color: "text-blue-400" },
-        { label: "Filler Words", value: fillerCount.toString(), unit: "used", icon: <Target className="h-4 w-4 text-red-400" />, color: fillerCount > 10 ? "text-red-400" : fillerCount > 5 ? "text-orange-400" : "text-green-400" },
-        { label: "Credits Earned", value: `+${xpEarned}`, unit: "xp", icon: <Zap className="h-4 w-4 text-primary" />, color: "text-primary" },
+        { 
+            label: UI_TEXT.summary.finalScore, 
+            value: score.toFixed(0), 
+            unit: "pts", 
+            icon: Trophy, 
+            color: "text-yellow-400",
+            iconColor: "text-yellow-500" 
+        },
+        { 
+            label: UI_TEXT.summary.duration, 
+            value: `${mins}:${secs.toString().padStart(2, '0')}`, 
+            unit: "min", 
+            icon: Clock, 
+            color: "text-blue-400",
+            iconColor: "text-blue-400" 
+        },
+        { 
+            label: UI_TEXT.summary.fillers, 
+            value: fillerCount.toString(), 
+            unit: "used", 
+            icon: Target, 
+            color: fillerCount > 10 ? "text-red-400" : fillerCount > 5 ? "text-orange-400" : "text-green-400",
+            iconColor: "text-red-400" 
+        },
+        { 
+            label: UI_TEXT.summary.xpEarned, 
+            value: `+${xpEarned}`, 
+            unit: "xp", 
+            icon: Zap, 
+            color: "text-primary",
+            iconColor: "text-primary" 
+        },
+    ];
+
+    const performanceBars = [
+        { label: UI_TEXT.summary.facialDiagnostics, value: facialScore, color: "bg-teal-500" },
+        { label: UI_TEXT.summary.vocalTelemetry, value: voiceScore, color: "bg-primary" },
+        { label: UI_TEXT.summary.syntaxControl, value: Math.max(0, 100 - fillerCount * 5), color: "bg-purple-500" },
     ];
 
     return (
@@ -231,7 +443,7 @@ function SessionSummary({ score, duration, fillerCount, facialScore, voiceScore,
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rotate-45 -mr-16 -mt-16"></div>
                     <div className="flex items-center gap-3 relative z-10">
                         <Shield className="w-5 h-5 text-primary" />
-                        <h2 className="font-pixel text-lg text-white uppercase tracking-widest">Post-Operation Report</h2>
+                        <h2 className="font-pixel text-lg text-white uppercase tracking-widest">{UI_TEXT.summary.title}</h2>
                     </div>
                 </div>
 
@@ -243,41 +455,40 @@ function SessionSummary({ score, duration, fillerCount, facialScore, voiceScore,
                         transition={{ delay: 0.2, type: "spring" }}
                         className="flex-shrink-0 flex flex-col items-center justify-center bg-zinc-950 border-4 border-zinc-800 p-8 shadow-[8px_8px_0px_rgba(0,0,0,1)] w-full md:w-auto min-w-[200px]"
                     >
-                        <div className="text-[10px] font-pixel text-zinc-500 mb-4 tracking-widest uppercase">Performance Rank</div>
-                        <div className={`text-8xl md:text-9xl font-pixel ${gradeColor} drop-shadow-[0_0_15px_currentColor]`}>{overallGrade}</div>
+                        <div className="text-[10px] font-pixel text-zinc-500 mb-4 tracking-widest uppercase">{UI_TEXT.summary.performanceRank}</div>
+                        <div className={`text-8xl md:text-9xl font-pixel ${gradeInfo.color} drop-shadow-[0_0_15px_currentColor]`}>{gradeInfo.grade}</div>
                         <div className="text-xs font-mono text-zinc-400 mt-4 px-4 py-1 border border-zinc-800 bg-zinc-900 rounded-none">
-                            {score >= 80 ? 'OUTSTANDING' : score >= 65 ? 'ACCEPTABLE' : score >= 50 ? 'MARGINAL' : 'UNACCEPTABLE'}
+                            {gradeInfo.label.toUpperCase()}
                         </div>
                     </motion.div>
 
                     {/* Stats Section */}
                     <div className="flex-1 w-full space-y-6">
                         <div className="grid grid-cols-2 gap-4">
-                            {stats.map((stat, i) => (
-                                <motion.div
-                                    key={stat.label}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.3 + i * 0.1 }}
-                                    className="bg-zinc-900 border-l-4 border-zinc-800 p-3 relative group overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 bg-primary/5 -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
-                                    <div className="flex justify-between items-start relative z-10">
-                                        <div className="text-[10px] font-mono text-zinc-500 uppercase">{stat.label}</div>
-                                        {stat.icon}
-                                    </div>
-                                    <div className={`text-xl font-pixel ${stat.color} mt-2 relative z-10`}>{stat.value}</div>
-                                </motion.div>
-                            ))}
+                            {stats.map((stat, i) => {
+                                const IconComponent = stat.icon;
+                                return (
+                                    <motion.div
+                                        key={stat.label}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.3 + i * 0.1 }}
+                                        className="bg-zinc-900 border-l-4 border-zinc-800 p-3 relative group overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 bg-primary/5 -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                                        <div className="flex justify-between items-start relative z-10">
+                                            <div className="text-[10px] font-mono text-zinc-500 uppercase">{stat.label}</div>
+                                            <IconComponent className={`h-4 w-4 ${stat.iconColor}`} />
+                                        </div>
+                                        <div className={`text-xl font-pixel ${stat.color} mt-2 relative z-10`}>{stat.value}</div>
+                                    </motion.div>
+                                );
+                            })}
                         </div>
 
                         {/* Breakdown Bars */}
                         <div className="space-y-4 pt-4 border-t-2 border-dashed border-zinc-800">
-                            {[
-                                { label: "Facial Diagnostics", value: facialScore, color: "bg-blue-500" },
-                                { label: "Vocal Telemetry", value: voiceScore, color: "bg-green-500" },
-                                { label: "Syntax Control", value: Math.max(0, 100 - fillerCount * 5), color: "bg-orange-500" },
-                            ].map((bar, i) => (
+                            {performanceBars.map((bar, i) => (
                                 <motion.div
                                     key={bar.label}
                                     initial={{ opacity: 0 }}
@@ -308,7 +519,7 @@ function SessionSummary({ score, duration, fillerCount, facialScore, voiceScore,
                         className="w-full font-pixel text-sm h-14 bg-primary text-black hover:bg-white border-4 border-primary hover:border-white shadow-[4px_4px_0px_#000] hover:translate-y-[2px] transition-all rounded-none hover:shadow-none"
                     >
                         <RotateCcw className="h-4 w-4 mr-2" />
-                        INITIALIZE_NEXT_SESSION
+                        {UI_TEXT.buttons.restart.toUpperCase()}
                     </Button>
                 </div>
             </motion.div>
@@ -672,12 +883,20 @@ export default function PracticePage() {
             {/* --- TOP NAVIGATION BAR --- */}
             <header className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-3 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-md z-20">
                 <div className="flex items-center gap-3 md:gap-4">
-                    <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
+                    <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="p-2 bg-primary/10 rounded-lg border border-primary/20"
+                    >
                         <Play className="h-5 w-5 text-primary" />
-                    </div>
+                    </motion.div>
                     <div>
-                        <h1 className="font-pixel text-lg md:text-xl text-primary leading-none tracking-tight">PRACTICE_MODE<span className="opacity-50">.v2</span></h1>
-                        <p className="hidden md:block text-[10px] text-zinc-500 mt-1 uppercase tracking-widest">Real-time Analysis Engine</p>
+                        <h1 className="font-pixel text-lg md:text-xl text-primary leading-none tracking-tight">
+                            {UI_TEXT.page.title.toUpperCase()}
+                            <span className="opacity-50">.{UI_TEXT.page.version}</span>
+                        </h1>
+                        <p className="hidden md:block text-[10px] text-zinc-500 mt-1 uppercase tracking-widest">
+                            {UI_TEXT.page.subtitle}
+                        </p>
                     </div>
                 </div>
 
@@ -687,24 +906,30 @@ export default function PracticePage() {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-pixel text-[10px] ${fillerCount > 10 ? 'border-red-500/50 bg-red-500/10 text-red-400' : fillerCount > 5 ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400' : 'border-green-500/50 bg-green-500/10 text-green-400'}`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border font-pixel text-[10px] transition-colors ${
+                                fillerCount > 10 
+                                    ? 'border-red-500/50 bg-red-500/10 text-red-400' 
+                                    : fillerCount > 5 
+                                    ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400' 
+                                    : 'border-green-500/50 bg-green-500/10 text-green-400'
+                            }`}
                         >
-                            <span>UM</span>
+                            <Target className="w-3 h-3" />
                             <span className="text-sm">{fillerCount}</span>
                         </motion.div>
                     )}
                     <div className="hidden md:flex flex-col items-end mr-2">
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Pilot</span>
-                        <span className="text-sm font-pixel text-zinc-300">{user?.name || "GUEST"}</span>
+                        <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{UI_TEXT.labels.pilot}</span>
+                        <span className="text-sm font-pixel text-zinc-300">{user?.name || UI_TEXT.labels.guest.toUpperCase()}</span>
                     </div>
                     <Button
                         onClick={() => setShowTutorial(true)}
                         variant="ghost"
                         size="sm"
-                        className="font-pixel text-xs hover:bg-zinc-800 border border-transparent hover:border-zinc-700"
+                        className="font-pixel text-xs hover:bg-zinc-800 border border-transparent hover:border-zinc-700 transition-all"
                     >
                         <BookOpen className="h-4 w-4 mr-2" />
-                        <span className="hidden md:inline">TUTORIAL</span>
+                        <span className="hidden md:inline">{UI_TEXT.buttons.tutorial.toUpperCase()}</span>
                     </Button>
                 </div>
             </header>
@@ -733,7 +958,7 @@ export default function PracticePage() {
                                 <div className="p-6 rounded-full bg-zinc-800/50 mb-4 border border-zinc-700/50 shadow-inner">
                                     <Camera className="h-12 w-12 text-zinc-600" />
                                 </div>
-                                <p className="text-zinc-500 font-pixel text-sm tracking-wide">CAMERA_OFFLINE</p>
+                                <p className="text-zinc-500 font-pixel text-sm tracking-wide">{UI_TEXT.labels.cameraOffline.toUpperCase()}</p>
                             </div>
                         )}
 
@@ -747,19 +972,21 @@ export default function PracticePage() {
                                         className="flex items-center gap-2 bg-red-500/10 backdrop-blur-md px-3 py-1.5 border border-red-500/30 rounded-full"
                                     >
                                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
-                                        <span className="text-red-400 font-pixel text-[10px] tracking-widest">REC</span>
+                                        <span className="text-red-400 font-pixel text-[10px] tracking-widest">{UI_TEXT.labels.recording.toUpperCase()}</span>
                                     </motion.div>
                                 )}
 
                                 {/* Timed countdown in HUD */}
                                 {isRecording && mode === 'timed' && (
-                                    <CountdownTimer seconds={timedSeconds} total={120} />
+                                    <CountdownTimer seconds={timedSeconds} total={PRACTICE_CONFIG.TIMED_DURATION} />
                                 )}
 
                                 {isRecording && mode !== 'timed' && (
-                                    <div className={`px-3 py-1.5 bg-black/40 backdrop-blur-md border rounded-full font-pixel text-[10px] flex items-center gap-2 ${aiCoachConnected ? 'border-green-500/30 text-green-400' : 'border-yellow-500/30 text-yellow-400'}`}>
+                                    <div className={`px-3 py-1.5 bg-black/40 backdrop-blur-md border rounded-full font-pixel text-[10px] flex items-center gap-2 ${
+                                        aiCoachConnected ? 'border-green-500/30 text-green-400' : 'border-yellow-500/30 text-yellow-400'
+                                    }`}>
                                         <div className={`w-1.5 h-1.5 rounded-full ${aiCoachConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                                        {aiCoachConnected ? 'ONLINE' : 'CONNECTING'}
+                                        {aiCoachConnected ? UI_TEXT.labels.online.toUpperCase() : UI_TEXT.labels.connecting.toUpperCase()}
                                     </div>
                                 )}
                             </div>
@@ -817,15 +1044,15 @@ export default function PracticePage() {
                         <div className="px-4 py-2.5 border-b border-zinc-800/50 bg-zinc-900/30 flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <div className={`w-1.5 h-1.5 rounded-full ${isTranscribing ? 'bg-primary animate-pulse' : 'bg-zinc-700'}`} />
-                                <span className="text-[10px] font-pixel text-zinc-500 uppercase tracking-wider">Live Transcript</span>
+                                <span className="text-[10px] font-pixel text-zinc-500 uppercase tracking-wider">{UI_TEXT.labels.liveTranscript}</span>
                             </div>
                             {/* Waveform */}
                             <WaveformVisualizer isActive={isTranscribing} />
                             {/* Filler word count inline */}
                             {isRecording && (
-                                <div className="text-[10px] font-mono text-zinc-600">
+                                <div className="text-[10px] font-mono text-zinc-600" title={`${fillerCount} ${UI_TEXT.labels.fillerWords.toLowerCase()}`}>
                                     <span className={fillerCount > 5 ? 'text-red-400' : 'text-zinc-500'}>
-                                        {fillerCount} filler{fillerCount !== 1 ? 's' : ''}
+                                        {fillerCount} {fillerCount !== 1 ? UI_TEXT.labels.fillerWords.toLowerCase() : 'filler'}
                                     </span>
                                 </div>
                             )}
@@ -854,7 +1081,7 @@ export default function PracticePage() {
                         <div className="flex-shrink-0 bg-black border-4 border-zinc-800 rounded-none p-5 shadow-[8px_8px_0px_#000] relative overflow-hidden group hover:border-zinc-700 transition-colors">
                             <div className="flex items-start justify-between relative z-10">
                                 <div>
-                                    <label className="text-[10px] font-pixel text-zinc-500 mb-1 block uppercase tracking-wider">Session Score</label>
+                                    <label className="text-[10px] font-pixel text-zinc-500 mb-1 block uppercase tracking-wider">{UI_TEXT.labels.sessionScore}</label>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-4xl md:text-5xl font-pixel text-primary tracking-tighter leading-none drop-shadow-[0_2px_10px_rgba(var(--primary-rgb),0.3)]">
                                             {currentScore?.total_score?.toLocaleString() ?? "0000"}
@@ -862,9 +1089,12 @@ export default function PracticePage() {
                                         <span className="text-xs font-pixel text-zinc-600">PTS</span>
                                     </div>
                                 </div>
-                                <div className="p-2 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
+                                <motion.div 
+                                    whileHover={{ rotate: 5 }}
+                                    className="p-2 bg-zinc-800/50 rounded-lg border border-zinc-700/50"
+                                >
                                     <Trophy className="h-5 w-5 text-zinc-400" />
-                                </div>
+                                </motion.div>
                             </div>
 
                             {isRecording && currentScore && (
@@ -882,7 +1112,7 @@ export default function PracticePage() {
                             <div className="bg-black border-4 border-zinc-800 rounded-none p-4 md:p-5 shadow-[8px_8px_0px_#000] relative group hover:border-zinc-700 transition-colors">
                                 <h3 className="text-[10px] font-pixel text-zinc-500 mb-4 flex items-center gap-2 uppercase tracking-widest border-b-2 border-zinc-800 pb-2">
                                     <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
-                                    System Telemetry
+                                    {UI_TEXT.labels.systemTelemetry}
                                 </h3>
                                 <Suspense fallback={<ComponentLoader />}>
                                     <PerformanceMeters
@@ -912,7 +1142,7 @@ export default function PracticePage() {
                         <div className="bg-black border-4 border-zinc-800 rounded-none p-4 shadow-[8px_8px_0px_#000] flex-1 min-h-[150px] relative group hover:border-zinc-700 transition-colors">
                             <h3 className="text-[10px] font-pixel text-primary mb-3 flex items-center gap-2 uppercase tracking-widest border-b-2 border-zinc-800 pb-2">
                                 <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
-                                AI_COACH_UPLINK
+                                {UI_TEXT.labels.aiCoach.toUpperCase()}_UPLINK
                             </h3>
                             <Suspense fallback={<ComponentLoader />}>
                                 <AICoach

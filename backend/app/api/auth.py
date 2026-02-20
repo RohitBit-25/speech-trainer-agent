@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 from app.db.mongodb import users_collection
 from app.db.models_mongo import UserInDB, UserCreate, UserResponse
+import os
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer(auto_error=False)
@@ -18,9 +19,9 @@ pwd_context = CryptContext(
 )
 
 # JWT Configuration
-SECRET_KEY = ""  # TODO: Move to env
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "fallback-secret-key-for-development-only")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "10080"))  # Default: 7 days
 
 # Pydantic Models
 class UserSignup(BaseModel):
