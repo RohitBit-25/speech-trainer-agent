@@ -330,6 +330,7 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
     const completed = challenge.user_progress?.completed || false;
     const claimed = challenge.user_progress?.claimed || false;
     const locked = !completed && progress === 0;
+    const skillCategory = challenge.requirements?.skill_category || "general";
 
     const diffColors: Record<string, { border: string; bg: string; text: string; badge: string }> = {
         beginner: { border: "border-green-500/30", bg: "from-green-950/20", text: "text-green-400", badge: "bg-green-500" },
@@ -343,6 +344,18 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
         weekly: <Calendar className="h-4 w-4" />,
         achievement: <Award className="h-4 w-4" />,
     };
+
+    // Estimate time for micro-challenges
+    const getEstimatedTime = () => {
+        if (challenge.requirements?.min_duration) {
+            return Math.ceil(challenge.requirements.min_duration / 60);
+        }
+        if (challenge.type === "daily") return 2;
+        if (challenge.type === "weekly") return 15;
+        return 5;
+    };
+    const estimatedMinutes = getEstimatedTime();
+    const isQuickWin = estimatedMinutes <= 5;
 
     const handleClaim = () => {
         setShowConfetti(true);
@@ -382,7 +395,7 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
 
                 <div className="p-5">
                     {/* Header */}
-                    <div className="flex items-start gap-3 mb-4">
+                    <div className="flex items-start gap-3 mb-3">
                         <div className={`p-2.5 rounded-xl border ${dc.border} ${dc.text} bg-zinc-900/50 flex-shrink-0`}>
                             {typeIcons[challenge.type]}
                         </div>
@@ -395,6 +408,17 @@ function ChallengeCard({ challenge, onClaim }: { challenge: Challenge; onClaim: 
                             </div>
                             <p className="text-xs font-mono text-zinc-400 mt-1 leading-relaxed">{challenge.description}</p>
                         </div>
+                    </div>
+
+                    {/* Skill Category & Quick Win Badge */}
+                    <div className="flex items-center gap-2 mb-4">
+                        <SkillCategoryBadge category={skillCategory} showLabel />
+                        {isQuickWin && (
+                            <Badge className="bg-primary/20 text-primary border-primary/30 font-pixel text-[9px]">
+                                <Timer className="h-3 w-3 mr-1" />
+                                {estimatedMinutes} MIN
+                            </Badge>
+                        )}
                     </div>
 
                     {/* Progress */}
@@ -510,6 +534,7 @@ export default function ChallengesPage() {
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("daily");
+    const [selectedCategory, setSelectedCategory] = useState<SkillCategory | "all">("all");
     const [streak] = useState(1); // TODO: get from user profile
 
     const fetchChallenges = useCallback(async () => {
@@ -580,13 +605,26 @@ export default function ChallengesPage() {
         }
     };
 
-    const filterChallenges = (type: string) => challenges.filter(c => c.type === type);
+    const filterChallenges = (type: string) => {
+        let filtered = challenges.filter(c => c.type === type);
+        if (selectedCategory !== "all") {
+            filtered = filtered.filter(c => 
+                (c.requirements?.skill_category || "general") === selectedCategory
+            );
+        }
+        return filtered;
+    };
 
     const tabConfig = [
         { value: "daily", label: "DAILY", icon: "🌅", count: filterChallenges("daily").length },
         { value: "weekly", label: "WEEKLY", icon: "📅", count: filterChallenges("weekly").length },
         { value: "achievement", label: "ACHIEVEMENTS", icon: "🏅", count: filterChallenges("achievement").length },
     ];
+
+    // Get unique skill categories from current challenges
+    const availableCategories = Array.from(new Set(
+        challenges.map(c => c.requirements?.skill_category || "general")
+    )) as SkillCategory[];
 
     if (loading) {
         return (
