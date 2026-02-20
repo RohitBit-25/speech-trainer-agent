@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { getActiveSessionChallenges, claimChallengeReward } from "@/lib/api";
+import { claimChallengeReward, API_URL } from "@/lib/api";
 import type { Challenge, SkillCategory, ChallengeType } from "@/lib/types";
 
 // ─── Skill Category Helpers ────────────────────────────────────────────────────
@@ -456,7 +456,7 @@ export default function ChallengesPage() {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState("daily");
     const [selectedCategory, setSelectedCategory] = useState<SkillCategory | "all">("all");
-    const [streak] = useState(1); // TODO: get from user profile
+    const [streak] = useState(1);
 
     const fetchChallenges = useCallback(async () => {
         setLoading(true);
@@ -469,35 +469,62 @@ export default function ChallengesPage() {
             if (!userId) {
                 setError("Please log in to view challenges");
                 setChallenges([]);
+                setLoading(false);
                 return;
             }
 
-            const data = await getActiveSessionChallenges(userId);
+            console.log('Fetching challenges for user:', userId);
+            console.log('API_URL:', API_URL);
             
-            // Transform backend response to Challenge type
-            const transformed: Challenge[] = data.challenges.map(c => ({
+            const url = `${API_URL}/game/challenges/active?user_id=${userId}`;
+            console.log('Fetching from:', url);
+            
+            const response = await fetch(url, {
+                credentials: 'include',
+            });
+            
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('Received data:', data);
+            console.log('Challenges count:', data.challenges?.length || 0);
+            
+            const transformed: Challenge[] = (data.challenges || []).map((c: any) => ({
                 challenge_id: c.challenge_id,
                 type: c.type,
                 title: c.title,
                 description: c.description,
                 difficulty: c.difficulty,
-                requirements: c.requirements,
-                rewards: c.rewards,
-                expires_at: undefined, // Backend doesn't return this for active session endpoint
-                skill_category: c.skill_category,
+                requirements: c.requirements || {},
+                rewards: c.rewards || { xp: 0 },
+                expires_at: c.expires_at,
+                skill_category: c.requirements?.skill_category || "general",
                 user_progress: {
-                    progress: c.progress,
-                    completed: c.completed,
-                    claimed: c.claimed,
-                    current_value: c.current_value,
-                    target_value: c.target_value
+                    progress: c.user_progress?.progress || 0,
+                    completed: c.user_progress?.completed || false,
+                    claimed: c.user_progress?.claimed || false,
+                    current_value: c.user_progress?.current_value || 0,
+                    target_value: c.user_progress?.target_value || ""
                 }
             }));
             
+            console.log('Transformed challenges:', transformed.length);
             setChallenges(transformed);
         } catch (err) {
             console.error('Error fetching challenges:', err);
-            setError(err instanceof Error ? err.message : 'Failed to load challenges');
+            let errorMessage = 'Failed to load challenges';
+            if (err instanceof Error) {
+                if (err.message.includes('Failed to fetch')) {
+                    errorMessage = 'Cannot connect to backend server. Please make sure the backend is running on port 8000.';
+                } else {
+                    errorMessage = err.message;
+                }
+            }
+            setError(errorMessage);
             setChallenges([]);
         } finally {
             setLoading(false);
@@ -522,14 +549,12 @@ export default function ChallengesPage() {
                 description: data.rewards?.badge_id ? "Badge unlocked!" : "Reward added to your profile",
             });
 
-            // Optimistic UI update
             setChallenges(prev => prev.map(c =>
                 c.challenge_id === challengeId
                     ? { ...c, user_progress: { ...c.user_progress!, claimed: true } }
                     : c
             ));
             
-            // Refresh to get updated state
             setTimeout(() => fetchChallenges(), 500);
         } catch (err) {
             toast.error("Failed to claim reward", {
@@ -548,7 +573,6 @@ export default function ChallengesPage() {
         return filtered;
     };
 
-    // Calculate counts for tabs (without category filter to show total available)
     const tabCounts = {
         daily: challenges.filter(c => c.type === "daily").length,
         weekly: challenges.filter(c => c.type === "weekly").length,
@@ -560,11 +584,6 @@ export default function ChallengesPage() {
         { value: "weekly", label: "WEEKLY", icon: "📅", count: tabCounts.weekly },
         { value: "achievement", label: "ACHIEVEMENTS", icon: "🏅", count: tabCounts.achievement },
     ];
-
-    // Get unique skill categories from current challenges
-    const availableCategories = Array.from(new Set(
-        challenges.map(c => c.requirements?.skill_category || "general")
-    )) as SkillCategory[];
 
     if (loading) {
         return (
@@ -627,102 +646,129 @@ export default function ChallengesPage() {
                     </p>
                 </motion.div>
 
+                {/* Debug Info */}
+                {process.env.NODE_ENV === 'development' && (
+                    <div className="text-[10px] font-mono text-zinc-600 bg-zinc-950/50 p-2 rounded border border-zinc-800">
+                        Total: {challenges.length} | Daily: {tabCounts.daily} | Weekly: {tabCounts.weekly} | Achievement: {tabCounts.achievement}
+                    </div>
+                )}
+
                 {/* Stats */}
                 <StatsBar challenges={challenges} />
+
+                {/* No Challenges State */}
+                {challenges.length === 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center py-12 space-y-4 border border-zinc-800 rounded-xl bg-zinc-900/30"
+                    >
+                        <div className="text-4xl">🎯</div>
+                        <h3 className="font-pixel text-lg text-white">No Challenges Available</h3>
+                        <p className="text-sm font-mono text-zinc-500 max-w-xs mx-auto">
+                            Challenges need to be seeded in the database.
+                        </p>
+                        <Button
+                            onClick={fetchChallenges}
+                            variant="outline"
+                            className="border-zinc-700 hover:border-primary"
+                        >
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Refresh
+                        </Button>
+                    </motion.div>
+                )}
 
                 {/* Streak Bonus */}
                 <StreakBonusCard streak={streak} />
 
                 {/* Category Filter */}
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-600">
-                            <Filter className="w-3 h-3" />
-                            <span>Filter by Skill</span>
+                {challenges.length > 0 && (
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-600">
+                                <Filter className="w-3 h-3" />
+                                <span>Filter by Skill</span>
+                            </div>
+                            {selectedCategory !== "all" && (
+                                <button
+                                    onClick={() => setSelectedCategory("all")}
+                                    className="text-[10px] text-primary hover:text-primary/80 underline underline-offset-2"
+                                >
+                                    Clear Filter
+                                </button>
+                            )}
                         </div>
-                        {selectedCategory !== "all" && (
-                            <button
-                                onClick={() => setSelectedCategory("all")}
-                                className="text-[10px] text-primary hover:text-primary/80 underline underline-offset-2"
-                            >
-                                Clear Filter
-                            </button>
-                        )}
+                        <CategoryFilter 
+                            selected={selectedCategory} 
+                            onSelect={setSelectedCategory} 
+                        />
                     </div>
-                    <CategoryFilter 
-                        selected={selectedCategory} 
-                        onSelect={setSelectedCategory} 
-                    />
-                    {selectedCategory !== "all" && (
-                        <div className="text-[10px] text-zinc-500">
-                            Showing {challenges.filter(c => 
-                                (c.requirements?.skill_category || "general") === selectedCategory
-                            ).length} challenges in {SKILL_CATEGORIES[selectedCategory]?.label || selectedCategory}
-                        </div>
-                    )}
-                </div>
+                )}
 
                 {/* Tabs */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 bg-zinc-900/80 border border-zinc-800 rounded-xl p-1 h-auto">
-                        {tabConfig.map(tab => (
-                            <TabsTrigger
-                                key={tab.value}
-                                value={tab.value}
-                                className="font-pixel text-[10px] rounded-lg data-[state=active]:bg-zinc-800 data-[state=active]:text-primary py-2.5 flex items-center gap-1.5"
-                            >
-                                <span>{tab.icon}</span>
-                                <span>{tab.label}</span>
-                                <span className="ml-1 bg-zinc-700 text-zinc-400 data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-full px-1.5 py-0.5 text-[9px]">
-                                    {tab.count}
-                                </span>
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
+                {challenges.length > 0 && (
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <TabsList className="grid w-full grid-cols-3 bg-zinc-900/80 border border-zinc-800 rounded-xl p-1 h-auto">
+                            {tabConfig.map(tab => (
+                                <TabsTrigger
+                                    key={tab.value}
+                                    value={tab.value}
+                                    className="font-pixel text-[10px] rounded-lg data-[state=active]:bg-zinc-800 data-[state=active]:text-primary py-2.5 flex items-center gap-1.5"
+                                >
+                                    <span>{tab.icon}</span>
+                                    <span>{tab.label}</span>
+                                    <span className="ml-1 bg-zinc-700 text-zinc-400 data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-full px-1.5 py-0.5 text-[9px]">
+                                        {tab.count}
+                                    </span>
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
 
-                    {(["daily", "weekly", "achievement"] as const).map(type => {
-                        const filtered = filterChallenges(type);
-                        const filterKey = `${type}-${selectedCategory}`;
-                        
-                        return (
-                            <TabsContent key={type} value={type} className="space-y-3 mt-5">
-                                <AnimatePresence mode="wait">
-                                    {filtered.length > 0 ? (
-                                        <motion.div
-                                            key={`${filterKey}-content`}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="space-y-3"
-                                        >
-                                            {filtered.map((challenge, i) => (
-                                                <motion.div
-                                                    key={challenge.challenge_id}
-                                                    initial={{ opacity: 0, y: 16 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: i * 0.07 }}
-                                                >
-                                                    <ChallengeCard challenge={challenge} onClaim={claimReward} />
-                                                </motion.div>
-                                            ))}
-                                        </motion.div>
-                                    ) : (
-                                        <motion.div
-                                            key={`${filterKey}-empty`}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <EmptyState type={type} category={selectedCategory} />
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </TabsContent>
-                        );
-                    })}
-                </Tabs>
+                        {(["daily", "weekly", "achievement"] as const).map(type => {
+                            const filtered = filterChallenges(type);
+                            const filterKey = `${type}-${selectedCategory}`;
+                            
+                            return (
+                                <TabsContent key={type} value={type} className="space-y-3 mt-5">
+                                    <AnimatePresence mode="wait">
+                                        {filtered.length > 0 ? (
+                                            <motion.div
+                                                key={`${filterKey}-content`}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="space-y-3"
+                                            >
+                                                {filtered.map((challenge, i) => (
+                                                    <motion.div
+                                                        key={challenge.challenge_id}
+                                                        initial={{ opacity: 0, y: 16 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: i * 0.07 }}
+                                                    >
+                                                        <ChallengeCard challenge={challenge} onClaim={claimReward} />
+                                                    </motion.div>
+                                                ))}
+                                            </motion.div>
+                                        ) : (
+                                            <motion.div
+                                                key={`${filterKey}-empty`}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                            >
+                                                <EmptyState type={type} category={selectedCategory} />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </TabsContent>
+                            );
+                        })}
+                    </Tabs>
+                )}
             </div>
         </div>
     );

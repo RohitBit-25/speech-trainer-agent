@@ -1,6 +1,6 @@
 import { ParsedAnalysisResult, HistoryItem, ActiveSessionChallengesResponse } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
