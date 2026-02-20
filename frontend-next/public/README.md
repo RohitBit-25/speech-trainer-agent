@@ -4,11 +4,11 @@
 
 This directory contains logo assets for the VAANIX platform:
 
-### SVG Logo
-- **File**: `vaanix-logo.svg`
-- **Type**: Scalable Vector Graphics
-- **Features**: Animated elements, gradient effects, cyberpunk styling
-- **Usage**: Best for web applications and high-resolution displays
+### PNG Logo
+- **File**: `vaanix-logo.png`
+- **Type**: Raster image
+- **Features**: High-contrast, app-icon style
+- **Usage**: Ideal for GitHub previews and general branding
 
 ### Text Logo (Fallback)
 - **File**: `vaanix-logo.txt`
@@ -29,10 +29,10 @@ The VAANIX logo uses the following color palette:
 
 When deploying to GitHub, follow these steps:
 
-1. **Upload Logo**: Place `vaanix-logo.svg` in your repository
+1. **Upload Logo**: Place `vaanix-logo.png` in your repository
 2. **Update README**: Replace the logo URL in README.md:
    ```markdown
-   ![VAANIX Logo](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/frontend-next/public/vaanix-logo.svg)
+   ![VAANIX Logo](https://raw.githubusercontent.com/RohitBit-25/speech-trainer-agent/main/frontend-next/public/vaanix-logo.png)
    ```
 3. **Update Badges**: Replace `YOUR_USERNAME` in all badge URLs
 4. **Verify Rendering**: Check that the logo appears correctly on GitHub
