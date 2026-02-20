@@ -146,92 +146,221 @@ Our AI engine provides comprehensive feedback through three core analysis module
 - **Social Features**: Leaderboards, community engagement, and peer feedback
 - **Privacy Controls**: Granular privacy settings for all content
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
+
+### High-Level Architecture
 
 ```mermaid
 graph TD
-    A[VAANIX Frontend] --> B[Next.js 13 App Router]
-    B --> C[FastAPI Backend]
-    C --> D[Celery Worker]
-    D --> E[Redis Queue]
-    C --> F[MongoDB]
-    C --> G[AI Analysis Engine]
-    G --> H[OpenRouter LLM]
-    G --> I[MediaPipe/OpenCV]
-    G --> J[Whisper Speech-to-Text]
+    A[Client Applications] --> B[Load Balancer]
+    B --> C[Next.js Frontend]
+    B --> D[Mobile App]
+    
+    C --> E[FastAPI Backend]
+    D --> E
+    
+    E --> F[Authentication Service]
+    E --> G[Analysis Engine]
+    E --> H[User Management]
+    E --> I[Game Services]
+    
+    G --> J[Celery Workers]
+    J --> K[Redis Queue]
+    
+    G --> L[AI Processing]
+    L --> M[OpenRouter LLM]
+    L --> N[MediaPipe/OpenCV]
+    L --> O[Whisper STT]
+    
+    E --> P[MongoDB]
+    E --> Q[Redis Cache]
+    
+    R[Monitoring] --> E
+    S[Logging] --> J
 ```
 
-## 🛠️ Tech Stack
+### Component Architecture
 
-### Frontend
-- **Next.js 13** with App Router
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **Framer Motion** for animations
-- **Shadcn/ui** component library
-- **Socket.IO** for real-time communication
+#### Frontend Layer
+```
+frontend-next/
+├── src/
+│   ├── app/                 # Next.js 13 App Router
+│   │   ├── (auth)/         # Authentication pages
+│   │   ├── (dashboard)/    # Main application
+│   │   ├── practice/       # Practice interface
+│   │   ├── studio/         # Recording studio
+│   │   └── challenges/     # Challenge system
+│   ├── components/         # Reusable UI components
+│   ├── hooks/             # Custom React hooks
+│   └── lib/               # Utility functions
+└── public/                # Static assets
+```
 
-### Backend
-- **FastAPI** REST API
-- **Python 3.9+**
-- **Celery** for asynchronous task processing
-- **Redis** for task queue and caching
-- **MongoDB** for data persistence
-- **Pydantic** for data validation
+#### Backend Layer
+```
+backend/
+├── app/
+│   ├── api/               # REST API endpoints
+│   │   ├── auth.py       # Authentication routes
+│   │   ├── practice.py   # Practice functionality
+│   │   ├── challenges.py # Challenge system
+│   │   └── user.py       # User management
+│   ├── agents/           # AI analysis agents
+│   │   ├── coordinator_agent.py
+│   │   ├── voice_analysis_agent.py
+│   │   └── facial_expression_agent.py
+│   ├── core/             # Core business logic
+│   │   ├── config.py
+│   │   ├── scoring_system.py
+│   │   └── gemini_coach_engine.py
+│   ├── db/               # Database models and connections
+│   └── worker.py         # Celery worker configuration
+├── temp_uploads/         # Temporary file storage
+└── main.py              # Application entry point
+```
 
-### AI/ML Components
-- **OpenRouter API** for LLM processing
-- **MediaPipe** for facial landmark detection
-- **OpenCV** for computer vision
-- **Whisper** for speech transcription
-- **FFmpeg** for video processing
+### Data Flow
 
-## 📋 Prerequisites
+1. **User Interaction**: Client sends request via REST API or WebSocket
+2. **Authentication**: JWT validation and user context creation
+3. **Task Queue**: Long-running analysis tasks queued in Redis
+4. **Processing**: Celery workers execute AI analysis pipelines
+5. **Data Storage**: Results stored in MongoDB with caching in Redis
+6. **Response**: Results delivered to client with real-time updates
 
-- **Python 3.9+**
-- **Node.js 18+**
-- **Redis Server**
-- **MongoDB**
-- **FFmpeg**
-- **Git**
+### Scalability Considerations
 
-## 🚀 Quick Start
+- **Horizontal Scaling**: Multiple backend instances behind load balancer
+- **Database Sharding**: MongoDB sharding for large datasets
+- **Caching Strategy**: Redis caching for frequently accessed data
+- **CDN Integration**: Static asset delivery optimization
+- **Microservices Ready**: Modular architecture supports service decomposition
 
-### 1. Clone the Repository
+## 🛠️ Technology Stack
+
+### Frontend Technologies
+
+| Technology | Version | Purpose | Key Features |
+|------------|---------|---------|--------------|
+| **Next.js** | 13.x | React Framework | App Router, SSR, ISR |
+| **React** | 18.x | UI Library | Hooks, Context, Concurrent Mode |
+| **TypeScript** | 5.x | Type Safety | Static typing, better DX |
+| **Tailwind CSS** | 3.x | Styling | Utility-first, responsive |
+| **Framer Motion** | 10.x | Animations | Declarative, performance |
+| **Shadcn/ui** | Latest | UI Components | Accessible, customizable |
+| **Socket.IO** | 4.x | Real-time | WebSockets, fallbacks |
+| **Zustand** | 4.x | State Management | Lightweight, easy API |
+
+### Backend Technologies
+
+| Technology | Version | Purpose | Key Features |
+|------------|---------|---------|--------------|
+| **Python** | 3.9+ | Core Language | Async support, rich ecosystem |
+| **FastAPI** | 0.100+ | Web Framework | ASGI, automatic docs, validation |
+| **Pydantic** | 2.x | Data Validation | Type hints, serialization |
+| **Celery** | 5.x | Task Queue | Distributed, async processing |
+| **Redis** | 7.x | Cache/Queue | In-memory, pub/sub, persistence |
+| **MongoDB** | 7.x | Database | Document store, aggregation |
+| **JWT** | PyJWT | Authentication | Token-based, secure |
+
+### AI/ML Technologies
+
+| Technology | Version | Purpose | Key Features |
+|------------|---------|---------|--------------|
+| **OpenRouter** | API | LLM Service | Multiple model support |
+| **MediaPipe** | Latest | Computer Vision | Face mesh, pose detection |
+| **OpenCV** | 4.x | Image Processing | Real-time, cross-platform |
+| **Whisper** | Large | Speech Recognition | Multilingual, accurate |
+| **FFmpeg** | 6.x | Media Processing | Encoding, filtering, streaming |
+
+### Development & DevOps
+
+| Technology | Purpose | Configuration |
+|------------|---------|---------------|
+| **Docker** | Containerization | Multi-stage builds |
+| **Docker Compose** | Orchestration | Local development |
+| **GitHub Actions** | CI/CD | Automated testing |
+| **ESLint** | Linting | Code quality |
+| **Prettier** | Formatting | Code consistency |
+| **Jest** | Testing | Unit/integration tests |
+| **Playwright** | E2E Testing | Browser automation |
+
+### Infrastructure
+
+| Service | Purpose | Provider |
+|---------|---------|----------|
+| **Vercel** | Frontend Hosting | Next.js optimized |
+| **Render/Railway** | Backend Hosting | Python support |
+| **MongoDB Atlas** | Database | Managed MongoDB |
+| **Upstash** | Redis | Serverless Redis |
+| **Cloudflare** | CDN | Global edge network |
+
+## 📋 System Requirements
+
+### Minimum Requirements
+
+| Component | Requirement | Notes |
+|-----------|-------------|-------|
+| **Operating System** | macOS 12+, Windows 10+, Linux | Latest updates recommended |
+| **RAM** | 8GB | 16GB recommended for development |
+| **Storage** | 10GB free space | For dependencies and media files |
+| **CPU** | 4 cores | Intel i5/AMD Ryzen 5 or equivalent |
+
+### Development Environment
+
+| Tool | Version | Installation |
+|------|---------|-------------|
+| **Python** | 3.9+ | [python.org](https://www.python.org/downloads/) |
+| **Node.js** | 18+ | [nodejs.org](https://nodejs.org/) |
+| **npm** | 9+ | Included with Node.js |
+| **Git** | 2.30+ | [git-scm.com](https://git-scm.com/) |
+| **Redis** | 7.0+ | [redis.io](https://redis.io/download/) |
+| **MongoDB** | 6.0+ | [mongodb.com](https://www.mongodb.com/try/download) |
+| **FFmpeg** | 6.0+ | [ffmpeg.org](https://ffmpeg.org/download.html) |
+
+### Optional Tools
+
+| Tool | Purpose | Recommendation |
+|------|---------|---------------|
+| **Docker** | Containerization | For consistent environments |
+| **Docker Compose** | Service orchestration | For local development |
+| **Postman** | API testing | For endpoint validation |
+| **MongoDB Compass** | Database GUI | For data exploration |
+| **RedisInsight** | Redis GUI | For cache monitoring |
+
+## 🚀 Quick Start Guide
+
+### 📥 Installation
+
+#### 1. Clone the Repository
+
 ```bash
+# Clone the main repository
 git clone https://github.com/yourusername/vaanix.git
 cd vaanix
+
+# Optional: Switch to development branch
+git checkout develop
 ```
 
-### 2. Backend Setup
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
+#### 2. Environment Setup
 
-### 3. Frontend Setup
-```bash
-cd ../frontend-next
-npm install
-```
+Create the necessary environment files:
 
-### 4. Environment Configuration
-Create `.env` files in both `backend` and `frontend-next` directories:
-
-**backend/.env:**
+**backend/.env**
 ```env
-# Database
+# Database Configuration
 MONGODB_URL=mongodb://localhost:27017/speech_trainer
 MONGODB_DB_NAME=speech_trainer
 
-# Redis
+# Redis Configuration
 REDIS_URL=redis://localhost:6379/0
 
 # Authentication
-JWT_SECRET_KEY=your-jwt-secret-key
+JWT_SECRET_KEY=your-super-secret-jwt-key-here
 JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 # AI Services
 OPENROUTER_API_KEY=your-openrouter-api-key
@@ -241,17 +370,68 @@ OPENROUTER_MODEL=openrouter/auto
 # File Upload
 MAX_CONTENT_LENGTH=104857600
 UPLOAD_FOLDER=temp_uploads
+
+# Application
+DEBUG=True
+LOG_LEVEL=INFO
 ```
 
-**frontend-next/.env:**
+**frontend-next/.env.local**
 ```env
+# API Configuration
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_WS_URL=ws://localhost:8000
+
+# Application
+NEXT_PUBLIC_APP_NAME=VAANIX
+NEXT_PUBLIC_APP_VERSION=2.0.0
+
+# Feature Flags
+NEXT_PUBLIC_ENABLE_ANALYTICS=false
+NEXT_PUBLIC_ENABLE_GA=false
 ```
 
-### 5. Start Services
+#### 3. Backend Setup
 
-**Terminal 1 - Redis:**
+```bash
+# Navigate to backend directory
+cd backend
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize database (if needed)
+python -m app.db.seed_challenges
+python -m app.db.seed_leaderboard
+```
+
+#### 4. Frontend Setup
+
+```bash
+# Navigate to frontend directory
+cd ../frontend-next
+
+# Install dependencies
+npm install
+
+# Install additional dev dependencies
+npm install -D @types/node @types/react @types/react-dom
+```
+
+### ▶️ Running the Application
+
+#### Method 1: Manual Startup (Recommended for Development)
+
+**Terminal 1 - Redis Server:**
 ```bash
 redis-server
 ```
@@ -259,38 +439,135 @@ redis-server
 **Terminal 2 - Celery Worker:**
 ```bash
 cd backend
-celery -A app.worker.celery_app worker --loglevel=info
+celery -A app.worker.celery_app worker --loglevel=info --pool=solo
 ```
 
-**Terminal 3 - Backend:**
+**Terminal 3 - Backend Server:**
 ```bash
 cd backend
 python main.py
 ```
 
-**Terminal 4 - Frontend:**
+**Terminal 4 - Frontend Development Server:**
 ```bash
 cd frontend-next
 npm run dev
 ```
 
-### 6. Access the Application
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+#### Method 2: Docker Compose (Recommended for Production)
 
-## 🎮 Usage
+```bash
+# Build and start all services
+docker-compose up --build
 
-1. **Sign Up/Login**: Create an account or log in to your existing account
-2. **Choose Practice Mode**: 
-   - Live Practice for real-time feedback
-   - Upload a video for detailed analysis
-3. **Record/Upload**: 
-   - For live practice: Enable camera and microphone
-   - For video upload: Select your presentation video
-4. **Get Analysis**: Receive comprehensive feedback on your performance
-5. **Track Progress**: Monitor your XP, levels, and achievements
-6. **Improve**: Use insights to enhance your speaking skills
+# Or run in detached mode
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### 🧪 Verification
+
+Once all services are running, verify the setup:
+
+1. **Frontend**: Visit `http://localhost:3000`
+2. **Backend API**: Visit `http://localhost:8000`
+3. **API Documentation**: Visit `http://localhost:8000/docs`
+4. **Redis**: Test connection with `redis-cli ping`
+5. **Health Check**: `curl http://localhost:8000/health`
+
+Expected responses:
+- Redis: `PONG`
+- Health Check: `{"status": "healthy", "timestamp": "..."}`
+
+## 🎮 User Guide
+
+### Getting Started
+
+#### 1. Account Creation
+1. Visit the homepage at `http://localhost:3000`
+2. Click **"Start Free"** or **"Sign Up"**
+3. Fill in your details (name, email, password)
+4. Verify your email address
+5. Complete your profile setup
+
+#### 2. First Practice Session
+
+**Live Practice Mode:**
+1. Navigate to **Practice** → **Live Session**
+2. Grant camera and microphone permissions
+3. Select your difficulty level
+4. Click **Start Recording**
+5. Speak for 1-5 minutes on any topic
+6. Click **Stop** to end the session
+7. View your detailed analysis
+
+**Video Upload Mode:**
+1. Navigate to **Practice** → **Upload Video**
+2. Click **Choose File** or drag-drop your video
+3. Supported formats: MP4, MOV, WebM (max 100MB)
+4. Add a title and description
+5. Click **Analyze Video**
+6. Wait for processing (2-5 minutes)
+7. Review your comprehensive feedback
+
+### Core Features Walkthrough
+
+#### 📊 Performance Dashboard
+- **Overall Score**: Combined 5-dimensional assessment
+- **Category Breakdown**: Detailed scores for each metric
+- **Progress Timeline**: Historical performance trends
+- **Strengths/Weaknesses**: AI-generated insights
+- **Improvement Suggestions**: Actionable recommendations
+
+#### 🎯 Challenge System
+1. Visit the **Challenges** section
+2. Browse available micro-challenges
+3. Select a challenge that matches your goals
+4. Follow the specific instructions
+5. Complete the task and submit
+6. Earn XP and unlock achievements
+
+#### 🏆 Gamification Elements
+- **Level Progression**: Track your speaker level advancement
+- **Achievement Badges**: Collect badges for milestones
+- **Leaderboards**: Compare with other users
+- **Streak Tracking**: Maintain daily practice habits
+- **XP Earnings**: Gain experience for all activities
+
+#### 📈 Analytics & Insights
+- **Performance Trends**: Week-over-week improvements
+- **Category Analysis**: Strengths and areas for growth
+- **Practice History**: Complete session log
+- **Time Investment**: Track your learning journey
+- **Goal Tracking**: Monitor progress toward objectives
+
+### Advanced Features
+
+#### Studio Mode
+Professional recording environment with:
+- Advanced camera controls
+- Real-time metrics overlay
+- Custom recording settings
+- High-quality audio processing
+- Export capabilities
+
+#### Comparison Tools
+- Compare sessions side-by-side
+- Track improvement over time
+- Benchmark against community averages
+- Export progress reports
+
+#### Social Features
+- Share achievements with friends
+- Join speaking communities
+- Participate in group challenges
+- Receive peer feedback
+- Mentor other users
 
 ## 📊 API Endpoints
 
