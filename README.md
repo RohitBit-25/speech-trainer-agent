@@ -569,79 +569,902 @@ Professional recording environment with:
 - Receive peer feedback
 - Mentor other users
 
-## 📊 API Endpoints
+## 📊 API Documentation
 
-### Authentication
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
+### Authentication Endpoints
 
-### Practice
-- `POST /api/practice/upload` - Upload video for analysis
-- `GET /api/practice/history` - Get practice history
-- `GET /api/practice/analysis/{task_id}` - Get analysis results
+#### `POST /api/auth/signup`
+User registration endpoint
 
-### Challenges
-- `GET /api/challenges` - List available challenges
-- `POST /api/challenges/{id}/attempt` - Attempt a challenge
-- `GET /api/challenges/leaderboard` - Get leaderboard
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123",
+  "name": "John Doe",
+  "username": "johndoe"
+}
+```
 
-### User Progress
-- `GET /api/user/stats` - Get user statistics
-- `GET /api/user/achievements` - Get unlocked achievements
-- `GET /api/user/level` - Get current level information
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "user": {
+    "id": "60f1b2c3d4e5f6a7b8c9d0e1",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "username": "johndoe",
+    "level": 1,
+    "xp": 0
+  }
+}
+```
 
-## 🎨 UI/UX Design
+#### `POST /api/auth/login`
+User authentication
 
-The platform features a distinctive **cyberpunk/tech aesthetic** with:
-- **Color Palette**: 
-  - Primary: Orange/Saffron (#FB923C)
-  - Secondary: Teal (#06B6D4)
-  - Accent: Cyan-400 (#22D3EE) for VAANIX branding
-  - Backgrounds: Dark zinc tones
-- **Typography**: Pixel-perfect fonts for digital feel
-- **Animations**: Smooth Framer Motion transitions
-- **Visual Elements**: Grid patterns, glowing effects, and terminal-inspired designs
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123"
+}
+```
 
-## 🏆 Gamification System
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "user": {
+    "id": "60f1b2c3d4e5f6a7b8c9d0e1",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "level": 3,
+    "xp": 2500
+  }
+}
+```
 
-### XP System
-- Earn XP for completed practice sessions
-- Bonus XP for improved performance
-- Multipliers for streaks and achievements
+### Practice Endpoints
 
-### Speaker Levels
-1. **Novice** (0-1000 XP)
-2. **Apprentice** (1001-2500 XP)
-3. **Competent** (2501-5000 XP)
-4. **Proficient** (5001-10000 XP)
-5. **Expert** (10001-20000 XP)
-6. **Master** (20001-50000 XP)
-7. **Grandmaster** (50001+ XP)
+#### `POST /api/practice/upload`
+Upload video for analysis
 
-### Achievements
-- **First Analysis**: Complete your first speech analysis
-- **Perfect Score**: Achieve 100 in any category
-- **Streak Master**: Maintain 7-day practice streak
-- **Content Creator**: Upload 10 videos
-- **Social Butterfly**: Engage with community features
+**Request:**
+```bash
+curl -X POST \
+  http://localhost:8000/api/practice/upload \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "video=@presentation.mp4" \
+  -F "title=My Presentation" \
+  -F "description=Team meeting presentation"
+```
 
-## 🤝 Contributing
+**Response:**
+```json
+{
+  "task_id": "task_1234567890",
+  "status": "PROCESSING",
+  "message": "Video analysis started"
+}
+```
 
-We welcome contributions! Please follow these steps:
+#### `GET /api/practice/history`
+Get user's practice history
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+**Response:**
+```json
+{
+  "total_sessions": 25,
+  "sessions": [
+    {
+      "id": "sess_1234567890",
+      "title": "Project Presentation",
+      "date": "2024-01-15T10:30:00Z",
+      "duration": 180,
+      "score": 85,
+      "mode": "upload",
+      "feedback_summary": "Strong content delivery with good eye contact"
+    }
+  ],
+  "stats": {
+    "average_score": 78,
+    "total_practice_time": 7200,
+    "streak_days": 5
+  }
+}
+```
 
-### Development Guidelines
-- Follow the existing code style
-- Write clear, descriptive commit messages
-- Add tests for new functionality
-- Update documentation as needed
-- Ensure all tests pass before submitting PR
+#### `GET /api/practice/analysis/{task_id}`
+Get analysis results
+
+**Response:**
+```json
+{
+  "task_id": "task_1234567890",
+  "status": "COMPLETED",
+  "completed_at": "2024-01-15T11:00:00Z",
+  "results": {
+    "overall_score": 85,
+    "dimension_scores": {
+      "content_clarity": 88,
+      "delivery_fluency": 82,
+      "body_language": 79,
+      "engagement_level": 91,
+      "language_precision": 85
+    },
+    "transcription": "This is the full transcription of the speech...",
+    "strengths": [
+      "Excellent eye contact maintained throughout",
+      "Clear and logical structure",
+      "Good use of pauses for emphasis"
+    ],
+    "weaknesses": [
+      "Some filler words detected",
+      "Pace could be more consistent",
+      "Limited hand gestures"
+    ],
+    "suggestions": [
+      "Practice reducing um and uh usage",
+      "Work on maintaining steady pace",
+      "Incorporate more natural hand movements"
+    ]
+  }
+}
+```
+
+### Challenge Endpoints
+
+#### `GET /api/challenges`
+List available challenges
+
+**Response:**
+```json
+{
+  "challenges": [
+    {
+      "id": "ch_001",
+      "title": "Introduction Master",
+      "description": "Record a 2-minute self-introduction",
+      "difficulty": "beginner",
+      "xp_reward": 200,
+      "criteria": [
+        "Clear speaking pace",
+        "Good eye contact",
+        "Engaging opening"
+      ],
+      "time_limit": 120
+    }
+  ]
+}
+```
+
+#### `POST /api/challenges/{id}/attempt`
+Submit challenge attempt
+
+**Request Body:**
+```json
+{
+  "video_id": "vid_1234567890",
+  "notes": "This was challenging but I focused on my pace"
+}
+```
+
+### User Progress Endpoints
+
+#### `GET /api/user/stats`
+Get user statistics
+
+**Response:**
+```json
+{
+  "user_id": "usr_1234567890",
+  "level": 4,
+  "xp": 8500,
+  "next_level_xp": 10000,
+  "total_sessions": 42,
+  "streak_days": 12,
+  "achievements_unlocked": 8,
+  "favorite_categories": [
+    "content_clarity",
+    "engagement_level"
+  ]
+}
+```
+
+#### `GET /api/user/achievements`
+Get unlocked achievements
+
+**Response:**
+```json
+{
+  "total_achievements": 15,
+  "unlocked": [
+    {
+      "id": "ach_001",
+      "name": "First Steps",
+      "description": "Complete your first analysis",
+      "xp_reward": 100,
+      "unlocked_at": "2024-01-01T10:00:00Z",
+      "badge": "🥇"
+    }
+  ]
+}
+```
+
+### WebSocket Events
+
+Real-time updates are available via WebSocket connections:
+
+```javascript
+const socket = io('http://localhost:8000', {
+  auth: {
+    token: 'YOUR_JWT_TOKEN'
+  }
+});
+
+// Task progress updates
+socket.on('task_progress', (data) => {
+  console.log(`Progress: ${data.progress}%`);
+  console.log(`Status: ${data.status}`);
+});
+
+// Analysis completion
+socket.on('analysis_complete', (data) => {
+  console.log('Analysis completed!', data.results);
+});
+
+// Live metrics (for practice mode)
+socket.on('live_metrics', (data) => {
+  console.log('Current metrics:', data);
+});
+```
+
+### Error Responses
+
+All endpoints return standardized error responses:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input data",
+    "details": [
+      {
+        "field": "email",
+        "message": "Invalid email format"
+      }
+    ]
+  }
+}
+```
+
+Common error codes:
+- `UNAUTHORIZED`: Invalid or missing authentication
+- `FORBIDDEN`: Insufficient permissions
+- `NOT_FOUND`: Resource not found
+- `VALIDATION_ERROR`: Invalid input data
+- `INTERNAL_ERROR`: Server-side error
+
+## 🎨 Design System
+
+### Visual Identity
+
+#### Color Palette
+
+| Color | Name | Hex | Usage |
+|-------|------|-----|-------|
+| ![Primary](https://via.placeholder.com/20/FF9933/FF9933) | **Primary (Saffron)** | `#FF9933` | Main brand color, CTAs, highlights |
+| ![Secondary](https://via.placeholder.com/20/06B6D4/06B6D4) | **Secondary (Teal)** | `#06B6D4` | Secondary actions, accents |
+| ![Accent](https://via.placeholder.com/20/22D3EE/22D3EE) | **Accent (Cyan)** | `#22D3EE` | VAANIX branding, special elements |
+| ![Background](https://via.placeholder.com/20/18181B/18181B) | **Background Dark** | `#18181B` | Main background |
+| ![Surface](https://via.placeholder.com/20/27272A/27272A) | **Surface** | `#27272A` | Card backgrounds, panels |
+| ![Text](https://via.placeholder.com/20/FAFAFA/FAFAFA) | **Text Light** | `#FAFAFA` | Primary text |
+| ![Text](https://via.placeholder.com/20/71717A/71717A) | **Text Muted** | `#71717A` | Secondary text, labels |
+
+#### Typography
+
+**Primary Font: Inter**
+- Used for body text and UI elements
+- Clean, modern, highly readable
+
+**Monospace Font: JetBrains Mono**
+- Used for code snippets and technical data
+- Clear distinction for technical content
+
+**Pixel Font: Press Start 2P**
+- Used for brand elements and gamification
+- Retro gaming aesthetic for VAANIX branding
+
+**Retro Font: VT323**
+- Used for terminal-style elements
+- Cyberpunk/tech atmosphere
+
+#### UI Components
+
+**Buttons**
+```css
+/* Primary Button */
+.bg-primary.text-black.hover\:bg-white.border-4.border-black
+.shadow-\[6px_6px_0px_rgba\(0\,0\,0\,0\.8\)\]
+
+/* Secondary Button */
+.bg-zinc-900.border-2.border-zinc-700.text-white
+.hover\:border-primary\/50.hover\:text-primary
+```
+
+**Cards**
+```css
+.bg-black.border-4.border-zinc-800
+.shadow-\[8px_8px_0px_\#000\]
+.hover\:border-primary\/40.transition-all
+```
+
+**Badges**
+```css
+.inline-flex.items-center.gap-2
+.px-4.py-2.bg-zinc-900\/80.border-2.border-primary\/30
+.text-xs.font-mono.text-zinc-400
+```
+
+### Animation Principles
+
+**Micro-interactions**
+- Hover effects: Scale 1.05, Y-translate -2px
+- Button taps: Scale 0.95 for tactile feedback
+- Loading states: Pulse animations with 1.5s duration
+- Progress indicators: Smooth transitions with easing
+
+**Page Transitions**
+- Fade in: 0.3s ease-out
+- Slide in: 0.5s ease-in-out
+- Staggered animations: 0.1s delays for sequential elements
+
+**Loading States**
+```javascript
+// Skeleton loading
+<motion.div 
+  animate={{ opacity: [0.5, 1, 0.5] }}
+  transition={{ duration: 1.5, repeat: Infinity }}
+/>
+
+// Progress bars
+<motion.div 
+  initial={{ width: 0 }}
+  animate={{ width: `${progress}%` }}
+  transition={{ duration: 0.5, ease: "easeOut" }}
+/>
+```
+
+### Responsive Design
+
+**Breakpoints**
+- Mobile: `max-width: 768px`
+- Tablet: `768px` to `1024px`
+- Desktop: `1024px` and above
+- Large Desktop: `1440px` and above
+
+**Grid System**
+- Mobile: Single column layout
+- Tablet: 2-column grid for cards
+- Desktop: 3-column grid for dashboards
+- Large Desktop: 4-column grid for data-dense views
+
+### Accessibility
+
+**Color Contrast**
+- All text meets WCAG AA standards (4.5:1 minimum)
+- Interactive elements have 3:1 contrast ratio
+- Focus states clearly visible for keyboard navigation
+
+**Screen Reader Support**
+- Semantic HTML structure
+- ARIA labels for complex components
+- Proper heading hierarchy
+- Alt text for all images
+
+**Keyboard Navigation**
+- Full keyboard operability
+- Logical tab order
+- Visible focus indicators
+- Skip to content links
+
+## 🏆 Gamification Framework
+
+### Core Mechanics
+
+#### Experience Points (XP) System
+
+**Base Rewards:**
+- **Video Analysis**: 500 XP per completed session
+- **Live Practice**: 300 XP per 5-minute session
+- **Challenge Completion**: 200-500 XP per challenge
+- **Daily Login**: 50 XP bonus
+- **Streak Maintenance**: 25 XP per consecutive day
+
+**Performance Multipliers:**
+- **Score-based**: 1.0x to 1.5x based on overall performance
+- **Streak Multiplier**: 1.2x to 2.0x for consecutive days
+- **First Attempt Bonus**: 1.3x for first-time challenge completions
+- **Perfect Score**: 2.0x for 90+ in all categories
+
+#### Speaker Level Progression
+
+| Level | Tier | XP Required | Title | Unlockables |
+|-------|------|-------------|-------|-------------|
+| 1 | Bronze | 0-1,000 | **Novice Speaker** | Basic features, core metrics |
+| 2 | Bronze | 1,001-2,500 | **Apprentice** | Advanced analytics, challenge access |
+| 3 | Silver | 2,501-5,000 | **Competent Communicator** | Comparison tools, detailed insights |
+| 4 | Silver | 5,001-10,000 | **Proficient Speaker** | Priority processing, export features |
+| 5 | Gold | 10,001-20,000 | **Expert Presenter** | Custom coaching, premium templates |
+| 6 | Gold | 20,001-50,000 | **Master Communicator** | Community features, beta access |
+| 7 | Platinum | 50,001+ | **Grandmaster** | VIP support, all features unlocked |
+
+#### Achievement System
+
+**Category-Based Achievements:**
+
+| Category | Achievement | Criteria | Reward | Badge |
+|----------|-------------|----------|--------|-------|
+| **General** | First Steps | Complete first analysis | 100 XP | 🥇 |
+| **General** | Consistency King | 30 consecutive days | 1000 XP | 👑 |
+| **General** | Content Creator | Upload 25 videos | 500 XP | 🎬 |
+| **Performance** | Perfect Score | 100 in any category | 750 XP | 🏆 |
+| **Performance** | Balanced Master | 85+ in all categories | 1000 XP | ⚖️ |
+| **Performance** | Improvement Champion | 20% score increase | 300 XP | 📈 |
+| **Social** | Community Builder | 100 peer interactions | 250 XP | 🤝 |
+| **Social** | Mentor | Help 10 other users | 400 XP | 🎓 |
+| **Speed** | Quick Learner | Level up in 7 days | 350 XP | ⚡ |
+| **Dedication** | Marathon Speaker | 100 total sessions | 800 XP | 🏃 |
+
+**Progression Achievements:**
+
+| Milestone | Requirement | Reward | Badge |
+|-----------|-------------|--------|-------|
+| **Bronze Medal** | Reach Level 2 | 200 XP | 🥉 |
+| **Silver Medal** | Reach Level 4 | 500 XP | 🥈 |
+| **Gold Medal** | Reach Level 6 | 1000 XP | 🥇 |
+| **Platinum Medal** | Reach Level 7 | 2000 XP | 🏅 |
+| **Century Club** | 100 sessions completed | 1500 XP | 💯 |
+| **Perfectionist** | 10 perfect scores | 1200 XP | ✨ |
+| **Social Butterfly** | 50 community interactions | 400 XP | 🦋 |
+| **Early Bird** | 7 AM practice sessions | 150 XP | 🌅 |
+| **Night Owl** | 10 PM+ practice sessions | 150 XP | 🦉 |
+
+### Leaderboard System
+
+#### Global Leaderboards
+- **Overall Ranking**: Based on total XP
+- **Weekly Champions**: Top performers this week
+- **Monthly MVPs**: Best monthly performers
+- **Category Leaders**: Top in specific metrics
+
+#### Social Leaderboards
+- **Friends Ranking**: Compare with connections
+- **Team Leaderboards**: Group-based competitions
+- **Class/Workplace**: Organization-specific rankings
+- **Challenge Winners**: Top performers in specific challenges
+
+#### Ranking Tiers
+
+| Tier | Requirement | Benefits | Badge |
+|------|-------------|----------|-------|
+| **Rookie** | < 1,000 XP | Basic ranking | 🆕 |
+| **Contender** | 1,000-5,000 XP | Weekly highlights | 🥊 |
+| **Challenger** | 5,001-15,000 XP | Monthly recognition | ⚔️ |
+| **Elite** | 15,001-35,000 XP | Featured profile | 🏆 |
+| **Legend** | 35,001+ XP | VIP status | 👑 |
+
+### Streak System
+
+**Daily Streaks:**
+- **Bronze Streak**: 3 consecutive days (50 XP)
+- **Silver Streak**: 7 consecutive days (200 XP)
+- **Gold Streak**: 14 consecutive days (500 XP)
+- **Platinum Streak**: 30 consecutive days (1500 XP)
+- **Diamond Streak**: 100 consecutive days (5000 XP)
+
+**Weekly Challenges:**
+- Complete 3 sessions per week for bonus XP
+- Maintain streak for multiplier bonuses
+- Special rewards for perfect weeks
+
+### Reward System
+
+#### Virtual Rewards
+- **Badges**: Collectible achievements
+- **Titles**: Special status indicators
+- **Themes**: Custom UI themes
+- **Avatars**: Profile customization options
+
+#### Practical Rewards
+- **Extended Features**: Unlock premium tools
+- **Priority Processing**: Faster analysis times
+- **Storage Boost**: Increased upload limits
+- **Export Options**: Advanced reporting capabilities
+
+### Progression Analytics
+
+**User Insights:**
+- **Improvement Rate**: % increase over time
+- **Consistency Score**: Regular practice patterns
+- **Peak Performance**: Best performing categories
+- **Growth Areas**: Skills needing attention
+- **Engagement Metrics**: Platform usage patterns
+
+**Comparison Tools:**
+- **Peer Benchmarking**: Compare with similar users
+- **Industry Standards**: Professional speaking benchmarks
+- **Historical Trends**: Personal progress tracking
+- **Goal Tracking**: Progress toward specific objectives
+
+### Community Features
+
+**Social Elements:**
+- **Friend System**: Connect with other users
+- **Mentorship Program**: Experienced users help beginners
+- **Group Challenges**: Collaborative speaking exercises
+- **Community Forums**: Discussion and support
+- **Feedback Exchange**: Peer review system
+
+**Competitive Elements:**
+- **Tournaments**: Time-limited competitions
+- **Team Challenges**: Group-based objectives
+- **Leaderboard Battles**: Direct ranking competitions
+- **Achievement Hunts**: Community-wide goal setting
+
+This comprehensive gamification system transforms speech practice from a chore into an engaging journey of continuous improvement, with clear milestones, meaningful rewards, and social elements that foster community and motivation.
+
+## 🤝 Contributing Guidelines
+
+We love contributions! This document provides guidelines for contributing to VAANIX.
+
+### Code of Conduct
+
+By participating in this project, you agree to maintain a respectful and inclusive environment:
+- Be welcoming and patient
+- Be considerate and respectful
+- Focus on what is best for the community
+- Gracefully accept constructive criticism
+- Show empathy towards other community members
+
+### Getting Started
+
+1. **Fork the repository**
+2. **Clone your fork**:
+   ```bash
+   git clone https://github.com/yourusername/vaanix.git
+   cd vaanix
+   ```
+3. **Create a branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+### Development Workflow
+
+#### Branch Naming Convention
+```
+feature/add-user-authentication
+bugfix/fix-login-error
+hotfix/critical-security-patch
+docs/update-api-documentation
+chore/update-dependencies
+```
+
+#### Commit Message Guidelines
+
+Follow the conventional commit format:
+
+```
+type(scope): description
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes
+- `refactor`: Code refactoring
+- `test`: Adding tests
+- `chore`: Maintenance tasks
+
+**Examples:**
+```
+feat(auth): add JWT refresh token functionality
+
+Implement automatic token refresh to improve user experience
+and reduce authentication failures.
+
+Closes #123
+```
+
+```
+fix(api): resolve video upload timeout issue
+
+Increase timeout limit from 30s to 120s for large video files
+and add progress tracking during upload.
+
+Fixes #456
+```
+
+### Code Standards
+
+#### Frontend (TypeScript/React)
+
+**ESLint Configuration:**
+```json
+{
+  "extends": [
+    "next/core-web-vitals",
+    "@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "no-console": "warn"
+  }
+}
+```
+
+**Component Structure:**
+```typescript
+// components/FeatureComponent.tsx
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+
+interface FeatureComponentProps {
+  title: string;
+  onAction: () => void;
+}
+
+export const FeatureComponent = ({ 
+  title, 
+  onAction 
+}: FeatureComponentProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      await onAction();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <motion.div 
+      className="component-wrapper"
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.2 }}
+    >
+      <h2>{title}</h2>
+      <button 
+        onClick={handleClick}
+        disabled={isLoading}
+        className="action-button"
+      >
+        {isLoading ? 'Processing...' : 'Action'}
+      </button>
+    </motion.div>
+  );
+};
+```
+
+#### Backend (Python/FastAPI)
+
+**Code Style:**
+```python
+# app/api/example.py
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List
+from app.core.auth import get_current_user
+from app.models.user import User
+
+router = APIRouter(prefix="/api/example", tags=["example"])
+
+@router.get("/items", response_model=List[dict])
+async def get_items(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
+    """Get paginated list of items for authenticated user."""
+    try:
+        items = await fetch_user_items(current_user.id, skip, limit)
+        return items
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch items: {str(e)}"
+        )
+
+async def fetch_user_items(user_id: str, skip: int, limit: int) -> List[dict]:
+    """Fetch items from database with proper error handling."""
+    # Implementation here
+    pass
+```
+
+### Testing Requirements
+
+#### Frontend Testing
+
+```typescript
+// components/__tests__/FeatureComponent.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { FeatureComponent } from '../FeatureComponent';
+
+describe('FeatureComponent', () => {
+  it('renders title correctly', () => {
+    render(<FeatureComponent title="Test Title" onAction={jest.fn()} />);
+    expect(screen.getByText('Test Title')).toBeInTheDocument();
+  });
+
+  it('calls onAction when button is clicked', async () => {
+    const mockAction = jest.fn();
+    render(<FeatureComponent title="Test" onAction={mockAction} />);
+    
+    fireEvent.click(screen.getByText('Action'));
+    expect(mockAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows loading state during action', async () => {
+    const mockAction = jest.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+    render(<FeatureComponent title="Test" onAction={mockAction} />);
+    
+    fireEvent.click(screen.getByText('Action'));
+    expect(screen.getByText('Processing...')).toBeInTheDocument();
+  });
+});
+```
+
+#### Backend Testing
+
+```python
+# app/api/test_example.py
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+@pytest.fixture
+def auth_headers():
+    # Mock authentication
+    return {"Authorization": "Bearer test-token"}
+
+def test_get_items_success(auth_headers):
+    response = client.get("/api/example/items", headers=auth_headers)
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+def test_get_items_unauthorized():
+    response = client.get("/api/example/items")
+    assert response.status_code == 401
+
+def test_get_items_pagination(auth_headers):
+    response = client.get("/api/example/items?skip=10&limit=5", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) <= 5
+```
+
+### Pull Request Process
+
+1. **Create Pull Request**
+   - Use descriptive title
+   - Fill out PR template completely
+   - Link related issues
+   - Add screenshots for UI changes
+
+2. **Code Review**
+   - Wait for at least one approval
+   - Address all review comments
+   - Ensure all tests pass
+   - Update documentation if needed
+
+3. **Merge Requirements**
+   - All CI checks must pass
+   - Code coverage maintained at 80%+
+   - Documentation updated
+   - Changelog entry added
+
+### Documentation Updates
+
+#### When to Update Documentation
+- New features or APIs
+- Breaking changes
+- Configuration changes
+- Security updates
+
+#### Documentation Structure
+```
+docs/
+├── api/                    # API documentation
+│   ├── endpoints.md
+│   └── authentication.md
+├── guides/                # User guides
+│   ├── getting-started.md
+│   └── best-practices.md
+├── development/          # Developer documentation
+│   ├── architecture.md
+│   └── contributing.md
+└── CHANGELOG.md
+```
+
+### Reporting Issues
+
+#### Issue Templates
+
+**Bug Report:**
+```
+## Description
+[Concise description of the bug]
+
+## Steps to Reproduce
+1. [First step]
+2. [Second step]
+3. [And so on...]
+
+## Expected Behavior
+[What you expected to happen]
+
+## Actual Behavior
+[What actually happened]
+
+## Environment
+- OS: [e.g., macOS 13.0]
+- Browser: [e.g., Chrome 110]
+- Version: [e.g., 2.0.0]
+
+## Screenshots
+[If applicable]
+
+## Additional Context
+[Any additional information]
+```
+
+**Feature Request:**
+```
+## Feature Description
+[Clear description of the feature]
+
+## Problem Statement
+[What problem does this solve?]
+
+## Proposed Solution
+[How should it work?]
+
+## Alternatives Considered
+[Other approaches considered]
+
+## Additional Context
+[Any additional information]
+```
+
+### Community Resources
+
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/vaanix/discussions)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/vaanix/issues)
+- **Documentation**: [Project Wiki](https://github.com/yourusername/vaanix/wiki)
+- **Chat**: [Discord/Slack community]
+
+### Recognition
+
+Contributors will be:
+- Added to CONTRIBUTORS.md
+- Featured in release notes
+- Given appropriate badges/reputation
+- Acknowledged in documentation
 
 ## 📄 License
 
