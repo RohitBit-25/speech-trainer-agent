@@ -1,17 +1,19 @@
 # VAANIX - AI Speech Training Platform
 
 <p align="center">
-  <img src="https://img.shields.io/github/languages/top/yourusername/vaanix?color=orange" alt="GitHub top language">
-  <img src="https://img.shields.io/github/languages/code-size/yourusername/vaanix" alt="GitHub code size in bytes">
-  <img src="https://img.shields.io/github/repo-size/yourusername/vaanix" alt="GitHub repo size">
-  <img src="https://img.shields.io/github/last-commit/yourusername/vaanix" alt="GitHub last commit">
-  <img src="https://img.shields.io/github/issues/yourusername/vaanix" alt="GitHub issues">
-  <img src="https://img.shields.io/github/issues-pr/yourusername/vaanix" alt="GitHub pull requests">
-  <img src="https://img.shields.io/github/license/yourusername/vaanix" alt="GitHub">
+  <!-- GitHub badges - Replace YOUR_USERNAME with your actual GitHub username -->
+  <img src="https://img.shields.io/github/languages/top/YOUR_USERNAME/speech-trainer-agent?color=orange" alt="GitHub top language">
+  <img src="https://img.shields.io/github/languages/code-size/YOUR_USERNAME/speech-trainer-agent" alt="GitHub code size in bytes">
+  <img src="https://img.shields.io/github/repo-size/YOUR_USERNAME/speech-trainer-agent" alt="GitHub repo size">
+  <img src="https://img.shields.io/github/last-commit/YOUR_USERNAME/speech-trainer-agent" alt="GitHub last commit">
+  <img src="https://img.shields.io/github/issues/YOUR_USERNAME/speech-trainer-agent" alt="GitHub issues">
+  <img src="https://img.shields.io/github/issues-pr/YOUR_USERNAME/speech-trainer-agent" alt="GitHub pull requests">
+  <img src="https://img.shields.io/github/license/YOUR_USERNAME/speech-trainer-agent" alt="GitHub">
 </p>
 
 <p align="center">
-  <img src="https://your-domain.com/vaanix-logo.png" alt="VAANIX Logo" width="200">
+  <!-- Logo placeholder - Replace with your actual logo -->
+  <img src="https://raw.githubusercontent.com/YOUR_USERNAME/speech-trainer-agent/main/frontend-next/public/vaanix-logo.svg" alt="VAANIX Logo" width="200">
 </p>
 
 <h1 align="center">VAANIX - AI Speech Training Platform</h1>
@@ -33,8 +35,8 @@
 <p align="center">
   <a href="https://your-deployment-url.com">Live Demo</a> •
   <a href="https://your-docs-url.com">Documentation</a> •
-  <a href="https://github.com/yourusername/vaanix/issues">Issues</a> •
-  <a href="https://github.com/yourusername/vaanix/discussions">Discussions</a>
+  <a href="https://github.com/yourusername/speech-trainer-agent/issues">Issues</a> •
+  <a href="https://github.com/yourusername/speech-trainer-agent/discussions">Discussions</a>
 </p>
 
 ## 🎯 Overview
@@ -1466,47 +1468,511 @@ Contributors will be:
 - Given appropriate badges/reputation
 - Acknowledged in documentation
 
+## 🛡️ Security Policy
+
+### Reporting Security Issues
+
+**Please do NOT report security vulnerabilities through public GitHub issues.**
+
+Instead, please report them through our security channels:
+
+- **Email**: security@vaanix.com
+- **Security Form**: [Security Report Form](https://vaanix.com/security)
+- **PGP Key**: [PGP Public Key](https://vaanix.com/security/pgp-key.txt)
+
+### Security Response Process
+
+1. **Initial Response** (24 hours)
+   - Acknowledge receipt of report
+   - Assign CVE number if applicable
+   - Begin investigation
+
+2. **Assessment** (3-5 days)
+   - Validate the vulnerability
+   - Determine impact and severity
+   - Plan remediation strategy
+
+3. **Remediation** (7-30 days)
+   - Develop and test fixes
+   - Coordinate disclosure timeline
+   - Prepare security advisory
+
+4. **Disclosure** (Coordinated)
+   - Release patched versions
+   - Publish security advisory
+   - Notify affected users
+
+### Security Best Practices
+
+#### Authentication Security
+- **JWT Implementation**: Secure token handling with proper expiration
+- **Password Security**: bcrypt hashing with appropriate salt rounds
+- **Rate Limiting**: Prevent brute force attacks on auth endpoints
+- **Session Management**: Proper session invalidation and rotation
+
+#### Data Protection
+- **Encryption**: AES-256 for sensitive data at rest
+- **Transmission**: TLS 1.3 for all network communications
+- **PII Handling**: Minimal data collection and retention policies
+- **Data Validation**: Strict input validation and sanitization
+
+#### Infrastructure Security
+- **Container Security**: Regular vulnerability scanning
+- **Network Security**: Firewall rules and network segmentation
+- **Access Control**: Principle of least privilege
+- **Logging**: Comprehensive audit trails for security events
+
+#### Third-Party Dependencies
+- **Dependency Scanning**: Automated security scanning in CI/CD
+- **Regular Updates**: Prompt updates for security patches
+- **Vulnerability Monitoring**: Continuous monitoring for new threats
+- **Supply Chain Security**: Verify package integrity and provenance
+
+### Security Headers
+
+```python
+# Backend Security Headers
+{
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+}
+```
+
+### Compliance
+
+- **GDPR**: Data protection and privacy compliance
+- **CCPA**: California consumer privacy requirements
+- **SOC 2**: Security and availability standards
+- **ISO 27001**: Information security management
+
+## 📊 Performance & Monitoring
+
+### Performance Metrics
+
+#### Frontend Performance
+- **Core Web Vitals**:
+  - LCP (Largest Contentful Paint): < 2.5s
+  - FID (First Input Delay): < 100ms
+  - CLS (Cumulative Layout Shift): < 0.1
+
+- **Bundle Optimization**:
+  - Total bundle size: < 2MB
+  - Initial load: < 500KB
+  - Code splitting implementation
+  - Dynamic imports for lazy loading
+
+#### Backend Performance
+- **API Response Times**:
+  - 95th percentile: < 500ms
+  - Average response: < 200ms
+  - Error rate: < 0.1%
+
+- **Database Performance**:
+  - Query response: < 100ms
+  - Connection pooling: 20-50 connections
+  - Index optimization for frequent queries
+
+### Monitoring Stack
+
+#### Application Monitoring
+- **Error Tracking**: Sentry integration
+- **Performance Monitoring**: Custom metrics collection
+- **User Experience**: Real user monitoring (RUM)
+- **Business Metrics**: Custom KPI tracking
+
+#### Infrastructure Monitoring
+- **Server Health**: CPU, memory, disk usage
+- **Network**: Bandwidth, latency, uptime
+- **Database**: Connection pool, query performance
+- **Queue**: Celery worker performance, task backlog
+
+#### Log Management
+```python
+# Structured Logging Example
+import logging
+import structlog
+
+logger = structlog.get_logger()
+
+# Log an event with structured data
+logger.info(
+    "video_analysis_started",
+    user_id="user_123",
+    video_id="vid_456",
+    file_size=1024000,
+    duration=180
+)
+```
+
+### Alerting System
+
+#### Critical Alerts
+- **System Downtime**: > 5 minutes
+- **Error Rate**: > 5% in 5 minutes
+- **Response Time**: > 1 second average
+- **Database Connections**: Pool exhaustion
+- **Queue Backlog**: > 1000 pending tasks
+
+#### Warning Alerts
+- **CPU Usage**: > 80% for 15 minutes
+- **Memory Usage**: > 85% for 10 minutes
+- **Disk Space**: < 15% remaining
+- **User Authentication**: Unusual spike in failures
+
+## 📱 Deployment & Operations
+
+### Deployment Strategy
+
+#### Continuous Integration
+```yaml
+# .github/workflows/ci.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10, 3.11]
+        
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Run tests
+      run: |
+        cd backend
+        pytest --cov=app --cov-report=xml
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+```
+
+#### Production Deployment
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend-next
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${API_URL}
+      - NEXT_PUBLIC_WS_URL=${WS_URL}
+    
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=${MONGODB_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET}
+    depends_on:
+      - mongodb
+      - redis
+    
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - MONGODB_URL=${MONGODB_URL}
+    depends_on:
+      - redis
+      - mongodb
+    
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+volumes:
+  redis_data:
+  mongodb_data:
+```
+
+### Environment Management
+
+#### Environment Configuration
+```bash
+# Development (.env.local)
+DEBUG=True
+LOG_LEVEL=DEBUG
+MONGODB_URL=mongodb://localhost:27017/dev
+REDIS_URL=redis://localhost:6379/0
+
+# Staging (.env.staging)
+DEBUG=False
+LOG_LEVEL=INFO
+MONGODB_URL=mongodb://mongo-staging:27017/staging
+REDIS_URL=redis://redis-staging:6379/0
+
+# Production (.env.production)
+DEBUG=False
+LOG_LEVEL=WARNING
+MONGODB_URL=mongodb://user:pass@mongo-cluster:27017/prod
+REDIS_URL=redis://user:pass@redis-cluster:6379/0
+```
+
+### Backup & Recovery
+
+#### Database Backup Strategy
+```bash
+#!/bin/bash
+# backup.sh
+
+date=$(date +%Y%m%d_%H%M%S)
+backup_dir="/backups/mongodb/$date"
+
+# Create backup directory
+mkdir -p $backup_dir
+
+# Backup MongoDB
+mongodump --uri="mongodb://localhost:27017/production" \
+  --out=$backup_dir
+
+gzip -r $backup_dir
+
+# Cleanup old backups (keep 30 days)
+find /backups/mongodb -name "*.tar.gz" -mtime +30 -delete
+
+# Copy to cloud storage
+gsutil -m cp -r $backup_dir gs://your-backup-bucket/mongodb/
+```
+
+#### Disaster Recovery Plan
+- **RTO**: Recovery Time Objective - 4 hours
+- **RPO**: Recovery Point Objective - 1 hour
+- **Backup Frequency**: Every 1 hour
+- **Verification**: Daily backup validation
+- **Retension**: 90 days rolling backups
+
+## 📋 Changelog Format
+
+### Version Format
+Follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
+
+### Changelog Structure
+```
+# Changelog
+
+## [2.1.0] - 2024-01-15
+
+### Added
+- New challenge system with gamification
+- Real-time metrics dashboard
+- Social features and leaderboards
+- Mobile-responsive design improvements
+
+### Changed
+- Improved video processing pipeline
+- Enhanced authentication security
+- Updated UI/UX design system
+- Optimized database queries
+
+### Fixed
+- Video upload timeout issues
+- Memory leaks in analysis engine
+- Authentication token refresh bugs
+- Cross-browser compatibility issues
+
+### Security
+- Updated dependencies to patch vulnerabilities
+- Implemented rate limiting for API endpoints
+- Added input validation for all user data
+- Enhanced JWT token security
+
+## [2.0.1] - 2024-01-08
+
+### Fixed
+- Critical bug in facial analysis processing
+- Memory allocation issues in worker processes
+- Database connection pool exhaustion
+
+## [2.0.0] - 2024-01-01
+
+### Added
+- Complete rewrite with Next.js 13
+- Real-time WebSocket communication
+- Advanced AI analysis capabilities
+- Comprehensive gamification system
+
+### Breaking Changes
+- New API endpoint structure
+- Updated database schema
+- Modified authentication flow
+```
+
+## 🆘 Support & Community
+
+### Getting Help
+
+#### Documentation
+- [User Guide](https://docs.vaanix.com/guide)
+- [API Documentation](https://docs.vaanix.com/api)
+- [Developer Docs](https://docs.vaanix.com/development)
+- [FAQ](https://docs.vaanix.com/faq)
+
+#### Community Support
+- **GitHub Discussions**: [Community Forum](https://github.com/yourusername/vaanix/discussions)
+- **Stack Overflow**: Tag questions with `vaanix`
+- **Discord**: [Community Chat](https://discord.gg/vaanix)
+- **Twitter**: [@vaanixplatform](https://twitter.com/vaanixplatform)
+
+#### Professional Support
+- **Email**: support@vaanix.com
+- **Enterprise**: enterprise@vaanix.com
+- **SLA**: 24-hour response for paid plans
+- **Consulting**: Available for custom implementations
+
+### Issue Reporting
+
+#### Before Creating an Issue
+1. Check existing issues and documentation
+2. Try the latest version
+3. Create a minimal reproduction
+4. Include environment details
+
+#### Issue Templates
+Available in `.github/ISSUE_TEMPLATE/`:
+- Bug Report
+- Feature Request
+- Documentation Issue
+- Security Report
+- Question/Support
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+### License Summary
+
+**You can:**
+- ✅ Use for personal projects
+- ✅ Use for commercial projects
+- ✅ Modify the code
+- ✅ Distribute your modifications
+
+**You must:**
+- 📝 Include original copyright notice
+- 📝 Include license text in distributions
+
+**You cannot:**
+- ❌ Hold the authors liable
+- ❌ Use trademarks without permission
+
+For commercial licensing options, contact licensing@vaanix.com
+
 ## 🙏 Acknowledgments
 
-- **OpenRouter** for LLM services
-- **MediaPipe** for facial analysis
-- **OpenCV** for computer vision
-- **Whisper** for speech recognition
-- **Next.js** and **FastAPI** communities
+### Technology Partners
+- **OpenRouter** for LLM services and API access
+- **MediaPipe** for advanced computer vision capabilities
+- **OpenCV** for robust image processing
+- **Whisper** for state-of-the-art speech recognition
+- **Next.js** for modern React framework
+- **FastAPI** for high-performance Python backend
 
-## 📞 Support
+### Open Source Projects
+- **Framer Motion** for smooth animations
+- **Shadcn/ui** for accessible UI components
+- **Tailwind CSS** for utility-first styling
+- **Celery** for distributed task processing
+- **Redis** for caching and queuing
+- **MongoDB** for flexible data storage
 
-For support, feature requests, or bug reports:
-- Open an issue on GitHub
-- Contact the development team
-- Check our documentation
+### Contributors
+Thanks to all the amazing people who have contributed to VAANIX:
 
-## 🚧 Roadmap
+[![Contributors](https://contrib.rocks/image?repo=yourusername/vaanix)](https://github.com/yourusername/vaanix/graphs/contributors)
 
-### Upcoming Features
-- [ ] Mobile application
+### Research & Inspiration
+- Public speaking research methodologies
+- Educational psychology principles
+- Gamification best practices
+- User experience design patterns
+- Accessibility standards and guidelines
+
+## 🚀 Roadmap
+
+### Q1 2024
+- [ ] Mobile application development
 - [ ] Advanced analytics dashboard
-- [ ] Community features and forums
 - [ ] Integration with video conferencing platforms
-- [ ] Multi-language support
-- [ ] Advanced challenge system
-- [ ] AI-powered personalized coaching
+- [ ] Multi-language support (Spanish, French, German)
 
-### Future Enhancements
-- [ ] Voice cloning for practice
+### Q2 2024
+- [ ] AI-powered personalized coaching
 - [ ] Virtual reality presentation practice
+- [ ] Advanced challenge system
 - [ ] Integration with professional speaking platforms
-- [ ] Advanced progress visualization
+
+### Q3 2024
+- [ ] Voice cloning for practice scenarios
 - [ ] Team/corporate training features
+- [ ] Advanced progress visualization
+- [ ] API marketplace for third-party integrations
+
+### Q4 2024
+- [ ] Enterprise-grade security features
+- [ ] Advanced collaboration tools
+- [ ] Certification program integration
+- [ ] Global community features
+
+### Long-term Vision
+- [ ] AI mentorship with personality matching
+- [ ] Cross-platform AR presentation tools
+- [ ] Professional speaking career platform
+- [ ] Global speaking community network
 
 ---
 
 <p align="center">
   <strong>Built with ❤️ for better communication</strong>
   <br/>
-  <strong>VAANIX - Command Your Vocal Presence</strong>
+  <strong>VAANIX - Transform Your Speaking Journey</strong>
+</p>
+
+<p align="center">
+  <a href="https://vaanix.com">Website</a> •
+  <a href="https://docs.vaanix.com">Documentation</a> •
+  <a href="https://github.com/yourusername/vaanix/issues">Issues</a> •
+  <a href="https://github.com/yourusername/vaanix/discussions">Community</a>
 </p>

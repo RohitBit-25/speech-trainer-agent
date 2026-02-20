@@ -1,0 +1,19 @@
+# VAANIX Logo - Text Version
+
+This is a placeholder for the VAANIX logo. When deployed to GitHub, replace this with an actual logo image.
+
+```
+██╗   ██╗ █████╗  █████╗ ███╗   ██╗██╗██╗  ██╗
+██║   ██║██╔══██╗██╔══██╗████╗  ██║██║╚██╗██╔╝
+██║   ██║███████║███████║██╔██╗ ██║██║ ╚███╔╝ 
+╚██╗ ██╔╝██╔══██║██╔══██║██║╚██╗██║██║ ██╔██╗ 
+ ╚████╔╝ ██║  ██║██║  ██║██║ ╚████║██║██╔╝ ██╗
+  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝
+                                               
+  Speech Training Platform
+```
+
+Color scheme:
+- Orange/Saffron: #FF9933 (VAANI)
+- Cyan/Teal: #22D3EE (X)
+- White: #FFFFFF (text)
