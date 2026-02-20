@@ -164,3 +164,83 @@ export interface HistoryItem {
     total_score: number | null;
     feedback_summary: string | null;
 }
+
+// ============================================================================
+// CHALLENGE / MICRO-CHALLENGE TYPES
+// ============================================================================
+
+export type SkillCategory = "body_language" | "voice_control" | "content_clarity" | "presence" | "general";
+export type ChallengeType = "daily" | "weekly" | "achievement";
+export type ChallengeDifficulty = "beginner" | "intermediate" | "expert";
+
+export interface ChallengeRequirements {
+    min_score?: number;
+    min_duration?: number;
+    max_filler_words?: number;
+    min_sessions?: number;
+    perfect_categories?: string[];
+    specific_metrics?: Record<string, any>;
+    // Micro-challenge fields
+    min_eye_contact_percent?: number;
+    target_wpm_min?: number;
+    target_wpm_max?: number;
+    min_facial_confidence?: number;
+    min_content_clarity?: number;
+    volume_min_db?: number;
+    volume_max_db?: number;
+    min_engagement_score?: number;
+    consecutive_good_sessions?: number;
+    target_session_count?: number;
+    skill_category?: SkillCategory;
+}
+
+export interface ChallengeRewards {
+    xp: number;
+    badge_id?: string;
+    title?: string;
+}
+
+export interface ChallengeUserProgress {
+    progress: number;
+    completed: boolean;
+    claimed: boolean;
+    current_value?: number;
+    target_value?: string | number;
+}
+
+export interface Challenge {
+    challenge_id: string;
+    type: ChallengeType;
+    title: string;
+    description: string;
+    difficulty: ChallengeDifficulty;
+    requirements: ChallengeRequirements;
+    rewards: ChallengeRewards;
+    expires_at?: string;
+    skill_category?: SkillCategory;
+    estimated_time?: number; // in minutes
+    user_progress?: ChallengeUserProgress;
+}
+
+export interface ActiveSessionChallenge {
+    challenge_id: string;
+    title: string;
+    description: string;
+    type: ChallengeType;
+    difficulty: ChallengeDifficulty;
+    skill_category: SkillCategory;
+    progress: number;
+    completed: boolean;
+    claimed: boolean;
+    current_value: number;
+    target_value: string;
+    rewards: ChallengeRewards;
+    requirements: ChallengeRequirements;
+}
+
+export interface ActiveSessionChallengesResponse {
+    challenges: ActiveSessionChallenge[];
+    by_category: Record<SkillCategory, ActiveSessionChallenge[]>;
+    total_active: number;
+    categories: SkillCategory[];
+}

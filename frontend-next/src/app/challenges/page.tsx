@@ -9,21 +9,12 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Trophy, Zap, Clock, Target, CheckCircle2, Gift, Flame,
-    Lock, Star, RefreshCw, Sparkles, Calendar, Award, ArrowRight
+    Lock, Star, RefreshCw, Sparkles, Calendar, Award, ArrowRight,
+    Eye, Mic, Brain, User, Filter, ChevronDown, Timer
 } from "lucide-react";
 import { toast } from "sonner";
-
-interface Challenge {
-    challenge_id: string;
-    type: "daily" | "weekly" | "achievement";
-    title: string;
-    description: string;
-    difficulty: string;
-    requirements: any;
-    rewards: { xp: number; badge_id?: string; title?: string; };
-    expires_at?: string;
-    user_progress?: { progress: number; completed: boolean; claimed: boolean; };
-}
+import { cn } from "@/lib/utils";
+import type { Challenge, SkillCategory, ChallengeType } from "@/lib/types";
 
 // ─── Mock fallback challenges ──────────────────────────────────────────────────
 const MOCK_CHALLENGES: Challenge[] = [
@@ -33,7 +24,7 @@ const MOCK_CHALLENGES: Challenge[] = [
         title: "First Words",
         description: "Complete a 60-second practice session today.",
         difficulty: "beginner",
-        requirements: { sessions: 1, min_duration: 60 },
+        requirements: { min_sessions: 1, min_duration: 60, skill_category: "general" },
         rewards: { xp: 150 },
         expires_at: new Date(Date.now() + 8 * 3600 * 1000).toISOString(),
         user_progress: { progress: 0, completed: false, claimed: false },
@@ -44,7 +35,7 @@ const MOCK_CHALLENGES: Challenge[] = [
         title: "Filler Slayer",
         description: "Complete a session with fewer than 5 filler words.",
         difficulty: "intermediate",
-        requirements: { filler_words_max: 5 },
+        requirements: { max_filler_words: 5, skill_category: "content_clarity" },
         rewards: { xp: 250, badge_id: "clean_speaker" },
         expires_at: new Date(Date.now() + 8 * 3600 * 1000).toISOString(),
         user_progress: { progress: 40, completed: false, claimed: false },
@@ -55,7 +46,7 @@ const MOCK_CHALLENGES: Challenge[] = [
         title: "Confidence Surge",
         description: "Achieve a facial confidence score above 80%.",
         difficulty: "intermediate",
-        requirements: { facial_score_min: 80 },
+        requirements: { min_facial_confidence: 80, skill_category: "presence" },
         rewards: { xp: 300 },
         expires_at: new Date(Date.now() + 8 * 3600 * 1000).toISOString(),
         user_progress: { progress: 75, completed: false, claimed: false },
@@ -66,7 +57,7 @@ const MOCK_CHALLENGES: Challenge[] = [
         title: "7-Day Warrior",
         description: "Practice every day for 7 consecutive days.",
         difficulty: "expert",
-        requirements: { streak_days: 7 },
+        requirements: { consecutive_good_sessions: 7, skill_category: "general" },
         rewards: { xp: 1000, badge_id: "warrior", title: "The Consistent" },
         expires_at: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
         user_progress: { progress: 43, completed: false, claimed: false },
@@ -77,7 +68,7 @@ const MOCK_CHALLENGES: Challenge[] = [
         title: "Score Hunter",
         description: "Accumulate 5,000 total points across all sessions this week.",
         difficulty: "intermediate",
-        requirements: { total_score: 5000 },
+        requirements: { specific_metrics: { total_score: 5000 }, skill_category: "general" },
         rewards: { xp: 600, badge_id: "score_hunter" },
         expires_at: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
         user_progress: { progress: 62, completed: false, claimed: false },
@@ -88,7 +79,7 @@ const MOCK_CHALLENGES: Challenge[] = [
         title: "Expert Initiation",
         description: "Complete 3 sessions on Expert difficulty.",
         difficulty: "expert",
-        requirements: { expert_sessions: 3 },
+        requirements: { target_session_count: 3, specific_metrics: { difficulty: "expert" }, skill_category: "general" },
         rewards: { xp: 800, title: "Expert Speaker" },
         expires_at: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
         user_progress: { progress: 33, completed: false, claimed: false },
@@ -99,7 +90,7 @@ const MOCK_CHALLENGES: Challenge[] = [
         title: "First Blood",
         description: "Complete your very first practice session.",
         difficulty: "beginner",
-        requirements: { sessions: 1 },
+        requirements: { min_sessions: 1, skill_category: "general" },
         rewards: { xp: 100, badge_id: "first_blood" },
         user_progress: { progress: 100, completed: true, claimed: false },
     },
@@ -109,7 +100,7 @@ const MOCK_CHALLENGES: Challenge[] = [
         title: "Combo King",
         description: "Reach a 10x combo multiplier in a single session.",
         difficulty: "expert",
-        requirements: { combo: 10 },
+        requirements: { specific_metrics: { max_combo: 10 }, skill_category: "general" },
         rewards: { xp: 500, badge_id: "combo_king", title: "Combo King" },
         user_progress: { progress: 0, completed: false, claimed: false },
     },
@@ -119,11 +110,107 @@ const MOCK_CHALLENGES: Challenge[] = [
         title: "Leaderboard Legend",
         description: "Reach the Top 10 on the global leaderboard.",
         difficulty: "expert",
-        requirements: { rank: 10 },
+        requirements: { specific_metrics: { rank: 10 }, skill_category: "general" },
         rewards: { xp: 2000, badge_id: "legend", title: "Legend" },
         user_progress: { progress: 0, completed: false, claimed: false },
     },
 ];
+
+// ─── Skill Category Helpers ────────────────────────────────────────────────────
+
+const SKILL_CATEGORIES: Record<SkillCategory, { label: string; icon: React.ElementType; color: string; bg: string }> = {
+    body_language: {
+        label: "Body Language",
+        icon: Eye,
+        color: "text-blue-400",
+        bg: "bg-blue-500/10 border-blue-500/30"
+    },
+    voice_control: {
+        label: "Voice Control",
+        icon: Mic,
+        color: "text-purple-400",
+        bg: "bg-purple-500/10 border-purple-500/30"
+    },
+    content_clarity: {
+        label: "Content Clarity",
+        icon: Brain,
+        color: "text-green-400",
+        bg: "bg-green-500/10 border-green-500/30"
+    },
+    presence: {
+        label: "Presence",
+        icon: User,
+        color: "text-pink-400",
+        bg: "bg-pink-500/10 border-pink-500/30"
+    },
+    general: {
+        label: "General",
+        icon: Target,
+        color: "text-zinc-400",
+        bg: "bg-zinc-500/10 border-zinc-500/30"
+    }
+};
+
+function SkillCategoryBadge({ category, showLabel = false }: { category: SkillCategory; showLabel?: boolean }) {
+    const config = SKILL_CATEGORIES[category] || SKILL_CATEGORIES.general;
+    const Icon = config.icon;
+    
+    return (
+        <div className={cn(
+            "flex items-center gap-1.5 px-2 py-1 rounded-lg border",
+            config.bg
+        )}>
+            <Icon className={cn("w-3.5 h-3.5", config.color)} />
+            {showLabel && (
+                <span className={cn("text-[10px] font-medium uppercase tracking-wider", config.color)}>
+                    {config.label}
+                </span>
+            )}
+        </div>
+    );
+}
+
+function CategoryFilter({ 
+    selected, 
+    onSelect 
+}: { 
+    selected: SkillCategory | "all"; 
+    onSelect: (cat: SkillCategory | "all") => void;
+}) {
+    const categories: (SkillCategory | "all")[] = ["all", "body_language", "voice_control", "content_clarity", "presence"];
+    
+    return (
+        <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+                <button
+                    key={cat}
+                    onClick={() => onSelect(cat)}
+                    className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-medium uppercase tracking-wider transition-all",
+                        selected === cat
+                            ? "bg-primary/20 border-primary text-primary"
+                            : "bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-400"
+                    )}
+                >
+                    {cat === "all" ? (
+                        <>
+                            <Filter className="w-3 h-3" />
+                            All
+                        </>
+                    ) : (
+                        <>
+                            {(() => {
+                                const Icon = SKILL_CATEGORIES[cat].icon;
+                                return <Icon className="w-3 h-3" />;
+                            })()}
+                            {SKILL_CATEGORIES[cat].label}
+                        </>
+                    )}
+                </button>
+            ))}
+        </div>
+    );
+}
 
 // ─── Streak Bonus Card ─────────────────────────────────────────────────────────
 function StreakBonusCard({ streak }: { streak: number }) {
