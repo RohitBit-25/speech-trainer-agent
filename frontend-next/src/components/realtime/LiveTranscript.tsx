@@ -70,7 +70,7 @@ export function LiveTranscript({
     };
 
     return (
-        <div className="border-2 border-zinc-800 bg-zinc-950 h-80 flex flex-col">
+        <div className="border-2 border-zinc-800 bg-zinc-950 h-full w-full flex flex-col">
             {/* Header */}
             <div className="border-b-2 border-zinc-800 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">

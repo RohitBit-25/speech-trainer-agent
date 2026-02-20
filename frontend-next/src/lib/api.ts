@@ -1,14 +1,120 @@
 import { ParsedAnalysisResult, HistoryItem } from "./types";
 
-const API_URL = "/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
     return fetch(url, {
         ...options,
-        credentials: 'include', // Ensure cookies are sent
+        credentials: 'include',
     });
+}
+
+// Safely parse a value if it happens to be a JSON string
+const parseIfString = (val: any): any => {
+    if (typeof val === 'string') {
+        try { return JSON.parse(val); } catch { return val; }
+    }
+    return val;
+};
+
+// Unwrap single-element arrays returned by the LLM
+const unwrapArray = (val: any): any => {
+    if (Array.isArray(val) && val.length === 1) return val[0];
+    return val;
+};
+
+const safeGet = (obj: any, ...keys: string[]): any => {
+    for (const key of keys) {
+        if (obj && obj[key] !== undefined && obj[key] !== null) return obj[key];
+    }
+    return undefined;
+};
+
+/**
+ * Map the raw LLM voice_analysis_response to our VoiceAnalysis type.
+ * The LLM may use: speech_rate_wpm, pitch_variation, volume_consistency, transcription
+ */
+function mapVoiceAnalysis(raw: any) {
+    if (!raw) return { transcription: "No transcription available.", pitch: 0, pace: 0, volume: "N/A" };
+    const r = unwrapArray(parseIfString(raw));
+    return {
+        transcription: safeGet(r, 'transcription', 'transcript', 'text') || "No transcription available.",
+        pitch: parseFloat(safeGet(r, 'pitch_hz', 'pitch_variation', 'pitch') || '0') || 0,
+        pace: parseFloat(safeGet(r, 'speech_rate_wpm', 'speech_rate', 'pace') || '0') || 0,
+        volume: safeGet(r, 'volume_consistency', 'volume_db', 'volume') || "N/A",
+        summary: safeGet(r, 'summary', 'voice_summary'),
+    };
+}
+
+/**
+ * Map the raw LLM facial_expression_response to our FacialAnalysis type.
+ */
+function mapFacialAnalysis(raw: any) {
+    if (!raw) return { summary: "Facial analysis unavailable.", emotions: {}, eye_contact: 0 };
+    const r = unwrapArray(parseIfString(raw));
+
+    // Build emotions map from emotion_timeline if present
+    let emotions: Record<string, number> = {};
+    const timeline = safeGet(r, 'emotion_timeline');
+    if (Array.isArray(timeline)) {
+        timeline.forEach((entry: any) => {
+            const emo = entry.emotion || entry.dominant_emotion;
+            if (emo) emotions[emo] = (emotions[emo] || 0) + 1;
+        });
+    }
+
+    // Fall back to direct emotions object
+    const directEmotions = safeGet(r, 'emotions', 'emotion_scores');
+    if (directEmotions && typeof directEmotions === 'object' && !Array.isArray(directEmotions)) {
+        emotions = directEmotions;
+    }
+
+    const engagement = safeGet(r, 'engagement_metrics', 'engagement');
+    const eyeContact = typeof engagement === 'object'
+        ? (safeGet(engagement, 'eye_contact_frequency', 'eye_contact') || 0)
+        : (safeGet(r, 'eye_contact', 'eye_contact_score') || 0);
+
+    const dominantEmotion = Object.keys(emotions).sort((a, b) => (emotions[b] || 0) - (emotions[a] || 0))[0] || 'neutral';
+
+    const summary = safeGet(r, 'summary', 'facial_summary') ||
+        `Dominant emotion: ${dominantEmotion}. Eye contact: ${eyeContact}`;
+
+    return {
+        summary,
+        emotions,
+        eye_contact: eyeContact,
+        confidence: safeGet(r, 'confidence', 'emotion_confidence') || 0,
+        engagement: safeGet(r, 'engagement_score') || 0,
+    };
+}
+
+/**
+ * Map the raw LLM content_analysis_response to our ContentAnalysis type.
+ */
+function mapContentAnalysis(raw: any) {
+    if (!raw) return { structure: "N/A", clarity: 0, persuasion: 0 };
+    const r = unwrapArray(parseIfString(raw));
+    return {
+        structure: safeGet(r, 'structure', 'speech_structure', 'organization') || "N/A",
+        clarity: parseFloat(safeGet(r, 'clarity', 'clarity_score', 'clarity_index') || '0') || 0,
+        persuasion: parseFloat(safeGet(r, 'persuasion', 'persuasion_score', 'persuasiveness') || '0') || 0,
+    };
+}
+
+/**
+ * Map the raw LLM feedback_response to our FeedbackAnalysis type.
+ */
+function mapFeedbackAnalysis(raw: any) {
+    if (!raw) return { scores: {}, total_score: 0, interpretation: "No feedback.", feedback_summary: "No feedback available." };
+    const r = unwrapArray(parseIfString(raw));
+    return {
+        scores: safeGet(r, 'scores', 'component_scores') || {},
+        total_score: parseFloat(safeGet(r, 'total_score', 'overall_score', 'score') || '0') || 0,
+        interpretation: safeGet(r, 'interpretation', 'grade_interpretation', 'overall_assessment') || "N/A",
+        feedback_summary: safeGet(r, 'feedback_summary', 'summary', 'feedback', 'overall_feedback') || "No summary.",
+    };
 }
 
 export async function startAnalysis(file: File): Promise<string> {
@@ -36,7 +142,7 @@ export async function startAnalysis(file: File): Promise<string> {
 
 export async function pollAnalysis(task_id: string): Promise<ParsedAnalysisResult> {
     let retries = 0;
-    const maxRetries = 600; // Timeout after ~20 minutes (assuming 2s interval) - increased for long analysis
+    const maxRetries = 600; // Timeout after ~20 minutes
 
     while (retries < maxRetries) {
         const statusResponse = await fetchWithAuth(`${API_URL}/status/${task_id}`);
@@ -52,30 +158,14 @@ export async function pollAnalysis(task_id: string): Promise<ParsedAnalysisResul
         if (statusData.state === "SUCCESS") {
             const data = statusData.result;
 
-            const facial = typeof data.facial_expression_response === 'string'
-                ? JSON.parse(data.facial_expression_response)
-                : data.facial_expression_response;
-
-            const voice = typeof data.voice_analysis_response === 'string'
-                ? JSON.parse(data.voice_analysis_response)
-                : data.voice_analysis_response;
-
-            const content = typeof data.content_analysis_response === 'string'
-                ? JSON.parse(data.content_analysis_response)
-                : data.content_analysis_response;
-
-            const feedback = typeof data.feedback_response === 'string'
-                ? JSON.parse(data.feedback_response)
-                : data.feedback_response;
-
             return {
-                facial,
-                voice,
-                content,
-                feedback,
-                strengths: data.strengths,
-                weaknesses: data.weaknesses,
-                suggestions: data.suggestions
+                facial: mapFacialAnalysis(data.facial_expression_response),
+                voice: mapVoiceAnalysis(data.voice_analysis_response),
+                content: mapContentAnalysis(data.content_analysis_response),
+                feedback: mapFeedbackAnalysis(data.feedback_response),
+                strengths: Array.isArray(data.strengths) ? data.strengths : [],
+                weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
+                suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
             } as ParsedAnalysisResult;
 
         } else if (statusData.state === "FAILURE") {
@@ -109,19 +199,13 @@ export async function getAnalysis(taskId: string): Promise<ParsedAnalysisResult>
     }
     const data = await response.json();
 
-    // The backend returns the raw JSON structure, but we need to ensure it matches ParsedAnalysisResult
-    // Our backend endpoint get_analysis already parses/constructs it, but let's be safe with parsing if strings are returned
-
-    // Helper to safely parse if string
-    const parseIfString = (val: any) => (typeof val === 'string' ? JSON.parse(val) : val);
-
     return {
-        facial: parseIfString(data.facial),
-        voice: parseIfString(data.voice),
-        content: parseIfString(data.content),
-        feedback: parseIfString(data.feedback),
-        strengths: data.strengths,
-        weaknesses: data.weaknesses,
-        suggestions: data.suggestions
+        facial: mapFacialAnalysis(data.facial),
+        voice: mapVoiceAnalysis(data.voice),
+        content: mapContentAnalysis(data.content),
+        feedback: mapFeedbackAnalysis(data.feedback),
+        strengths: Array.isArray(data.strengths) ? data.strengths : [],
+        weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
+        suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
     };
 }

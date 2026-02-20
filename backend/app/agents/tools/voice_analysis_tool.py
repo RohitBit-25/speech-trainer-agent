@@ -98,64 +98,84 @@ def analyze_voice_attributes(file_path: str) -> dict:
     Analyzes vocal attributes in an audio file.
 
     Args:
-        audio_path: The path to the audio file.
+        file_path: The path to the audio or video file.
 
     Returns:
         A dictionary containing the transcribed text, speech rate, pitch variation, and volume consistency.
     """
+    print(f"DEBUG: Starting analyze_voice_attributes for {file_path}")
 
     # Determine file extension
     _, ext = os.path.splitext(file_path)
     ext = ext.lower()
+    print(f"DEBUG: File extension: {ext}")
 
     # If the file is a video, extract audio
     video_extensions = ['.mp4', '.mov', '.webm', '.mkv', '.avi']
+    audio_path = file_path
     if ext in video_extensions:
+        print(f"DEBUG: Extracting audio from video...")
         with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_audio_file:
             try:
                 audio_path = extract_audio_from_video(file_path, temp_audio_file.name)
-            except ValueError as e:
-                # E.g. No audio track found
+                print(f"DEBUG: Audio extracted to {audio_path}")
+            except Exception as e:
+                print(f"DEBUG: Error extracting audio: {e}")
                 if os.path.exists(temp_audio_file.name):
                     os.remove(temp_audio_file.name)
-                return json.dumps({
-                    "transcription": "Error: No audio track found in the video.",
-                    "speech_rate_wpm": "0",
-                    "pitch_variation": "0",
-                    "volume_consistency": "0"
-                })
-    else:
-        audio_path = file_path
+                raise e
 
     # Transcribe audio
+    print(f"DEBUG: Beginning transcription...")
     transcription = transcribe_audio(audio_path)
+    print(f"DEBUG: Transcription complete. Length: {len(transcription)}")
 
     # Proceed with analysis using the audio_path
     # Load audio
-    y, sr = librosa.load(audio_path, sr=16000)
+    print(f"DEBUG: Loading audio with librosa...")
+    try:
+        y, sr = librosa.load(audio_path, sr=16000)
+        print(f"DEBUG: Audio loaded. Sample rate: {sr}, Duration: {len(y)/sr}s")
+    except Exception as e:
+        print(f"DEBUG: Error loading with librosa: {e}")
+        raise e
 
     words = transcription.split()
 
     # Calculate speech rate
     duration = librosa.get_duration(y=y, sr=sr)
-    speech_rate = len(words) / (duration / 60.0)  # words per minute
+    speech_rate = len(words) / (duration / 60.0) if duration > 0 else 0
+    print(f"DEBUG: Speech rate calculated: {speech_rate}")
 
     # Pitch variation
-    pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
-    pitch_values = pitches[magnitudes > np.median(magnitudes)]
-    pitch_variation = np.std(pitch_values) if pitch_values.size > 0 else 0
+    print(f"DEBUG: Calculating pitch...")
+    try:
+        pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+        pitch_values = pitches[magnitudes > np.median(magnitudes)]
+        pitch_variation = np.std(pitch_values) if pitch_values.size > 0 else 0
+        print(f"DEBUG: Pitch variation: {pitch_variation}")
+    except Exception as e:
+        print(f"DEBUG: Error calculating pitch: {e}")
+        pitch_variation = 0
 
     # Volume consistency
-    rms = librosa.feature.rms(y=y)[0]
-    volume_consistency = np.std(rms)
+    print(f"DEBUG: Calculating volume...")
+    try:
+        rms = librosa.feature.rms(y=y)[0]
+        volume_consistency = np.std(rms)
+        print(f"DEBUG: Volume consistency: {volume_consistency}")
+    except Exception as e:
+        print(f"DEBUG: Error calculating volume: {e}")
+        volume_consistency = 0
 
     # Clean up temporary audio file if created
     if ext in video_extensions and os.path.exists(audio_path):
+        print(f"DEBUG: Cleaning up temp file {audio_path}")
         os.remove(audio_path)
 
-    return json.dumps({
+    return {
         "transcription": transcription,
         "speech_rate_wpm": str(round(speech_rate, 2)),
         "pitch_variation": str(round(pitch_variation, 2)),
         "volume_consistency": str(round(volume_consistency, 4))
-    })
+    }

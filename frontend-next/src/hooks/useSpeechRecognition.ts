@@ -19,6 +19,17 @@ interface UseSpeechRecognitionReturn {
     resetTranscript: () => void;
 }
 
+// Filler words to detect
+const FILLER_WORDS = new Set([
+    'um', 'uh', 'like', 'you know', 'so', 'actually',
+    'basically', 'literally', 'kind of', 'sort of', 'i mean'
+]);
+
+function detectFillerWords(text: string): boolean {
+    const lowerText = text.toLowerCase();
+    return Array.from(FILLER_WORDS).some(filler => lowerText.includes(filler));
+}
+
 export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     const [transcript, setTranscript] = useState('');
     const [interimTranscript, setInterimTranscript] = useState('');
@@ -27,22 +38,12 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     const [error, setError] = useState<string | null>(null);
 
     const recognitionRef = useRef<any>(null);
+    const shouldListenRef = useRef(false); // Track intent to listen (stable ref, avoids stale closure)
+
     const isSupported = typeof window !== 'undefined' &&
         ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-    // Filler words to detect
-    const fillerWords = new Set([
-        'um', 'uh', 'like', 'you know', 'so', 'actually',
-        'basically', 'literally', 'kind of', 'sort of', 'i mean'
-    ]);
-
-    const detectFillerWords = useCallback((text: string): boolean => {
-        const lowerText = text.toLowerCase();
-        return Array.from(fillerWords).some(filler =>
-            lowerText.includes(filler)
-        );
-    }, []);
-
+    // Initialize recognition once on mount only
     useEffect(() => {
         if (!isSupported) {
             setError('Speech recognition is not supported in this browser');
@@ -65,52 +66,38 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
         recognition.onresult = (event: any) => {
             let interim = '';
-            let final = '';
 
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const result = event.results[i];
                 const text = result[0].transcript;
 
                 if (result.isFinal) {
-                    final += text + ' ';
-
-                    // Add to segments
                     const segment: TranscriptSegment = {
                         text: text,
                         timestamp: Date.now(),
                         isFinal: true,
                         hasFillerWord: detectFillerWords(text)
                     };
-
                     setSegments(prev => [...prev, segment]);
+                    setTranscript(prev => prev + text + ' ');
                 } else {
                     interim += text;
                 }
-            }
-
-            if (final) {
-                setTranscript(prev => prev + final);
             }
             setInterimTranscript(interim);
         };
 
         recognition.onerror = (event: any) => {
             console.error('Speech recognition error:', event.error);
-
-            if (event.error === 'no-speech') {
-                // Don't show error for no speech, just continue
-                return;
-            }
-
+            if (event.error === 'no-speech') return; // Not an error, just silence
             setError(`Speech recognition error: ${event.error}`);
             setIsListening(false);
         };
 
         recognition.onend = () => {
             setIsListening(false);
-
-            // Auto-restart if we were listening
-            if (recognitionRef.current && isListening) {
+            // Auto-restart only if the user still wants to be listening
+            if (shouldListenRef.current) {
                 try {
                     recognition.start();
                 } catch (err) {
@@ -122,18 +109,19 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
         recognitionRef.current = recognition;
 
         return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.stop();
-            }
+            shouldListenRef.current = false;
+            try {
+                recognition.stop();
+            } catch (_) { }
         };
-    }, [isSupported, isListening, detectFillerWords]);
+    }, []); // Run ONCE on mount — no deps needed
 
     const startListening = useCallback(() => {
         if (!isSupported) {
             setError('Speech recognition is not supported');
             return;
         }
-
+        shouldListenRef.current = true;
         try {
             recognitionRef.current?.start();
         } catch (err) {
@@ -143,12 +131,13 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     }, [isSupported]);
 
     const stopListening = useCallback(() => {
+        shouldListenRef.current = false;
         try {
             recognitionRef.current?.stop();
-            setIsListening(false);
         } catch (err) {
             console.error('Failed to stop recognition:', err);
         }
+        setIsListening(false);
     }, []);
 
     const resetTranscript = useCallback(() => {

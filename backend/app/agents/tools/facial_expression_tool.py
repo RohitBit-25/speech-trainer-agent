@@ -1,9 +1,15 @@
 import cv2
 import numpy as np
 import mediapipe as mp
-# from deepface import DeepFace
 from agno.tools import tool
 import json
+
+# Try to import DeepFace for richer emotion detection, but fall back gracefully
+try:
+    from deepface import DeepFace
+    DEEPFACE_AVAILABLE = True
+except ImportError:
+    DEEPFACE_AVAILABLE = False
 
 def log_before_call(fc):
     """Pre-hook function that runs before the tool execution"""
@@ -72,8 +78,17 @@ def analyze_facial_expressions(video_path: str) -> dict:
 
                 # Emotion Detection using DeepFace & Smile Detection
                 try:
-                    analysis = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
-                    emotion = analysis[0]['dominant_emotion']
+                    if DEEPFACE_AVAILABLE:
+                        analysis = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
+                        emotion = analysis[0]['dominant_emotion']
+                    else:
+                        # Heuristic fallback: estimate smile from mouth openness
+                        # Mouth landmarks: 13 (upper lip), 14 (lower lip)
+                        upper_lip = landmark_coords[13]
+                        lower_lip = landmark_coords[14]
+                        mouth_open = np.linalg.norm(np.array(upper_lip) - np.array(lower_lip))
+                        emotion = "happy" if mouth_open > 8 else "neutral"
+
                     if emotion == "happy":
                         smile_count += 1
 
