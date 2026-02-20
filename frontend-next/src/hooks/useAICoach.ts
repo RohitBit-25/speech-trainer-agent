@@ -103,8 +103,13 @@ export function useAICoach(optionsOrSessionId?: UseAICoachOptions | string): Use
         }
 
         if (message.facial_analysis) {
-          setCurrentEmotion(message.facial_analysis);
-          onEmotionUpdate?.(message.facial_analysis);
+          // ensure confidence is mapped correctly from emotion_confidence for UI
+          const facial = {
+            ...message.facial_analysis,
+            confidence: message.facial_analysis.confidence ?? message.facial_analysis.emotion_confidence ?? 0
+          };
+          setCurrentEmotion(facial);
+          onEmotionUpdate?.(facial);
         }
 
         if (message.voice_analysis) {

@@ -96,7 +96,7 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <span className="text-xs text-zinc-400">Clarity</span>
           </div>
           <div className="text-lg font-semibold text-white mb-1">
-            {((voice.clarity_score || 0) * 100).toFixed(0)}%
+            {(voice.clarity_score || 0).toFixed(0)}%
           </div>
           <motion.div
             className="h-1.5 bg-white/10 rounded-full overflow-hidden"
@@ -106,7 +106,7 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <motion.div
               className="h-full bg-purple-400"
               initial={{ width: 0 }}
-              animate={{ width: `${(voice.clarity_score || 0) * 100}%` }}
+              animate={{ width: `${voice.clarity_score || 0}%` }}
               transition={{ duration: 0.5 }}
             />
           </motion.div>
@@ -133,7 +133,7 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <span className="text-xs text-zinc-400">Volume</span>
           </div>
           <div className="text-lg font-semibold text-white mb-1">
-            {((voice.volume_consistency || 0) * 100).toFixed(0)}%
+            {(voice.volume_consistency || 0).toFixed(0)}%
           </div>
           <motion.div
             className="h-1.5 bg-white/10 rounded-full overflow-hidden"
@@ -143,7 +143,7 @@ export function RealtimeVoiceDisplay({ voice, isLoading = false }: RealtimeVoice
             <motion.div
               className="h-full bg-green-400"
               initial={{ width: 0 }}
-              animate={{ width: `${(voice.volume_consistency || 0) * 100}%` }}
+              animate={{ width: `${voice.volume_consistency || 0}%` }}
               transition={{ duration: 0.5 }}
             />
           </motion.div>

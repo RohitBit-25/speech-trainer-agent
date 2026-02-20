@@ -424,6 +424,15 @@ export default function PracticePage() {
         resetTranscript
     } = useSpeechRecognition();
 
+    // Keep latest transcript lengths/values in refs so we don't trigger re-renders or re-effects
+    const latestTranscriptRef = useRef('');
+    const latestInterimRef = useRef('');
+
+    useEffect(() => {
+        latestTranscriptRef.current = transcript;
+        latestInterimRef.current = interimTranscript;
+    }, [transcript, interimTranscript]);
+
     // Count filler words in transcript
     useEffect(() => {
         if (!transcript) return;
@@ -503,13 +512,14 @@ export default function PracticePage() {
     useEffect(() => {
         if (isRecording && stream && aiCoachConnected) {
             startCapture(stream, (audioData) => {
-                // Send audio chunk with current transcript status if needed
-                aiSendAudioChunk(audioData, transcript || interimTranscript);
+                // Send audio chunk with current transcript status dynamically via refs
+                const currentText = latestTranscriptRef.current || latestInterimRef.current;
+                aiSendAudioChunk(audioData, currentText);
             });
         } else if (!isRecording) {
             stopCapture();
         }
-    }, [isRecording, stream, aiCoachConnected, transcript, interimTranscript, startCapture, stopCapture, aiSendAudioChunk]);
+    }, [isRecording, stream, aiCoachConnected, startCapture, stopCapture, aiSendAudioChunk]);
 
 
 
