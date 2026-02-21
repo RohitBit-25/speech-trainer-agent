@@ -22,11 +22,6 @@
   <strong>Earn XP, unlock achievements, and master communication.</strong>
 </p>
 
-> 📝 **Important Setup Notes for GitHub Deployment:**
-> 
-> 1. **Logo**: Replace the logo file in `frontend-next/public/` if you update branding
-> 2. **Deployment URLs**: Add live demo and documentation links when available
-> 3. **License**: Confirm the license file matches the badge
 
 <p align="center">
   <a href="#-features"><strong>Features</strong></a> •
